@@ -13,6 +13,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   check_origin: false,
   watchers: []
 
+config :blockchain_api, env: Mix.env()
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

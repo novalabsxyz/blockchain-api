@@ -29,9 +29,28 @@ defmodule BlockchainAPI.Watcher do
   # GenServer Callbacks
   #==================================================================
   @impl true
-  def init(_args) do
+  def init(args) do
     :ok = :blockchain_event.add_handler(self())
-    {:ok, %{chain: nil}}
+
+    state =
+      case Keyword.get(args, :env) do
+        :dev ->
+          %{chain: nil}
+        :prod ->
+          genesis_file = Path.join(:code.priv_dir(:blockchain_api), "genesis")
+          case File.read(genesis_file) do
+            {:ok, genesis_block} ->
+              :ok = genesis_block
+                    |> :blockchain_block.deserialize()
+                    |> :blockchain_worker.integrate_genesis_block()
+              chain = :blockchain_worker.blockchain()
+              %{chain: chain}
+            {:error, reason} ->
+              %{chain: nil}
+          end
+      end
+
+    {:ok, state}
   end
 
   @impl true

@@ -17,6 +17,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   version: Application.spec(:blockchain_api, :vsn)
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
+config :blockchain_api, env: Mix.env()
+
 # Do not print debug messages in production
 config :logger, level: :info
 

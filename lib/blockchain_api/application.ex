@@ -22,6 +22,9 @@ defmodule BlockchainAPI.Application do
       {:base_dir, base_dir}
     ]
 
+    env = Application.fetch_env!(:blockchain_api, :env)
+    watcher_worker_opts = [{:env, env}]
+
     # List all child processes to be supervised
     children = [
       # Start the blockchain
@@ -36,7 +39,7 @@ defmodule BlockchainAPI.Application do
       # Start the endpoint when the application starts
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
-      {BlockchainAPI.Watcher, []},
+      {BlockchainAPI.Watcher, watcher_worker_opts},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
