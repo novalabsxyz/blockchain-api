@@ -6,6 +6,8 @@ defmodule BlockchainAPI.Repo.Migrations.CreateAddGatewayTransactions do
       add :type, :string, null: false
       add :owner, :string, null: false
       add :gateway, :string, null: false
+      add :hash, :string, null: false
+
       add :block_height, references(:blocks, on_delete: :nothing, column: :height)
 
       timestamps()

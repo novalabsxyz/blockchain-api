@@ -9,6 +9,8 @@ defmodule BlockchainAPI.Repo.Migrations.CreateAssertLocationTransactions do
       add :location, :string, null: false
       add :nonce, :integer, null: false
       add :fee, :integer, null: false
+      add :hash, :string, null: false
+
       add :block_height, references(:blocks, on_delete: :nothing, column: :height)
 
       timestamps()

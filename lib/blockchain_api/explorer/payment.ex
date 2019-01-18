@@ -12,6 +12,7 @@ defmodule BlockchainAPI.Explorer.Payment do
     field :payee, :string
     field :payer, :string
     field :type, :string
+    field :hash, :string
 
     belongs_to :blocks, BlockchainAPI.Explorer.Block, foreign_key: :block_height, references: :height
 
@@ -21,7 +22,7 @@ defmodule BlockchainAPI.Explorer.Payment do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:type, :amount, :payee, :payer, :fee, :nonce, :block_height])
-    |> validate_required([:type, :amount, :payee, :payer, :fee, :nonce, :block_height])
+    |> cast(attrs, [:type, :amount, :payee, :payer, :fee, :nonce, :block_height, :hash])
+    |> validate_required([:type, :amount, :payee, :payer, :fee, :nonce, :block_height, :hash])
   end
 end

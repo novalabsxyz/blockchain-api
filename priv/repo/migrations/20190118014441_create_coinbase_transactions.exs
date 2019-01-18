@@ -6,6 +6,8 @@ defmodule BlockchainAPI.Repo.Migrations.CreateCoinbaseTransactions do
       add :type, :string, null: false
       add :amount, :bigint, null: false
       add :payee, :string, null: false
+      add :hash, :string, null: false
+
       add :block_height, references(:blocks, on_delete: :nothing, column: :height)
 
       timestamps()

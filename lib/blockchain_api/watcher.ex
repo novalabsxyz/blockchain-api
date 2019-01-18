@@ -176,7 +176,8 @@ defmodule BlockchainAPI.Watcher do
       type: "coinbase",
       payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))),
       amount: :blockchain_txn_coinbase_v1.amount(txn),
-      block_height: height
+      block_height: height,
+      hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)
     }
   end
 
@@ -188,7 +189,8 @@ defmodule BlockchainAPI.Watcher do
       block_height: height,
       amount: :blockchain_txn_payment_v1.amount(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
-      fee: :blockchain_txn_payment_v1.fee(txn)
+      fee: :blockchain_txn_payment_v1.fee(txn),
+      hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)
     }
   end
 
@@ -197,7 +199,8 @@ defmodule BlockchainAPI.Watcher do
       type: "add_gateway",
       owner: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
       gateway: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
-      block_height: height
+      block_height: height,
+      hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)
     }
   end
 
@@ -209,7 +212,8 @@ defmodule BlockchainAPI.Watcher do
       block_height: height,
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
-      location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn)))
+      location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
+      hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)
     }
   end
 

@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Explorer.Gateway do
     field :gateway, :string
     field :owner, :string
     field :type, :string
+    field :hash, :string
 
     belongs_to :blocks, BlockchainAPI.Explorer.Block, foreign_key: :block_height, references: :height
 
@@ -18,7 +19,7 @@ defmodule BlockchainAPI.Explorer.Gateway do
   @doc false
   def changeset(gateway, attrs) do
     gateway
-    |> cast(attrs, [:type, :owner, :gateway, :block_height])
-    |> validate_required([:type, :owner, :gateway, :block_height])
+    |> cast(attrs, [:type, :owner, :gateway, :block_height, :hash])
+    |> validate_required([:type, :owner, :gateway, :block_height, :hash])
   end
 end

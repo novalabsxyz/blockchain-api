@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Explorer.Coinbase do
     field :amount, :integer
     field :payee, :string
     field :type, :string
+    field :hash, :string
 
     belongs_to :blocks, BlockchainAPI.Explorer.Block, foreign_key: :block_height, references: :height
 
@@ -18,7 +19,7 @@ defmodule BlockchainAPI.Explorer.Coinbase do
   @doc false
   def changeset(coinbase, attrs) do
     coinbase
-    |> cast(attrs, [:type, :amount, :payee, :block_height])
-    |> validate_required([:type, :amount, :payee, :block_height])
+    |> cast(attrs, [:type, :amount, :payee, :block_height, :hash])
+    |> validate_required([:type, :amount, :payee, :block_height, :hash])
   end
 end
