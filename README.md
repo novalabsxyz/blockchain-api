@@ -88,16 +88,20 @@ Doing so will connect you to the seed nodes and boot the chain with the priv/gen
 `cd` into the `blockchain-api` project and then run:
 
 Remove existing data folder (if any). NOTE: This will wipe an existing chain if you had one before.
-`rm -rf data`
+
+```rm -rf data```
 
 Build clean
-`make clean && make`
+
+```make clean && make```
 
 Reset Database to start fresh
-`make reset-prod-db`
+
+```make reset-prod-db```
 
 Start interactively
-`make prod-start`
+
+```make prod-start```
 
 
 #### Running Interactively (Dev)
@@ -106,13 +110,17 @@ Doing so will NOT connect you to the seed nodes, you'll have to supply it manual
 `cd` into the `blockchain-api` project and then run:
 
 Remove existing data folder (if any)
-`rm -rf data`
+
+```rm -rf data```
 
 Build clean
-`make clean && make`
+
+```make clean && make```
 
 Reset Database to start fresh
-`make reset-dev-db`
+
+```make reset-dev-db```
 
 Start interactively
-`make dev-start`
+
+```make dev-start```
