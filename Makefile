@@ -22,6 +22,12 @@ reset-prod-db:
 reset-dev-db:
 	NO_ESCRIPT=1 MIX_ENV=dev $(MIX) ecto.reset
 
+prod-start:
+	PORT=4001 MIX_ENV=prod iex -S mix phx.server
+
+dev-start:
+	MIX_ENV=dev iex -S mix phx.server
+
 release:
 	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release
 
