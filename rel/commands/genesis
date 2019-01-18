@@ -1,0 +1,13 @@
+#!/bin/sh
+case $1 in
+    help)
+        echo "$0 load <genesis_block_file>"
+        exit 0
+        ;;
+    load)
+        release_remote_ctl rpc "BlockchainAPI.CLI.load_genesis(\"$2\")"
+        ;;
+    onboard)
+        release_remote_ctl rpc "BlockchainAPI.CLI.load_genesis()"
+        ;;
+esac

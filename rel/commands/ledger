@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ -t 0 ] ; then
+    export CLIQUE_COLUMNS=`stty size | cut -d ' ' -f 2`
+fi
+release_remote_ctl rpc --mfa 'BlockchainAPI.CLI.clique_command/1' --argv -- ledger $@
