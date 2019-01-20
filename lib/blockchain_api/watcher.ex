@@ -88,7 +88,6 @@ defmodule BlockchainAPI.Watcher do
 
   @impl true
   def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %{chain: chain}) when chain != nil do
-    # NOTE: send updates to other workers as needed here
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain)
@@ -141,26 +140,36 @@ defmodule BlockchainAPI.Watcher do
         :ok
       txns ->
         Enum.map(txns, fn txn ->
-          case :blockchain_transactions.type(txn) do
-            :blockchain_txn_assert_location_v1 ->
-              Explorer.create_gateway_location(assert_gw_loc_txn_map(txn, height))
-            :blockchain_txn_payment_v1 ->
-              Explorer.create_payment(payment_txn_map(txn, height))
-            # :blockchain_txn_create_htlc_v1 ->
-            # :blockchain_txn_redeem_htlc_v1 ->
-            # :blockchain_txn_poc_request_v1 ->
-            :blockchain_txn_add_gateway_v1 ->
-              Explorer.create_gateway(add_gw_txn_map(txn, height))
-            :blockchain_txn_coinbase_v1 ->
-              Explorer.create_coinbase(coinbase_txn_map(txn, height))
-            # :blockchain_txn_poc_receipts_v1 ->
-            # blockchain_txn_gen_consensus_group_v1 ->
-            _ ->
-              :ok
-          end
+
+          Explorer.create_transaction(txn_map(txn, height))
+
+          # case :blockchain_transactions.type(txn) do
+          #   :blockchain_txn_assert_location_v1 ->
+          #     Explorer.create_location(assert_gw_loc_txn_map(txn, height))
+          #   :blockchain_txn_payment_v1 ->
+          #     Explorer.create_payment(payment_txn_map(txn, height))
+          #   # :blockchain_txn_create_htlc_v1 ->
+          #   # :blockchain_txn_redeem_htlc_v1 ->
+          #   # :blockchain_txn_poc_request_v1 ->
+          #   :blockchain_txn_add_gateway_v1 ->
+          #     Explorer.create_gateway(add_gw_txn_map(txn, height))
+          #   :blockchain_txn_coinbase_v1 ->
+          #     Explorer.create_coinbase(coinbase_txn_map(txn, height))
+          #   # :blockchain_txn_poc_receipts_v1 ->
+          #   # blockchain_txn_gen_consensus_group_v1 ->
+          #   _ ->
+          #     :ok
+          # end
         end)
     end
   end
+
+
+  defp txn_map(txn, height) do
+    type = to_string(:blockchain_transactions.type(txn))
+
+  end
+
 
   defp block_map(block) do
     height = :blockchain_block.height(block)

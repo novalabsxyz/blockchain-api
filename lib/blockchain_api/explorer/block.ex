@@ -2,17 +2,14 @@ defmodule BlockchainAPI.Explorer.Block do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:height, :id, []}
+  @primary_key {:height, :integer, []}
   @derive {Phoenix.Param, key: :height}
   schema "blocks" do
     field :hash, :string
     field :round, :integer
     field :time, :integer
 
-    has_many :coinbase_transactions, BlockchainAPI.Explorer.Coinbase
-    has_many :payment_transactions, BlockchainAPI.Explorer.Payment
-    has_many :add_gateway_transactions, BlockchainAPI.Explorer.Gateway
-    has_many :assert_location_transactions, BlockchainAPI.Explorer.GatewayLocation
+    has_many :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :block_height
 
     timestamps()
   end
