@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddBlocksTable do
 
   def change do
     create table(:blocks, primary_key: false) do
-      add :height, :bigint, primary_key: true
+      add :height, :bigint, primary_key: true, null: false
       add :hash, :string, null: false
       add :round, :integer, null: false
       add :time, :integer, null: false

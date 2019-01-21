@@ -124,3 +124,11 @@ Reset Database to start fresh
 Start interactively
 
 ```make dev-start```
+
+#### Running Tests
+
+`cd` into the `blockchain-api` project and run:
+
+```
+make clean && make reset-test-db && make test
+```

@@ -6,8 +6,11 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: 4002],
   server: false
 
+config :blockchain_api, env: Mix.env()
+
 # Print only warnings and errors during test
 config :logger, level: :warn
+
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
@@ -16,3 +19,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   database: "blockchain_api_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :blockchain,
+  seed_nodes: [],
+  seed_node_dns: ''

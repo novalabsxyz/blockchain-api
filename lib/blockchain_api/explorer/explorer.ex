@@ -20,8 +20,8 @@ defmodule BlockchainAPI.Explorer do
 
   def get_transaction!(txn_hash), do: Repo.get!(Transaction, txn_hash)
 
-  def create_transaction(attrs \\ %{}) do
-    %Transaction{}
+  def create_transaction(block_height, attrs \\ %{}) do
+    %Transaction{block_height: block_height}
     |> Transaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -48,10 +48,10 @@ defmodule BlockchainAPI.Explorer do
     Repo.all(CoinbaseTransaction)
   end
 
-  def get_coinbase!(id), do: Repo.get!(CoinbaseTransaction, id)
+  def get_coinbase!(coinbase_hash), do: Repo.get!(CoinbaseTransaction, coinbase_hash)
 
-  def create_coinbase(attrs \\ %{}) do
-    %CoinbaseTransaction{}
+  def create_coinbase(txn_hash, attrs \\ %{}) do
+    %CoinbaseTransaction{coinbase_hash: txn_hash}
     |> CoinbaseTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -60,22 +60,22 @@ defmodule BlockchainAPI.Explorer do
     Repo.all(PaymentTransaction)
   end
 
-  def get_payment!(id), do: Repo.get!(PaymentTransaction, id)
+  def get_payment!(payment_hash), do: Repo.get!(PaymentTransaction, payment_hash)
 
-  def create_payment(attrs \\ %{}) do
-    %PaymentTransaction{}
+  def create_payment(txn_hash, attrs \\ %{}) do
+    %PaymentTransaction{payment_hash: txn_hash}
     |> PaymentTransaction.changeset(attrs)
     |> Repo.insert()
   end
 
-  def list_add_gateway_transactions do
+  def list_gateway_transactions do
     Repo.all(GatewayTransaction)
   end
 
-  def get_gateway!(id), do: Repo.get!(GatewayTransaction, id)
+  def get_gateway!(gateway_hash), do: Repo.get!(GatewayTransaction, gateway_hash)
 
-  def create_gateway(attrs \\ %{}) do
-    %GatewayTransaction{}
+  def create_gateway(txn_hash, attrs \\ %{}) do
+    %GatewayTransaction{gateway_hash: txn_hash}
     |> GatewayTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -85,10 +85,10 @@ defmodule BlockchainAPI.Explorer do
     Repo.all(LocationTransaction)
   end
 
-  def get_location!(id), do: Repo.get!(LocationTransaction, id)
+  def get_location!(location_hash), do: Repo.get!(LocationTransaction, location_hash)
 
-  def create_location(attrs \\ %{}) do
-    %LocationTransaction{}
+  def create_location(txn_hash, attrs \\ %{}) do
+    %LocationTransaction{location_hash: txn_hash}
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()
   end

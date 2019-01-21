@@ -1,4 +1,4 @@
-.PHONY: all compile clean release devrelease
+.PHONY: all compile clean release devrelease test
 
 MIX=$(shell which mix)
 
@@ -16,11 +16,17 @@ compile:
 clean:
 	$(MIX) clean
 
+test:
+	NO_ESCRIPT=1 PORT=4002 MIX_ENV=test $(MIX) test --trace
+
 reset-prod-db:
 	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod $(MIX) ecto.reset
 
 reset-dev-db:
-	NO_ESCRIPT=1 MIX_ENV=dev $(MIX) ecto.reset
+	NO_ESCRIPT=1 PORT=4000 MIX_ENV=dev $(MIX) ecto.reset
+
+reset-test-db:
+	NO_ESCRIPT=1 PORT=4002 MIX_ENV=test $(MIX) ecto.reset
 
 prod-start:
 	PORT=4001 MIX_ENV=prod iex -S mix phx.server

@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Explorer.Block do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:height, :integer, []}
+  @primary_key {:height, :integer, autogenerate: false}
   @derive {Phoenix.Param, key: :height}
   schema "blocks" do
     field :hash, :string

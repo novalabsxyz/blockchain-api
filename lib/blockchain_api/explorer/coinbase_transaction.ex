@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
     field :amount, :integer
     field :payee, :string
 
-    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, type: :string, primary_key: true, foreign_key: :coinbase_hash, define_field: false
+    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, define_field: false
 
     timestamps()
   end
@@ -17,7 +17,8 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
   @doc false
   def changeset(coinbase, attrs) do
     coinbase
-    |> cast(attrs, [:amount, :payee, :coinbase_hash])
-    |> validate_required([:amount, :payee, :coinbase_hash])
+    |> cast(attrs, [:coinbase_hash, :amount, :payee, :coinbase_hash])
+    |> validate_required([:coinbase_hash, :amount, :payee, :coinbase_hash])
+    |> foreign_key_constraint(:coinbase_hash)
   end
 end

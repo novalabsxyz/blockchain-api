@@ -20,7 +20,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 config :blockchain_api, env: Mix.env()
 
 # Do not print debug messages in production
-config :logger, level: :info
+config :logger, level: :debug
 
 config :blockchain,
   seed_nodes: ['/ip4/34.222.64.221/tcp/2154', '/ip4/34.208.255.251/tcp/2154'],

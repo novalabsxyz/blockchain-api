@@ -4,14 +4,16 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
 
 
   @primary_key {:payment_hash, :string, autogenerate: false}
+  @derive {Phoenix.Param, key: :payment_hash}
   schema "payment_transactions" do
     field :amount, :integer
     field :fee, :integer
     field :nonce, :integer
     field :payee, :string
     field :payer, :string
+    # field :payment_hash, :string
 
-    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, type: :string, primary_key: true, foreign_key: :txn_hash, define_field: false
+    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, define_field: false
 
     timestamps()
   end
@@ -19,7 +21,8 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:amount, :payee, :payer, :fee, :nonce])
-    |> validate_required([:amount, :payee, :payer, :fee, :nonce])
+    |> cast(attrs, [:payment_hash, :amount, :payee, :payer, :fee, :nonce])
+    |> validate_required([:payment_hash, :amount, :payee, :payer, :fee, :nonce])
+    |> foreign_key_constraint(:payment_hash)
   end
 end

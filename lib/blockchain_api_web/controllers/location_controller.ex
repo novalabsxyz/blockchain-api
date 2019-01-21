@@ -2,7 +2,6 @@ defmodule BlockchainAPIWeb.LocationController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Explorer
-  # alias BlockchainAPI.Explorer.GatewayLocation
 
   action_fallback BlockchainAPIWeb.FallbackController
 

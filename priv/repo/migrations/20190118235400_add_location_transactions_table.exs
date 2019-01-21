@@ -8,7 +8,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddLocationTransactionsTable do
       add :location, :string, null: false
       add :nonce, :integer, null: false
       add :fee, :integer, null: false
-      add :location_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string)
+
+      add :location_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
+      timestamps()
     end
 
     alter table(:location_transactions) do
