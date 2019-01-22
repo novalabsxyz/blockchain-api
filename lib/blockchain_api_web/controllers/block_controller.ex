@@ -2,7 +2,6 @@ defmodule BlockchainAPIWeb.BlockController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Explorer
-  # alias BlockchainAPI.Explorer.Block
 
   action_fallback BlockchainAPIWeb.FallbackController
 

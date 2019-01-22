@@ -34,6 +34,8 @@ defmodule BlockchainAPI.Watcher do
 
     state =
       case Keyword.get(args, :env) do
+        :test ->
+          %{chain: nil}
         :dev ->
           %{chain: nil}
         :prod ->
@@ -88,7 +90,6 @@ defmodule BlockchainAPI.Watcher do
 
   @impl true
   def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %{chain: chain}) when chain != nil do
-    # NOTE: send updates to other workers as needed here
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain)
@@ -125,7 +126,6 @@ defmodule BlockchainAPI.Watcher do
                   end)
 
                 Enum.map(missing_blocks, fn b -> Explorer.create_block(block_map(b)) end)
-
                 Enum.map(missing_blocks, fn b -> add_transactions(b) end)
               false ->
                 :ok
@@ -142,24 +142,46 @@ defmodule BlockchainAPI.Watcher do
       txns ->
         Enum.map(txns, fn txn ->
           case :blockchain_transactions.type(txn) do
-            :blockchain_txn_assert_location_v1 ->
-              Explorer.create_gateway_location(assert_gw_loc_txn_map(txn, height))
-            :blockchain_txn_payment_v1 ->
-              Explorer.create_payment(payment_txn_map(txn, height))
-            # :blockchain_txn_create_htlc_v1 ->
-            # :blockchain_txn_redeem_htlc_v1 ->
-            # :blockchain_txn_poc_request_v1 ->
-            :blockchain_txn_add_gateway_v1 ->
-              Explorer.create_gateway(add_gw_txn_map(txn, height))
             :blockchain_txn_coinbase_v1 ->
-              Explorer.create_coinbase(coinbase_txn_map(txn, height))
-            # :blockchain_txn_poc_receipts_v1 ->
-            # blockchain_txn_gen_consensus_group_v1 ->
+              txn_map =
+                %{type: "coinbase",
+                  hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)}
+              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+              BlockchainAPI.Repo.preload transaction_entry, [:coinbase_transactions]
+              Explorer.create_coinbase(transaction_entry.hash, coinbase_map(txn))
+            :blockchain_txn_payment_v1 ->
+              txn_map =
+                %{type: "payment",
+                  hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)}
+              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+              BlockchainAPI.Repo.preload transaction_entry, [:payment_transactions]
+              Explorer.create_payment(transaction_entry.hash, payment_map(txn))
+            :blockchain_txn_add_gateway_v1 ->
+              txn_map =
+                %{type: "gateway",
+                  hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)}
+              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+              BlockchainAPI.Repo.preload transaction_entry, [:gateway_transactions]
+              Explorer.create_gateway(transaction_entry.hash, gateway_map(txn))
+            :blockchain_txn_assert_location_v1 ->
+              txn_map =
+                %{type: "location",
+                  hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)}
+              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+              BlockchainAPI.Repo.preload transaction_entry, [:location_transactions]
+              Explorer.create_location(transaction_entry.hash, location_map(txn))
             _ ->
               :ok
           end
         end)
     end
+  end
+
+  defp coinbase_map(txn) do
+    %{
+      payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))),
+      amount: :blockchain_txn_coinbase_v1.amount(txn)
+    }
   end
 
   defp block_map(block) do
@@ -170,50 +192,30 @@ defmodule BlockchainAPI.Watcher do
     %{hash: hash, height: height, time: time, round: round}
   end
 
-
-  defp coinbase_txn_map(txn, height) do
+  defp payment_map(txn) do
     %{
-      type: "coinbase",
-      payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))),
-      amount: :blockchain_txn_coinbase_v1.amount(txn),
-      block_height: height,
-      hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)
-    }
-  end
-
-  defp payment_txn_map(txn, height) do
-    %{
-      type: "payment",
       payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payee(txn))),
       payer: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payer(txn))),
-      block_height: height,
       amount: :blockchain_txn_payment_v1.amount(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
       fee: :blockchain_txn_payment_v1.fee(txn),
-      hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)
     }
   end
 
-  defp add_gw_txn_map(txn, height) do
+  defp gateway_map(txn) do
     %{
-      type: "add_gateway",
       owner: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
       gateway: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
-      block_height: height,
-      hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)
     }
   end
 
-  defp assert_gw_loc_txn_map(txn, height) do
+  defp location_map(txn) do
     %{
-      type: "assert_location",
       owner: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))),
       gateway: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.gateway_address(txn))),
-      block_height: height,
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
       location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
-      hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)
     }
   end
 

@@ -1,0 +1,6 @@
+add_blocks_table
+add_transactions_table
+add_payment_transactions_table
+add_coinbase_transactions_table
+add_gateway_transactions_table
+add_location_transactions_table

@@ -11,8 +11,8 @@ defmodule BlockchainAPIWeb.Router do
     resources "/blocks", BlockController, except: [:new, :edit, :delete, :update]
     resources "/coinbase_transactions", CoinbaseController, except: [:new, :edit, :delete, :update]
     resources "/payment_transactions", PaymentController, except: [:new, :edit, :delete, :update]
-    resources "/add_gateway_transactions", GatewayController, except: [:new, :edit, :delete, :update]
-    resources "/assert_location_transactions", GatewayLocationController, except: [:new, :edit, :delete, :update]
+    resources "/gateway_transactions", GatewayController, except: [:new, :edit, :delete, :update]
+    resources "/location_transactions", LocationController, except: [:new, :edit, :delete, :update]
 
   end
 end
