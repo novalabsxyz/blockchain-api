@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.TransactionController do
     render(conn, "index.json", transactions: block.transactions)
   end
 
-  def show(conn, %{"block_height" => _height, "hash" => hash}=params) do
+  def show(conn, %{"block_height" => _height, "hash" => hash}) do
 
     txn_type =
       Repo.one from t in Explorer.Transaction,
