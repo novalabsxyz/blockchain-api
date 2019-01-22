@@ -10,9 +10,7 @@ defmodule BlockchainAPIWeb.BlockController do
     render(conn, "index.json", blocks: blocks)
   end
 
-  # XXX: this should ideally be height => height
-  # but phoenix doesn't seem to like it on the controller side
-  def show(conn, %{"id" => height}) do
+  def show(conn, %{"height" => height}) do
     block = Explorer.get_block!(height)
     render(conn, "show.json", block: block)
   end

@@ -18,6 +18,17 @@ defmodule BlockchainAPI.Explorer do
     Repo.all(Transaction)
   end
 
+  def get_transactions!(block_height) do
+    Block
+    |> Repo.get!(block_height)
+    |> Repo.preload([transactions: [
+      :coinbase_transactions,
+      :payment_transactions,
+      :gateway_transactions,
+      :location_transactions,
+    ]])
+  end
+
   def get_transaction!(txn_hash), do: Repo.get!(Transaction, txn_hash)
 
   def create_transaction(block_height, attrs \\ %{}) do

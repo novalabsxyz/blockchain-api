@@ -5,13 +5,8 @@ defmodule BlockchainAPIWeb.PaymentController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, _params) do
-    payment_transactions = Explorer.list_payment_transactions()
-    render(conn, "index.json", payment_transactions: payment_transactions)
-  end
-
-  def show(conn, %{"id" => id}) do
-    payment = Explorer.get_payment!(id)
+  def show(conn, %{"hash" => hash}) do
+    payment = Explorer.get_payment!(hash)
     render(conn, "show.json", payment: payment)
   end
 end

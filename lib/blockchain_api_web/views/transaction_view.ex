@@ -12,6 +12,7 @@ defmodule BlockchainAPIWeb.TransactionView do
 
   def render("transaction.json", %{transaction: transaction}) do
     %{block_height: transaction.block_height,
-      type: transaction.type}
+      type: transaction.type,
+      hash: transaction.hash}
   end
 end
