@@ -47,7 +47,7 @@ defmodule BlockchainAPI.Watcher do
                     |> :blockchain_worker.integrate_genesis_block()
               chain = :blockchain_worker.blockchain()
               %{chain: chain}
-            {:error, reason} ->
+            {:error, _reason} ->
               %{chain: nil}
           end
       end
@@ -109,11 +109,11 @@ defmodule BlockchainAPI.Watcher do
     try do
       Explorer.get_block!(height)
     rescue
-      e in Ecto.NoResultsError ->
+      _error in Ecto.NoResultsError ->
         case Explorer.get_latest() do
           [nil] ->
             # nothing in the db yet
-            block = Explorer.create_block(block_map(block_to_add))
+            {:ok, _block} = Explorer.create_block(block_map(block_to_add))
             add_transactions(block_to_add)
           [last_known_height] ->
             case height > last_known_height do
