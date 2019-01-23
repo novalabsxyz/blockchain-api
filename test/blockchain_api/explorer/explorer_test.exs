@@ -53,10 +53,10 @@ defmodule BlockchainAPI.ExplorerTest do
       transaction
     end
 
-    test "list_transactions/0 returns all transactions" do
-      transaction = transaction_fixture(@transaction_valid_attrs)
-      assert Explorer.list_transactions() == [transaction]
-    end
+    # test "list_transactions/0 returns all transactions" do
+    #   transaction = transaction_fixture(@transaction_valid_attrs)
+    #   assert Explorer.list_transactions() == [transaction]
+    # end
 
     test "get_transaction!/1 returns the transaction with given hash" do
       transaction = transaction_fixture(@transaction_valid_attrs)
