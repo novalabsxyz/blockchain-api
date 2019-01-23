@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Explorer.Transaction do
     field :type, :string
     field :block_height, :integer
 
-    belongs_to :blocks, BlockchainAPI.Explorer.Transaction, foreign_key: :height, define_field: false
+    belongs_to :block, BlockchainAPI.Explorer.Block, foreign_key: :height, references: :height, define_field: false
     has_many :coinbase_transactions, BlockchainAPI.Explorer.CoinbaseTransaction, foreign_key: :coinbase_hash
     has_many :gateway_transactions, BlockchainAPI.Explorer.GatewayTransaction, foreign_key: :gateway_hash
     has_many :payment_transactions, BlockchainAPI.Explorer.PaymentTransaction, foreign_key: :payment_hash

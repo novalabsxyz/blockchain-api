@@ -8,9 +8,8 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
   schema "gateway_transactions" do
     field :gateway, :string
     field :owner, :string
-    # field :gateway_hash, :string
 
-    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
+    belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
 
     timestamps()
   end
