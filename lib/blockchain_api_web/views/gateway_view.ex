@@ -11,7 +11,7 @@ defmodule BlockchainAPIWeb.GatewayView do
   end
 
   def render("gateway.json", %{gateway: gateway}) do
-    %{id: gateway.id,
+    %{hash: gateway.hash,
       type: gateway.type,
       owner: gateway.owner,
       gateway: gateway.gateway}

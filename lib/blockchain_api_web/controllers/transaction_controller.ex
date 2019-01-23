@@ -8,17 +8,23 @@ defmodule BlockchainAPIWeb.TransactionController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"block_height" => height}) do
-    block =
-      Repo.one from b in Explorer.Block,
-      where: b.height == ^height,
-      preload: [transactions: [
-        :coinbase_transactions,
-        :payment_transactions,
-        :gateway_transactions,
-        :location_transactions
-      ]]
+    block0 = BlockchainAPI.Explorer.Block
+             |> where([block], block.height == ^height)
+             |> join(:left, [block], transactions in assoc(block, :transactions))
+             |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
+             |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
+             |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
+             |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
+             |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
+               transactions: {transactions,
+                 coinbase_transactions: coinbase_transactions,
+                 payment_transactions: payment_transactions,
+                 gateway_transactions: gateway_transactions,
+                 location_transactions: location_transactions}
+             ])
+             |> BlockchainAPI.Repo.one
 
-    render(conn, "index.json", transactions: block.transactions)
+    render(conn, "index.json", transactions: block0.transactions)
   end
 
   def show(conn, %{"block_height" => _height, "hash" => hash}) do
