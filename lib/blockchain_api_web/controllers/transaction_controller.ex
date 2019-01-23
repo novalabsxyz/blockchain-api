@@ -2,39 +2,20 @@ defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Explorer
-  alias BlockchainAPI.Repo
-  import Ecto.Query
+  require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"block_height" => height}) do
-    block0 = BlockchainAPI.Explorer.Block
-             |> where([block], block.height == ^height)
-             |> join(:left, [block], transactions in assoc(block, :transactions))
-             |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
-             |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
-             |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
-             |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
-             |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
-               transactions: {transactions,
-                 coinbase_transactions: coinbase_transactions,
-                 payment_transactions: payment_transactions,
-                 gateway_transactions: gateway_transactions,
-                 location_transactions: location_transactions}
-             ])
-             |> BlockchainAPI.Repo.one
-
-    render(conn, "index.json", transactions: block0.transactions)
+    render(conn, "index.json", transactions: Explorer.get_transactions(height))
   end
 
-  def show(conn, %{"block_height" => _height, "hash" => hash}) do
+  def index(conn, %{}) do
+    render(conn, "index.json", transactions: Explorer.list_transactions())
+  end
 
-    txn_type =
-      Repo.one from t in Explorer.Transaction,
-      where: t.hash == ^hash,
-      select: t.type
-
-    case txn_type do
+  def show(conn, %{"hash" => hash}) do
+    case Explorer.get_transaction_type(hash) do
       "payment" ->
         payment = Explorer.get_payment!(hash)
         conn

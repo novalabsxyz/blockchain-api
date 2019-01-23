@@ -9,8 +9,10 @@ defmodule BlockchainAPIWeb.Router do
     pipe_through :api
 
     resources "/blocks", BlockController, only: [:show, :index], param: "height" do
-      resources "/transactions", TransactionController, only: [:index, :show], param: "hash"
+      resources "/transactions", TransactionController, only: [:index], param: "hash"
     end
+
+    resources "/transactions", TransactionController, only: [:index, :show], param: "hash"
 
     # resources "/coinbase_transactions", CoinbaseController, except: [:new, :edit, :delete, :update]
     # resources "/payment_transactions", PaymentController, except: [:new, :edit, :delete, :update]

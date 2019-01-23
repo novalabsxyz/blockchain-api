@@ -15,18 +15,48 @@ defmodule BlockchainAPI.Explorer do
 
 
   def list_transactions do
-    Repo.all(Transaction)
+    Block
+    |> join(:left, [block], transactions in assoc(block, :transactions))
+    |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
+    |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
+    |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
+    |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
+    |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
+      transactions: {transactions,
+        coinbase_transactions: coinbase_transactions,
+        payment_transactions: payment_transactions,
+        gateway_transactions: gateway_transactions,
+        location_transactions: location_transactions}
+    ])
+    |> Repo.all()
+    |> Enum.reduce([], fn b, acc -> [b.transactions | acc] end)
+    |> List.flatten
   end
 
-  def get_transactions!(block_height) do
-    Block
-    |> Repo.get!(block_height)
-    |> Repo.preload([transactions: [
-      :coinbase_transactions,
-      :payment_transactions,
-      :gateway_transactions,
-      :location_transactions,
-    ]])
+  def get_transactions(block_height) do
+    block = Block
+            |> where([block], block.height == ^block_height)
+            |> join(:left, [block], transactions in assoc(block, :transactions))
+            |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
+            |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
+            |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
+            |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
+            |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
+              transactions: {transactions,
+                coinbase_transactions: coinbase_transactions,
+                payment_transactions: payment_transactions,
+                gateway_transactions: gateway_transactions,
+                location_transactions: location_transactions}
+            ])
+            |> Repo.one
+
+    block.transactions
+  end
+
+  def get_transaction_type(hash) do
+    Repo.one from t in Transaction,
+      where: t.hash == ^hash,
+      select: t.type
   end
 
   def get_transaction!(txn_hash), do: Repo.get!(Transaction, txn_hash)

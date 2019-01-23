@@ -29,13 +29,12 @@ defmodule BlockchainAPIWeb.TransactionView do
             nonce: payment.nonce}
         "gateway" ->
           [gateway] = transaction.gateway_transactions
-          %{hash: gateway.hash,
-            type: gateway.type,
+          %{gateway_hash: gateway.gateway_hash,
             owner: gateway.owner,
             gateway: gateway.gateway}
         "location" ->
           [location] = transaction.location_transactions
-          %{location_hash: location.gateway_hash,
+          %{location_hash: location.location_hash,
             gateway: location.gateway,
             owner: location.owner,
             location: location.location,
