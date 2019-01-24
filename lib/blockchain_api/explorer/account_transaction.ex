@@ -14,11 +14,10 @@ defmodule BlockchainAPI.Explorer.AccountTransaction do
   end
 
   @doc false
-  def changeset(block, attrs) do
-    block
+  def changeset(account_transaction, attrs) do
+    account_transaction
     |> cast(attrs, [:account_address, :txn_hash])
     |> validate_required([:account_address, :txn_hash])
-    |> unique_constraint(:unique_account_txn, name: :unique_account_txn_hash)
     |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:address)
   end

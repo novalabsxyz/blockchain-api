@@ -8,6 +8,7 @@ defmodule BlockchainAPI.Explorer do
 
   alias BlockchainAPI.Explorer.Block
   alias BlockchainAPI.Explorer.Transaction
+  alias BlockchainAPI.Explorer.Account
   alias BlockchainAPI.Explorer.PaymentTransaction
   alias BlockchainAPI.Explorer.CoinbaseTransaction
   alias BlockchainAPI.Explorer.GatewayTransaction
@@ -133,4 +134,22 @@ defmodule BlockchainAPI.Explorer do
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()
   end
+
+  def create_account(attrs \\ %{}) do
+    %Account{}
+    |> Account.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_account!(address) do
+    Repo.get!(Account, address)
+  end
+
+  def update_account(account, attrs \\ %{}) do
+    account.address
+    |> get_account!()
+    |> Account.changeset(attrs)
+    |> Repo.update()
+  end
+
 end

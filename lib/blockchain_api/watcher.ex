@@ -114,7 +114,9 @@ defmodule BlockchainAPI.Watcher do
           [nil] ->
             # nothing in the db yet
             {:ok, _block} = Explorer.create_block(block_map(block_to_add))
+            add_accounts(block_to_add, chain)
             add_transactions(block_to_add)
+            add_account_transactions(block_to_add)
           [last_known_height] ->
             case height > last_known_height do
               true ->
@@ -125,13 +127,80 @@ defmodule BlockchainAPI.Watcher do
                     b
                   end)
 
-                Enum.map(missing_blocks, fn b -> Explorer.create_block(block_map(b)) end)
-                Enum.map(missing_blocks, fn b -> add_transactions(b) end)
+                Enum.map(missing_blocks,
+                  fn b ->
+                    Explorer.create_block(block_map(b))
+                    add_accounts(b, chain)
+                    add_transactions(b)
+                    add_account_transactions(b)
+                  end)
+                # Enum.map(missing_blocks, fn b -> add_transactions(b) end)
               false ->
                 :ok
             end
         end
     end
+  end
+
+  defp add_accounts(block, chain) do
+
+    # A block may contain multiple transactions of different types
+    # There could also be multiple transactions made from the same account address
+    # Since this is just add_accounts, and address is a primary key, I think it's probably
+    # fine to add it directly, BUT the balance needs to be updated at the end for the account
+
+    ledger = :blockchain.ledger(chain)
+
+    case :blockchain_block.transactions(block) do
+      [] ->
+        :ok
+      txns ->
+        Enum.map(txns,
+          fn txn ->
+            case :blockchain_transactions.type(txn) do
+              :blockchain_txn_coinbase_v1 ->
+                addr = :blockchain_txn_coinbase_v1.payee(txn)
+                addr_str = to_string(:libp2p_crypto.address_to_b58(addr))
+                {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
+                try do
+                  account = Explorer.get_account!(addr_str)
+                  account_map = %{balance: :blockchain_ledger_entry_v1.balance(entry)}
+                  Explorer.update_account(account, account_map)
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    account_map = %{address: addr_str, balance: :blockchain_ledger_entry_v1.balance(entry)}
+                    Explorer.create_account(account_map)
+                end
+              :blockchain_txn_payment_v1 ->
+                payee = :blockchain_txn_payment_v1.payee(txn)
+                payer = :blockchain_txn_payment_v1.payer(txn)
+                payee_str = to_string(:libp2p_crypto.address_to_b58(payee))
+                payer_str = to_string(:libp2p_crypto.address_to_b58(payer))
+                {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
+                {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
+                try do
+                  payer_account = Explorer.get_account!(payer_str)
+                  payer_map = %{balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+                  payee_account = Explorer.get_account!(payee_str)
+                  payee_map = %{balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+                  Explorer.update_account(payer_account, payer_map)
+                  Explorer.update_account(payee_account, payee_map)
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    payee_map = %{address: payee_str, balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+                    payer_map = %{address: payer_str, balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+                    Explorer.create_account(payer_map)
+                    Explorer.create_account(payee_map)
+                end
+              _ ->
+                :ok
+            end
+          end)
+    end
+
+  end
+
+  defp add_account_transactions(block) do
   end
 
   defp add_transactions(block) do

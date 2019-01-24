@@ -4,20 +4,17 @@ defmodule BlockchainAPI.Explorer.Account do
 
   @primary_key {:address, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :address}
-  schema "blocks" do
+  schema "accounts" do
     field :name, :string
     field :balance, :integer
-    field :public_key, :string
 
     timestamps()
   end
 
   @doc false
-  def changeset(block, attrs) do
-    block
-    |> cast(attrs, [:address, :name, :balance, :public_key])
-    |> validate_required([:address, :balance, :public_key])
-    |> unique_constraint(:address)
-    |> unique_constraint(:public_key)
+  def changeset(account, attrs) do
+    account
+    |> cast(attrs, [:address, :name, :balance])
+    |> validate_required([:address, :balance])
   end
 end
