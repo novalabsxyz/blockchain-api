@@ -152,4 +152,8 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.update()
   end
 
+  def list_accounts() do
+    Repo.all(Account)
+  end
+
 end
