@@ -16,5 +16,6 @@ defmodule BlockchainAPI.Explorer.Account do
     account
     |> cast(attrs, [:address, :name, :balance])
     |> validate_required([:address, :balance])
+    |> unique_constraint(:address)
   end
 end

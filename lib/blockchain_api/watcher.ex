@@ -104,8 +104,8 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   # Private Functions
   #==================================================================
-  defp add_block(block_to_add, chain) do
-    height = :blockchain_block.height(block_to_add)
+  defp add_block(block, chain) do
+    height = :blockchain_block.height(block)
     try do
       Explorer.get_block!(height)
     rescue
@@ -113,28 +113,15 @@ defmodule BlockchainAPI.Watcher do
         case Explorer.get_latest() do
           [nil] ->
             # nothing in the db yet
-            {:ok, _block} = Explorer.create_block(block_map(block_to_add))
-            add_accounts(block_to_add, chain)
-            add_transactions(block_to_add)
-            add_account_transactions(block_to_add)
+            insert_block_with_transactions(block, chain)
           [last_known_height] ->
             case height > last_known_height do
               true ->
-                missing_blocks =
-                  Range.new(last_known_height + 1, height)
-                  |> Enum.map(fn h ->
-                    {:ok, b} = :blockchain.get_block(h, chain)
-                    b
-                  end)
-
-                Enum.map(missing_blocks,
-                  fn b ->
-                    Explorer.create_block(block_map(b))
-                    add_accounts(b, chain)
-                    add_transactions(b)
-                    add_account_transactions(b)
-                  end)
-                # Enum.map(missing_blocks, fn b -> add_transactions(b) end)
+                Range.new(last_known_height + 1, height)
+                |> Enum.map(fn h ->
+                  {:ok, b} = :blockchain.get_block(h, chain)
+                  insert_block_with_transactions(b, chain)
+                end)
               false ->
                 :ok
             end
@@ -142,15 +129,21 @@ defmodule BlockchainAPI.Watcher do
     end
   end
 
-  defp add_accounts(block, chain) do
+  defp insert_block_with_transactions(block, chain) do
+    # NOTE: this should all be done via Ecto.Multi to ensure a single database transaction
+    # occurs and ensure consistency with rollback on failure
+    Explorer.create_block(block_map(block))
+    add_accounts(block, chain)
+    add_transactions(block)
+    add_account_transactions(block)
+  end
 
-    # A block may contain multiple transactions of different types
+  defp add_accounts(block, chain) do
+    # NOTE: A block may contain multiple transactions of different types
     # There could also be multiple transactions made from the same account address
     # Since this is just add_accounts, and address is a primary key, I think it's probably
     # fine to add it directly, BUT the balance needs to be updated at the end for the account
-
     ledger = :blockchain.ledger(chain)
-
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
@@ -158,49 +151,59 @@ defmodule BlockchainAPI.Watcher do
         Enum.map(txns,
           fn txn ->
             case :blockchain_transactions.type(txn) do
-              :blockchain_txn_coinbase_v1 ->
-                addr = :blockchain_txn_coinbase_v1.payee(txn)
-                addr_str = to_string(:libp2p_crypto.address_to_b58(addr))
-                {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
-                try do
-                  account = Explorer.get_account!(addr_str)
-                  account_map = %{balance: :blockchain_ledger_entry_v1.balance(entry)}
-                  Explorer.update_account(account, account_map)
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    account_map = %{address: addr_str, balance: :blockchain_ledger_entry_v1.balance(entry)}
-                    Explorer.create_account(account_map)
-                end
-              :blockchain_txn_payment_v1 ->
-                payee = :blockchain_txn_payment_v1.payee(txn)
-                payer = :blockchain_txn_payment_v1.payer(txn)
-                payee_str = to_string(:libp2p_crypto.address_to_b58(payee))
-                payer_str = to_string(:libp2p_crypto.address_to_b58(payer))
-                {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
-                {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
-                try do
-                  payer_account = Explorer.get_account!(payer_str)
-                  payer_map = %{balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
-                  payee_account = Explorer.get_account!(payee_str)
-                  payee_map = %{balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
-                  Explorer.update_account(payer_account, payer_map)
-                  Explorer.update_account(payee_account, payee_map)
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    payee_map = %{address: payee_str, balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
-                    payer_map = %{address: payer_str, balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
-                    Explorer.create_account(payer_map)
-                    Explorer.create_account(payee_map)
-                end
+              :blockchain_txn_coinbase_v1 -> insert_account_from_coinbase_transaction(txn, ledger)
+              :blockchain_txn_payment_v1 -> insert_account_from_payment_transaction(txn, ledger)
               _ ->
                 :ok
             end
           end)
     end
+  end
 
+  defp insert_account_from_coinbase_transaction(txn, ledger) do
+    addr = :blockchain_txn_coinbase_v1.payee(txn)
+    addr_str = to_string(:libp2p_crypto.address_to_b58(addr))
+    {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
+    try do
+      account = Explorer.get_account!(addr_str)
+      account_map = %{balance: :blockchain_ledger_entry_v1.balance(entry)}
+      Explorer.update_account(account, account_map)
+    rescue
+      _error in Ecto.NoResultsError ->
+        account_map = %{address: addr_str, balance: :blockchain_ledger_entry_v1.balance(entry)}
+        Explorer.create_account(account_map)
+    end
+  end
+
+  defp insert_account_from_payment_transaction(txn, ledger) do
+    payee = :blockchain_txn_payment_v1.payee(txn)
+    payer = :blockchain_txn_payment_v1.payer(txn)
+    payee_str = to_string(:libp2p_crypto.address_to_b58(payee))
+    payer_str = to_string(:libp2p_crypto.address_to_b58(payer))
+    {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
+    {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
+    try do
+      payer_account = Explorer.get_account!(payer_str)
+      payer_map = %{balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+      Explorer.update_account(payer_account, payer_map)
+    rescue
+      _error in Ecto.NoResultsError ->
+        payer_map = %{address: payer_str, balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+        Explorer.create_account(payer_map)
+    end
+    try do
+      payee_account = Explorer.get_account!(payee_str)
+      payee_map = %{balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+      Explorer.update_account(payee_account, payee_map)
+    rescue
+      _error in Ecto.NoResultsError ->
+        payee_map = %{address: payee_str, balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+        Explorer.create_account(payee_map)
+    end
   end
 
   defp add_account_transactions(block) do
+    # TODO: insert/update account_transactions table
   end
 
   defp add_transactions(block) do
@@ -211,39 +214,43 @@ defmodule BlockchainAPI.Watcher do
       txns ->
         Enum.map(txns, fn txn ->
           case :blockchain_transactions.type(txn) do
-            :blockchain_txn_coinbase_v1 ->
-              txn_map =
-                %{type: "coinbase",
-                  hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)}
-              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
-              BlockchainAPI.Repo.preload transaction_entry, [:coinbase_transactions]
-              Explorer.create_coinbase(transaction_entry.hash, coinbase_map(txn))
-            :blockchain_txn_payment_v1 ->
-              txn_map =
-                %{type: "payment",
-                  hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)}
-              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
-              BlockchainAPI.Repo.preload transaction_entry, [:payment_transactions]
-              Explorer.create_payment(transaction_entry.hash, payment_map(txn))
-            :blockchain_txn_add_gateway_v1 ->
-              txn_map =
-                %{type: "gateway",
-                  hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)}
-              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
-              BlockchainAPI.Repo.preload transaction_entry, [:gateway_transactions]
-              Explorer.create_gateway(transaction_entry.hash, gateway_map(txn))
-            :blockchain_txn_assert_location_v1 ->
-              txn_map =
-                %{type: "location",
-                  hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)}
-              {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
-              BlockchainAPI.Repo.preload transaction_entry, [:location_transactions]
-              Explorer.create_location(transaction_entry.hash, location_map(txn))
+            :blockchain_txn_coinbase_v1 -> insert_coinbase_transaction(txn, height)
+            :blockchain_txn_payment_v1 -> insert_payment_transaction(txn, height)
+            :blockchain_txn_add_gateway_v1 -> insert_gateway_transaction(txn, height)
+            :blockchain_txn_assert_location_v1 -> insert_location_transaction(txn, height)
             _ ->
               :ok
           end
         end)
     end
+  end
+
+  defp insert_coinbase_transaction(txn, height) do
+    txn_map = %{type: "coinbase", hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)}
+    {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+    BlockchainAPI.Repo.preload transaction_entry, [:coinbase_transactions]
+    Explorer.create_coinbase(transaction_entry.hash, coinbase_map(txn))
+  end
+
+  defp insert_payment_transaction(txn, height) do
+    txn_map = %{type: "payment", hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)}
+    {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+    BlockchainAPI.Repo.preload transaction_entry, [:payment_transactions]
+    Explorer.create_payment(transaction_entry.hash, payment_map(txn))
+  end
+
+  defp insert_gateway_transaction(txn, height) do
+    txn_map = %{type: "gateway", hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)}
+    {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+    BlockchainAPI.Repo.preload transaction_entry, [:gateway_transactions]
+    Explorer.create_gateway(transaction_entry.hash, gateway_map(txn))
+  end
+
+  defp insert_location_transaction(txn, height) do
+    txn_map = %{type: "location", hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)}
+    {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
+    BlockchainAPI.Repo.preload transaction_entry, [:location_transactions]
+    Explorer.create_location(transaction_entry.hash, location_map(txn))
   end
 
   defp coinbase_map(txn) do
