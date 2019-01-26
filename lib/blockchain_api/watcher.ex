@@ -203,7 +203,80 @@ defmodule BlockchainAPI.Watcher do
   end
 
   defp add_account_transactions(block) do
-    # TODO: insert/update account_transactions table
+    case :blockchain_block.transactions(block) do
+      [] ->
+        :ok
+      txns ->
+        Enum.map(txns, fn txn ->
+          case :blockchain_transactions.type(txn) do
+            :blockchain_txn_coinbase_v1 -> insert_coinbase_account_transaction(txn)
+            :blockchain_txn_payment_v1 -> insert_payment_account_transaction(txn)
+            :blockchain_txn_add_gateway_v1 -> insert_gateway_account_transaction(txn)
+            :blockchain_txn_assert_location_v1 -> insert_location_account_transaction(txn)
+            _ -> :ok
+          end
+        end)
+    end
+  end
+
+  defp insert_coinbase_account_transaction(txn) do
+    try do
+      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))))
+      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower))
+      Explorer.create_account_transaction(account_txn_map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated account for coinbase transaction"}
+    end
+  end
+
+  defp insert_payment_account_transaction(txn) do
+    try do
+      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payee(txn))))
+      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
+      Explorer.create_account_transaction(account_txn_map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated payee account for payment transaction"}
+    end
+    try do
+      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payer(txn))))
+      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
+      Explorer.create_account_transaction(account_txn_map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated payer account for payment transaction"}
+    end
+  end
+
+  defp insert_location_account_transaction(txn) do
+    try do
+      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))))
+      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower))
+      Explorer.create_account_transaction(account_txn_map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated account for coinbase transaction"}
+    end
+  end
+
+  defp insert_gateway_account_transaction(txn) do
+    try do
+      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))))
+      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower))
+      Explorer.create_account_transaction(account_txn_map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated account for coinbase transaction"}
+    end
+  end
+
+  defp account_txn_map(account, txn) do
+    %{
+      account_address: account.address,
+      txn_hash: txn.hash,
+      txn_type: txn.type
+    }
   end
 
   defp add_transactions(block) do

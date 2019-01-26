@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Explorer do
   alias BlockchainAPI.Explorer.Block
   alias BlockchainAPI.Explorer.Transaction
   alias BlockchainAPI.Explorer.Account
+  alias BlockchainAPI.Explorer.AccountTransaction
   alias BlockchainAPI.Explorer.PaymentTransaction
   alias BlockchainAPI.Explorer.CoinbaseTransaction
   alias BlockchainAPI.Explorer.GatewayTransaction
@@ -154,6 +155,41 @@ defmodule BlockchainAPI.Explorer do
 
   def list_accounts() do
     Repo.all(Account)
+  end
+
+  def create_account_transaction(attrs \\ %{}) do
+    %AccountTransaction{}
+    |> AccountTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_account_transactions(address) do
+    query = from(
+      at in AccountTransaction,
+      where: at.account_address == ^address,
+      left_join: transaction in Transaction,
+      on: at.txn_hash == transaction.hash,
+      left_join: coinbase_transaction in CoinbaseTransaction,
+      on: transaction.hash == coinbase_transaction.coinbase_hash,
+      left_join: payment_transaction in PaymentTransaction,
+      on: transaction.hash == payment_transaction.payment_hash,
+      left_join: gateway_transaction in GatewayTransaction,
+      on: transaction.hash == gateway_transaction.gateway_hash,
+      left_join: location_transaction in LocationTransaction,
+      on: transaction.hash == location_transaction.location_hash,
+      select: [
+        coinbase_transaction,
+        payment_transaction,
+        gateway_transaction,
+        location_transaction
+      ]
+    )
+
+    query
+    |> Repo.all
+    |> List.flatten
+    |> Enum.reject(&is_nil/1)
+
   end
 
 end

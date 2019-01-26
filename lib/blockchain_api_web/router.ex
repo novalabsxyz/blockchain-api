@@ -15,7 +15,7 @@ defmodule BlockchainAPIWeb.Router do
     resources "/transactions", TransactionController, only: [:index, :show], param: "hash"
 
     resources "/accounts", AccountController, only: [:index, :show], param: "address" do
-      resources "/transactions", TransactionController, only: [:index], param: "hash"
+      resources "/transactions", AccountTransactionController, only: [:index], param: "account_address"
     end
 
 

@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Explorer.Account do
     field :balance, :integer
 
     timestamps()
+
   end
 
   @doc false
