@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
 
   @primary_key {:coinbase_hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :coinbase_hash}
+  @derive {Poison.Encoder, only: [:coinbase_hash, :amount, :payee]}
   schema "coinbase_transactions" do
     field :amount, :integer
     field :payee, :string

@@ -18,7 +18,19 @@ defmodule BlockchainAPI.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :runtime_tools, :gpb, :intercept, :rand_compat, :libp2p, :observer, :wx, :inets, :xmerl],
+      extra_applications: [
+        :logger,
+        :runtime_tools,
+        :gpb,
+        :intercept,
+        :rand_compat,
+        :libp2p,
+        :observer,
+        :wx,
+        :inets,
+        :xmerl,
+        :scrivener_ecto
+      ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
     ]
@@ -37,7 +49,7 @@ defmodule BlockchainAPI.MixProject do
       {:phoenix, "~> 1.4.0"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.0"},
+      {:ecto_sql, "~> 3.0", override: true},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
@@ -52,7 +64,8 @@ defmodule BlockchainAPI.MixProject do
       {:logger_file_backend, "~> 0.0.10"},
       {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
 
-      {:ranch, "~> 1.7.1", override: true}
+      {:ranch, "~> 1.7.1", override: true},
+      {:scrivener_ecto, "~> 2.0"}
     ]
   end
 

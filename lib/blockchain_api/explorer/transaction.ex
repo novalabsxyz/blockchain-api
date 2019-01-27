@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Explorer.Transaction do
 
   @primary_key {:hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :hash}
+  @derive {Poison.Encoder, only: [:hash, :type, :block_height]}
   schema "transactions" do
     field :type, :string
     field :block_height, :integer

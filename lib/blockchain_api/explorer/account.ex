@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Explorer.Account do
 
   @primary_key {:address, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :address}
+  @derive {Poison.Encoder, only: [:address, :name, :balance]}
   schema "accounts" do
     field :name, :string
     field :balance, :integer

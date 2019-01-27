@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
 
   @primary_key {:location_hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :location_hash}
+  @derive {Poison.Encoder, only: [:location_hash, :fee, :gateway, :location, :nonce, :owner]}
   schema "location_transactions" do
     field :fee, :integer
     field :gateway, :string

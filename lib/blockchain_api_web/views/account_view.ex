@@ -11,8 +11,6 @@ defmodule BlockchainAPIWeb.AccountView do
   end
 
   def render("account.json", %{account: account}) do
-    %{address: account.address,
-      balance: account.balance,
-      name: account.name}
+    account |> Poison.encode!
   end
 end

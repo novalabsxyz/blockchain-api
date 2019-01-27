@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Explorer.Block do
 
   @primary_key {:height, :integer, autogenerate: false}
   @derive {Phoenix.Param, key: :height}
+  @derive {Poison.Encoder, only: [:height, :hash, :round, :time]}
   schema "blocks" do
     field :hash, :string
     field :round, :integer

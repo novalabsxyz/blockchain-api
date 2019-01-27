@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
 
   @primary_key {:gateway_hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :gateway_hash}
+  @derive {Poison.Encoder, only: [:gateway_hash, :gateway, :owner]}
   schema "gateway_transactions" do
     field :gateway, :string
     field :owner, :string

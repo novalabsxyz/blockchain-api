@@ -10,6 +10,8 @@ defmodule BlockchainAPI.ExplorerTest do
   @transaction_valid_attrs %{hash: "some hash", type: "some type"}
   @transaction_invalid_attrs %{hash: nil, type: nil}
 
+  # TODO: Fix tests to use pagination params as default
+
   describe "blocks" do
 
     def block_fixture(attrs \\ %{}) do
