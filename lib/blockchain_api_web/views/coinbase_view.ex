@@ -11,8 +11,7 @@ defmodule BlockchainAPIWeb.CoinbaseView do
   end
 
   def render("coinbase.json", %{coinbase: coinbase}) do
-    %{id: coinbase.id,
-      type: coinbase.type,
+    %{coinbase_hash: coinbase.coinbase_hash,
       amount: coinbase.amount,
       payee: coinbase.payee}
   end

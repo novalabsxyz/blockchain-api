@@ -11,8 +11,7 @@ defmodule BlockchainAPIWeb.PaymentView do
   end
 
   def render("payment.json", %{payment: payment}) do
-    %{id: payment.id,
-      type: payment.type,
+    %{payment_hash: payment.payment_hash,
       amount: payment.amount,
       payee: payment.payee,
       payer: payment.payer,

@@ -8,6 +8,8 @@ defmodule BlockchainAPI.Explorer do
 
   alias BlockchainAPI.Explorer.Block
   alias BlockchainAPI.Explorer.Transaction
+  alias BlockchainAPI.Explorer.Account
+  alias BlockchainAPI.Explorer.AccountTransaction
   alias BlockchainAPI.Explorer.PaymentTransaction
   alias BlockchainAPI.Explorer.CoinbaseTransaction
   alias BlockchainAPI.Explorer.GatewayTransaction
@@ -15,7 +17,48 @@ defmodule BlockchainAPI.Explorer do
 
 
   def list_transactions do
-    Repo.all(Transaction)
+    Block
+    |> join(:left, [block], transactions in assoc(block, :transactions))
+    |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
+    |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
+    |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
+    |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
+    |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
+      transactions: {transactions,
+        coinbase_transactions: coinbase_transactions,
+        payment_transactions: payment_transactions,
+        gateway_transactions: gateway_transactions,
+        location_transactions: location_transactions}
+    ])
+    |> Repo.all()
+    |> Enum.reduce([], fn b, acc -> [b.transactions | acc] end)
+    |> List.flatten
+  end
+
+  def get_transactions(block_height) do
+    block = Block
+            |> where([block], block.height == ^block_height)
+            |> join(:left, [block], transactions in assoc(block, :transactions))
+            |> join(:left, [block, transactions], coinbase_transactions in assoc(transactions, :coinbase_transactions))
+            |> join(:left, [block, transactions], payment_transactions in assoc(transactions, :payment_transactions))
+            |> join(:left, [block, transactions], gateway_transactions in assoc(transactions, :gateway_transactions))
+            |> join(:left, [block, transactions], location_transactions in assoc(transactions, :location_transactions))
+            |> preload([block, transactions, coinbase_transactions, payment_transactions, gateway_transactions, location_transactions], [
+              transactions: {transactions,
+                coinbase_transactions: coinbase_transactions,
+                payment_transactions: payment_transactions,
+                gateway_transactions: gateway_transactions,
+                location_transactions: location_transactions}
+            ])
+            |> Repo.one
+
+    block.transactions
+  end
+
+  def get_transaction_type(hash) do
+    Repo.one from t in Transaction,
+      where: t.hash == ^hash,
+      select: t.type
   end
 
   def get_transaction!(txn_hash), do: Repo.get!(Transaction, txn_hash)
@@ -92,4 +135,61 @@ defmodule BlockchainAPI.Explorer do
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()
   end
+
+  def create_account(attrs \\ %{}) do
+    %Account{}
+    |> Account.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_account!(address) do
+    Repo.get!(Account, address)
+  end
+
+  def update_account(account, attrs \\ %{}) do
+    account.address
+    |> get_account!()
+    |> Account.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def list_accounts() do
+    Repo.all(Account)
+  end
+
+  def create_account_transaction(attrs \\ %{}) do
+    %AccountTransaction{}
+    |> AccountTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_account_transactions(address) do
+    query = from(
+      at in AccountTransaction,
+      where: at.account_address == ^address,
+      left_join: transaction in Transaction,
+      on: at.txn_hash == transaction.hash,
+      left_join: coinbase_transaction in CoinbaseTransaction,
+      on: transaction.hash == coinbase_transaction.coinbase_hash,
+      left_join: payment_transaction in PaymentTransaction,
+      on: transaction.hash == payment_transaction.payment_hash,
+      left_join: gateway_transaction in GatewayTransaction,
+      on: transaction.hash == gateway_transaction.gateway_hash,
+      left_join: location_transaction in LocationTransaction,
+      on: transaction.hash == location_transaction.location_hash,
+      select: [
+        coinbase_transaction,
+        payment_transaction,
+        gateway_transaction,
+        location_transaction
+      ]
+    )
+
+    query
+    |> Repo.all
+    |> List.flatten
+    |> Enum.reject(&is_nil/1)
+
+  end
+
 end

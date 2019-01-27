@@ -9,8 +9,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 config :blockchain_api, env: Mix.env()
 
 # Print only warnings and errors during test
-config :logger, level: :warn
-
+config :logger, level: :debug
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,

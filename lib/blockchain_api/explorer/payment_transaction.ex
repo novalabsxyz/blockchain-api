@@ -11,9 +11,8 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
     field :nonce, :integer
     field :payee, :string
     field :payer, :string
-    # field :payment_hash, :string
 
-    belongs_to :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, define_field: false
+    belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
 
     timestamps()
   end
