@@ -9,8 +9,7 @@ defmodule BlockchainAPI.ExplorerTest do
   @block_invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}
   @transaction_valid_attrs %{hash: "some hash", type: "some type"}
   @transaction_invalid_attrs %{hash: nil, type: nil}
-
-  # TODO: Fix tests to use pagination params as default
+  @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
 
@@ -25,7 +24,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert Explorer.list_blocks() == [block]
+      assert Explorer.list_blocks(@default_params).entries == [block]
     end
 
     test "get_block!/1 returns the block with given id" do
@@ -54,11 +53,6 @@ defmodule BlockchainAPI.ExplorerTest do
       assert {:ok, %Transaction{} = transaction} = Explorer.create_transaction(block.height, attrs)
       transaction
     end
-
-    # test "list_transactions/0 returns all transactions" do
-    #   transaction = transaction_fixture(@transaction_valid_attrs)
-    #   assert Explorer.list_transactions() == [transaction]
-    # end
 
     test "get_transaction!/1 returns the transaction with given hash" do
       transaction = transaction_fixture(@transaction_valid_attrs)
@@ -92,7 +86,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "list_coinbase_transactions/0 returns all coinbase_transactions" do
       coinbase = coinbase_fixture(@valid_attrs)
-      assert Explorer.list_coinbase_transactions() == [coinbase]
+      assert Explorer.list_coinbase_transactions(@default_params).entries == [coinbase]
     end
 
     test "get_coinbase!/1 returns the coinbase with given hash" do
@@ -129,7 +123,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "list_payment_transactions/0 returns all payment_transactions" do
       payment = payment_fixture(@valid_attrs)
-      assert Explorer.list_payment_transactions() == [payment]
+      assert Explorer.list_payment_transactions(@default_params).entries == [payment]
     end
 
     test "get_payment!/1 returns the payment with given hash" do
@@ -168,7 +162,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "list_gateway_transactions/0 returns all add_gateway_transactions" do
       gateway = gateway_fixture(@valid_attrs)
-      assert Explorer.list_gateway_transactions() == [gateway]
+      assert Explorer.list_gateway_transactions(@default_params).entries == [gateway]
     end
 
     test "get_gateway!/1 returns the gateway with given gateway_hash" do
@@ -204,7 +198,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "list_location_transactions/0 returns all assert_location_transactions" do
       gateway_location = gateway_location_fixture(@valid_attrs)
-      assert Explorer.list_location_transactions() == [gateway_location]
+      assert Explorer.list_location_transactions(@default_params).entries == [gateway_location]
     end
 
     test "get_location!/1 returns the gateway_location with given location_hash" do

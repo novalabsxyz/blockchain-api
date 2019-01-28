@@ -2,6 +2,7 @@ defmodule BlockchainAPI.BlockchainAPITest do
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.Explorer
+  @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
     alias Explorer.Block
@@ -20,7 +21,7 @@ defmodule BlockchainAPI.BlockchainAPITest do
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert Explorer.list_blocks() == [block]
+      assert Explorer.list_blocks(@default_params).entries == [block]
     end
 
     test "get_block!/1 returns the block with given id" do
