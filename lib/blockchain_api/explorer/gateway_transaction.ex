@@ -3,12 +3,12 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
   import Ecto.Changeset
 
 
-  @primary_key {:gateway_hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :gateway_hash}
-  @derive {Poison.Encoder, only: [:gateway_hash, :gateway, :owner]}
+  @derive {Poison.Encoder, only: [:id, :gateway_hash, :gateway, :owner]}
   schema "gateway_transactions" do
-    field :gateway, :string
-    field :owner, :string
+    field :gateway, :string, null: false
+    field :owner, :string, null: false
+    field :gateway_hash, :string, null: false
 
     belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
 

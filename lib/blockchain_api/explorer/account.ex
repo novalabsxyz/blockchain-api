@@ -2,12 +2,12 @@ defmodule BlockchainAPI.Explorer.Account do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:address, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :address}
-  @derive {Poison.Encoder, only: [:address, :name, :balance]}
+  @derive {Poison.Encoder, only: [:id, :address, :name, :balance]}
   schema "accounts" do
     field :name, :string
-    field :balance, :integer
+    field :balance, :integer, null: false
+    field :address, :string, null: false
 
     timestamps()
 

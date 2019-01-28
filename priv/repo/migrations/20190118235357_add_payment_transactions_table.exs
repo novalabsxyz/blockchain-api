@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
   use Ecto.Migration
 
   def change do
-    create table(:payment_transactions, primary_key: false) do
+    create table(:payment_transactions) do
       add :amount, :bigint, null: false
       add :payee, :string, null: false
       add :payer, :string, null: false
@@ -13,9 +13,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
       timestamps()
     end
 
-    alter table(:payment_transactions) do
-      modify(:payment_hash, :string, primary_key: true)
-    end
+    create unique_index(:payment_transactions, [:payment_hash], name: :unique_payment_hash)
 
   end
 end

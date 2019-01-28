@@ -3,15 +3,15 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
   import Ecto.Changeset
 
 
-  @primary_key {:location_hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :location_hash}
-  @derive {Poison.Encoder, only: [:location_hash, :fee, :gateway, :location, :nonce, :owner]}
+  @derive {Poison.Encoder, only: [:id, :location_hash, :fee, :gateway, :location, :nonce, :owner]}
   schema "location_transactions" do
-    field :fee, :integer
-    field :gateway, :string
-    field :location, :string
-    field :nonce, :integer
-    field :owner, :string
+    field :fee, :integer, null: false
+    field :gateway, :string, null: false
+    field :location, :string, null: false
+    field :nonce, :integer, null: false
+    field :owner, :string, null: false
+    field :location_hash, :string, null: false
 
     belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
 

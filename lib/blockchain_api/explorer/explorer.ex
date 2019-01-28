@@ -71,7 +71,11 @@ defmodule BlockchainAPI.Explorer do
       select: t.type
   end
 
-  def get_transaction!(txn_hash), do: Repo.get!(Transaction, txn_hash)
+  def get_transaction!(txn_hash) do
+    Transaction
+    |> where([t], t.hash == ^txn_hash)
+    |> Repo.one!
+  end
 
   def create_transaction(block_height, attrs \\ %{}) do
     %Transaction{block_height: block_height}
@@ -84,7 +88,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_block!(height), do: Repo.get!(Block, height)
+  def get_block!(height) do
+    Block
+    |> where([b], b.height == ^height)
+    |> Repo.one!
+  end
 
   def create_block(attrs \\ %{}) do
     %Block{}
@@ -102,7 +110,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_coinbase!(coinbase_hash), do: Repo.get!(CoinbaseTransaction, coinbase_hash)
+  def get_coinbase!(coinbase_hash) do
+    CoinbaseTransaction
+    |> where([ct], ct.coinbase_hash == ^coinbase_hash)
+    |> Repo.one!
+  end
 
   def create_coinbase(txn_hash, attrs \\ %{}) do
     %CoinbaseTransaction{coinbase_hash: txn_hash}
@@ -115,7 +127,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_payment!(payment_hash), do: Repo.get!(PaymentTransaction, payment_hash)
+  def get_payment!(payment_hash) do
+    PaymentTransaction
+    |> where([pt], pt.payment_hash == ^payment_hash)
+    |> Repo.one!
+  end
 
   def create_payment(txn_hash, attrs \\ %{}) do
     %PaymentTransaction{payment_hash: txn_hash}
@@ -128,7 +144,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_gateway!(gateway_hash), do: Repo.get!(GatewayTransaction, gateway_hash)
+  def get_gateway!(gateway_hash) do
+    GatewayTransaction
+    |> where([gt], gt.gateway_hash == ^gateway_hash)
+    |> Repo.one!
+  end
 
   def create_gateway(txn_hash, attrs \\ %{}) do
     %GatewayTransaction{gateway_hash: txn_hash}
@@ -141,7 +161,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_location!(location_hash), do: Repo.get!(LocationTransaction, location_hash)
+  def get_location!(location_hash) do
+    LocationTransaction
+    |> where([lt], lt.location_hash == ^location_hash)
+    |> Repo.one!
+  end
 
   def create_location(txn_hash, attrs \\ %{}) do
     %LocationTransaction{location_hash: txn_hash}
@@ -156,7 +180,9 @@ defmodule BlockchainAPI.Explorer do
   end
 
   def get_account!(address) do
-    Repo.get!(Account, address)
+    Account
+    |> where([a], a.address == ^address)
+    |> Repo.one!
   end
 
   def update_account(account, attrs \\ %{}) do

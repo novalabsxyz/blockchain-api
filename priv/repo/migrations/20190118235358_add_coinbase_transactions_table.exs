@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddCoinbaseTransactionsTable do
   use Ecto.Migration
 
   def change do
-    create table(:coinbase_transactions, primary_key: false) do
+    create table(:coinbase_transactions) do
       add :amount, :bigint, null: false
       add :payee, :string, null: false
 
@@ -10,9 +10,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddCoinbaseTransactionsTable do
       timestamps()
     end
 
-    alter table(:coinbase_transactions) do
-      modify(:coinbase_hash, :string, primary_key: true)
-    end
+    create unique_index(:coinbase_transactions, [:coinbase_hash], name: :unique_coinbase_hash)
 
   end
 end

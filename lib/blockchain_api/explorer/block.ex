@@ -2,13 +2,13 @@ defmodule BlockchainAPI.Explorer.Block do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:height, :integer, autogenerate: false}
   @derive {Phoenix.Param, key: :height}
-  @derive {Poison.Encoder, only: [:height, :hash, :round, :time]}
+  @derive {Poison.Encoder, only: [:id, :height, :hash, :round, :time]}
   schema "blocks" do
-    field :hash, :string
-    field :round, :integer
-    field :time, :integer
+    field :hash, :string, null: false
+    field :round, :integer, null: false
+    field :time, :integer, null: false
+    field :height, :integer, null: false
 
     has_many :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :block_height
 
