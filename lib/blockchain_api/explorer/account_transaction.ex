@@ -2,11 +2,11 @@ defmodule BlockchainAPI.Explorer.AccountTransaction do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
+  @derive {Poison.Encoder, only: [:id, :account_address, :txn_hash, :txn_type]}
   schema "account_transactions" do
-    field :account_address, :string, primary_key: true
-    field :txn_hash, :string, primary_key: true
-    field :txn_type, :string
+    field :account_address, :string, null: false
+    field :txn_hash, :string, null: false
+    field :txn_type, :string, null: false
 
     timestamps()
   end

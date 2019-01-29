@@ -3,11 +3,12 @@ defmodule BlockchainAPI.Explorer.Transaction do
   import Ecto.Changeset
 
 
-  @primary_key {:hash, :string, autogenerate: false}
   @derive {Phoenix.Param, key: :hash}
+  @derive {Poison.Encoder, only: [:id, :hash, :type, :block_height]}
   schema "transactions" do
-    field :type, :string
-    field :block_height, :integer
+    field :type, :string, null: false
+    field :block_height, :integer, null: false
+    field :hash, :string, null: false
 
     belongs_to :block, BlockchainAPI.Explorer.Block, foreign_key: :height, references: :height, define_field: false
     has_many :coinbase_transactions, BlockchainAPI.Explorer.CoinbaseTransaction, foreign_key: :coinbase_hash

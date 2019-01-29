@@ -2,8 +2,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
   use Ecto.Migration
 
   def change do
-    create table(:transactions, primary_key: false) do
-      add :hash, :string, null: false, primary_key: true
+    create table(:transactions) do
+      add :hash, :string, null: false
       add :type, :string, null: false
 
       add :block_height, references(:blocks, on_delete: :nothing, column: :height), null: false
@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
       timestamps()
     end
 
-    create unique_index(:transactions, [:hash])
+    create unique_index(:transactions, [:hash], name: :unique_txn_hash)
 
   end
 end

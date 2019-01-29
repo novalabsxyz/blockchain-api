@@ -11,11 +11,6 @@ defmodule BlockchainAPIWeb.LocationView do
   end
 
   def render("location.json", %{location: location}) do
-    %{location_hash: location.gateway_hash,
-      gateway: location.gateway,
-      owner: location.owner,
-      location: location.location,
-      nonce: location.nonce,
-      fee: location.fee}
+    location |> Poison.encode!
   end
 end
