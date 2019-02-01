@@ -13,10 +13,6 @@ defmodule BlockchainAPIWeb.BlockChannel do
       time: block.time
     }
 
-    IO.puts "+++++++++++++++++++"
-    IO.inspect payload
-    IO.puts "+++++++++++++++++++"
-
     BlockchainAPIWeb.Endpoint.broadcast("block:update", "change", payload)
   end
 

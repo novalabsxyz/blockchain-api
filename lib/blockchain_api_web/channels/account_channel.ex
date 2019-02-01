@@ -12,10 +12,6 @@ defmodule BlockchainAPIWeb.AccountChannel do
       balance: account.balance
     }
 
-    IO.puts "+++++++++++++++++++"
-    IO.inspect payload
-    IO.puts "+++++++++++++++++++"
-
     BlockchainAPIWeb.Endpoint.broadcast("account:#{account.address}", "change", payload)
   end
 
