@@ -5,4 +5,19 @@ defmodule BlockchainAPIWeb.BlockChannel do
     {:ok, %{data: "joined block:update"}, socket}
   end
 
+  def broadcast_change(block) do
+    payload = %{
+      height: block.height,
+      hash: block.hash,
+      round: block.round,
+      time: block.time
+    }
+
+    IO.puts "+++++++++++++++++++"
+    IO.inspect payload
+    IO.puts "+++++++++++++++++++"
+
+    BlockchainAPIWeb.Endpoint.broadcast("block:update", "change", payload)
+  end
+
 end

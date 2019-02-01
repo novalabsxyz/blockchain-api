@@ -135,7 +135,8 @@ defmodule BlockchainAPI.Watcher do
   defp insert_block_with_transactions(block, chain) do
     # NOTE: this should all be done via Ecto.Multi to ensure a single database transaction
     # occurs and ensure consistency with rollback on failure
-    Explorer.create_block(block_map(block))
+    {:ok, block} = Explorer.create_block(block_map(block))
+    BlockchainAPIWeb.BlockChannel.broadcast_change(block)
     add_accounts(block, chain)
     add_transactions(block)
     add_account_transactions(block)
