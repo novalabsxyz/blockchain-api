@@ -157,8 +157,12 @@ defmodule BlockchainAPI.Watcher do
         Enum.map(txns,
           fn txn ->
             case :blockchain_transactions.type(txn) do
-              :blockchain_txn_coinbase_v1 -> insert_account_from_coinbase_transaction(txn, ledger)
-              :blockchain_txn_payment_v1 -> insert_account_from_payment_transaction(txn, ledger)
+              :blockchain_txn_coinbase_v1 ->
+                {:ok, account} = insert_account_from_coinbase_transaction(txn, ledger)
+                BlockchainAPIWeb.AccountChannel.broadcast_change(account)
+              :blockchain_txn_payment_v1 ->
+                {:ok, account} = insert_account_from_payment_transaction(txn, ledger)
+                BlockchainAPIWeb.AccountChannel.broadcast_change(account)
               _ ->
                 :ok
             end
