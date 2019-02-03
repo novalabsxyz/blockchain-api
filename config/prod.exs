@@ -14,7 +14,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   url: [host: "localhost", port: {:system, "PORT"}],
   server: true,
   root: ".",
-  version: Application.spec(:blockchain_api, :vsn)
+  version: Application.spec(:blockchain_api, :vsn),
+  check_origin: false
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :blockchain_api, env: Mix.env()

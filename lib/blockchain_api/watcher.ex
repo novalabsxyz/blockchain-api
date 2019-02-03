@@ -132,13 +132,14 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   # Add block with subsequent updates to account and transactions
   #==================================================================
-  defp insert_block_with_transactions(block, chain) do
+  defp insert_block_with_transactions(block0, chain) do
     # NOTE: this should all be done via Ecto.Multi to ensure a single database transaction
     # occurs and ensure consistency with rollback on failure
-    Explorer.create_block(block_map(block))
-    add_accounts(block, chain)
-    add_transactions(block)
-    add_account_transactions(block)
+    {:ok, block} = Explorer.create_block(block_map(block0))
+    BlockchainAPIWeb.BlockChannel.broadcast_change(block)
+    add_accounts(block0, chain)
+    add_transactions(block0)
+    add_account_transactions(block0)
   end
 
   #==================================================================
@@ -157,8 +158,12 @@ defmodule BlockchainAPI.Watcher do
         Enum.map(txns,
           fn txn ->
             case :blockchain_transactions.type(txn) do
-              :blockchain_txn_coinbase_v1 -> insert_account_from_coinbase_transaction(txn, ledger)
-              :blockchain_txn_payment_v1 -> insert_account_from_payment_transaction(txn, ledger)
+              :blockchain_txn_coinbase_v1 ->
+                {:ok, account} = insert_account_from_coinbase_transaction(txn, ledger)
+                BlockchainAPIWeb.AccountChannel.broadcast_change(account)
+              :blockchain_txn_payment_v1 ->
+                {:ok, account} = insert_account_from_payment_transaction(txn, ledger)
+                BlockchainAPIWeb.AccountChannel.broadcast_change(account)
               _ ->
                 :ok
             end
