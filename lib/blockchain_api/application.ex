@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Application do
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
-    {privkey, pubkey} = :libp2p_crypto.generate_keys()
+    %{:secret => privkey, :public => pubkey} = :libp2p_crypto.generate_keys(:ecc_compact)
     sig_fun = :libp2p_crypto.mk_sig_fun(privkey)
     base_dir = ~c(data)
     seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)

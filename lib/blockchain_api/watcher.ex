@@ -220,7 +220,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_coinbase_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_coinbase_v1.payee(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -231,7 +231,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_payment_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payee(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payee(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -239,7 +239,7 @@ defmodule BlockchainAPI.Watcher do
         {:error, "No associated payee account for payment transaction"}
     end
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payer(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -250,7 +250,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_location_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -261,7 +261,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_gateway_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -305,7 +305,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_account_from_coinbase_transaction(txn, ledger) do
     addr = :blockchain_txn_coinbase_v1.payee(txn)
-    addr_str = to_string(:libp2p_crypto.address_to_b58(addr))
+    addr_str = to_string(:libp2p_crypto.bin_to_b58(addr))
     {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
     try do
       account = Explorer.get_account!(addr_str)
@@ -321,8 +321,8 @@ defmodule BlockchainAPI.Watcher do
   defp insert_account_from_payment_transaction(txn, ledger) do
     payee = :blockchain_txn_payment_v1.payee(txn)
     payer = :blockchain_txn_payment_v1.payer(txn)
-    payee_str = to_string(:libp2p_crypto.address_to_b58(payee))
-    payer_str = to_string(:libp2p_crypto.address_to_b58(payer))
+    payee_str = to_string(:libp2p_crypto.bin_to_b58(payee))
+    payer_str = to_string(:libp2p_crypto.bin_to_b58(payer))
     {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
     {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
     try do
@@ -359,7 +359,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp coinbase_map(txn) do
     %{
-      payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_coinbase_v1.payee(txn))),
+      payee: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_coinbase_v1.payee(txn))),
       amount: :blockchain_txn_coinbase_v1.amount(txn)
     }
   end
@@ -374,8 +374,8 @@ defmodule BlockchainAPI.Watcher do
 
   defp payment_map(txn) do
     %{
-      payee: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payee(txn))),
-      payer: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_payment_v1.payer(txn))),
+      payee: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payee(txn))),
+      payer: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn))),
       amount: :blockchain_txn_payment_v1.amount(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
       fee: :blockchain_txn_payment_v1.fee(txn),
@@ -384,15 +384,15 @@ defmodule BlockchainAPI.Watcher do
 
   defp gateway_map(txn) do
     %{
-      owner: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
-      gateway: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
+      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
+      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
     }
   end
 
   defp location_map(txn) do
     %{
-      owner: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))),
-      gateway: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.gateway_address(txn))),
+      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))),
+      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway_address(txn))),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
       location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
