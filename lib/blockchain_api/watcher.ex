@@ -75,7 +75,7 @@ defmodule BlockchainAPI.Watcher do
   end
   def handle_call(:last_block_time, _from, state = %{chain: chain}) do
     {:ok, head_block} = :blockchain.head_block(chain)
-    time = :blockchain_block.meta(head_block).block_time
+    time = :blockchain_block.time(head_block)
     {:reply, time, state}
   end
 
@@ -157,7 +157,7 @@ defmodule BlockchainAPI.Watcher do
       txns ->
         Enum.map(txns,
           fn txn ->
-            case :blockchain_transactions.type(txn) do
+            case :blockchain_txn.type(txn) do
               :blockchain_txn_coinbase_v1 ->
                 {:ok, account} = insert_account_from_coinbase_transaction(txn, ledger)
                 BlockchainAPIWeb.AccountChannel.broadcast_change(account)
@@ -181,7 +181,7 @@ defmodule BlockchainAPI.Watcher do
         :ok
       txns ->
         Enum.map(txns, fn txn ->
-          case :blockchain_transactions.type(txn) do
+          case :blockchain_txn.type(txn) do
             :blockchain_txn_coinbase_v1 -> insert_coinbase_transaction(txn, height)
             :blockchain_txn_payment_v1 -> insert_payment_transaction(txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_gateway_transaction(txn, height)
@@ -203,7 +203,7 @@ defmodule BlockchainAPI.Watcher do
         :ok
       txns ->
         Enum.map(txns, fn txn ->
-          case :blockchain_transactions.type(txn) do
+          case :blockchain_txn.type(txn) do
             :blockchain_txn_coinbase_v1 -> insert_coinbase_account_transaction(txn)
             :blockchain_txn_payment_v1 -> insert_payment_account_transaction(txn)
             :blockchain_txn_add_gateway_v1 -> insert_gateway_account_transaction(txn)
@@ -250,7 +250,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_location_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -261,7 +261,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp insert_gateway_account_transaction(txn) do
     try do
-      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))))
+      account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn))))
       txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
@@ -367,8 +367,8 @@ defmodule BlockchainAPI.Watcher do
   defp block_map(block) do
     height = :blockchain_block.height(block)
     hash = :blockchain_block.hash_block(block) |> Base.encode16(case: :lower)
-    time = :blockchain_block.meta(block).block_time
-    round = :blockchain_block.meta(block).hbbft_round
+    time = :blockchain_block.time(block)
+    round = :blockchain_block.hbbft_round(block)
     %{hash: hash, height: height, time: time, round: round}
   end
 
@@ -384,15 +384,15 @@ defmodule BlockchainAPI.Watcher do
 
   defp gateway_map(txn) do
     %{
-      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
-      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
+      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn))),
+      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway(txn))),
     }
   end
 
   defp location_map(txn) do
     %{
-      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))),
-      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway_address(txn))),
+      owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn))),
+      gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway(txn))),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
       location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
