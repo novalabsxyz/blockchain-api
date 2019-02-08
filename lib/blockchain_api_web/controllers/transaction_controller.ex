@@ -60,4 +60,12 @@ defmodule BlockchainAPIWeb.TransactionController do
     end
   end
 
+  def create(conn, %{"txn" => txn}) do
+	decoded = Base.decode64!(txn)
+    IO.inspect decoded
+	IO.inspect :blockchain_txn.deserialize(decoded)
+
+    conn |> resp(201, "{}")
+  end
+
 end
