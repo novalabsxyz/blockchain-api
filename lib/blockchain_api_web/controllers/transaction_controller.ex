@@ -60,53 +60,13 @@ defmodule BlockchainAPIWeb.TransactionController do
     end
   end
 
-  def create(conn, %{"txn" => txn0}) do
-    txn = txn0
-          |> Base.decode64!
-          |> :blockchain_txn.deserialize()
-
-    IO.puts "got txn"
-    IO.inspect txn0
-
-    IO.puts "\n"
-    IO.puts "deserialized txn"
-    IO.inspect txn
-
-    is_valid = txn |> :blockchain_txn_payment_v1.is_valid()
-    IO.puts "\n"
-    IO.puts "is_valid?"
-    IO.inspect is_valid
-
-    IO.puts "\n"
-    IO.puts "signature"
-    IO.inspect :blockchain_txn_payment_v1.signature(txn)
-
-    payer = :blockchain_txn_payment_v1.payer(txn)
-    payee = :blockchain_txn_payment_v1.payee(txn)
-    amount = :blockchain_txn_payment_v1.amount(txn)
-    fee = :blockchain_txn_payment_v1.fee(txn)
-    nonce = :blockchain_txn_payment_v1.nonce(txn)
-
-    txn2 = :blockchain_txn_payment_v1.new(payer, payee, amount, fee, nonce)
-    sig_fun = :libp2p_crypto.mk_sig_fun({:ed25519, Base.decode64!("0HmZh6t7ig7kLBTt1/wyptB5mYere4oO5CwU7df8MqbZ1cSv76+kCQbBIGJtCkxEd9tyPJB60eSm6xsoQbbyRw==")})
-    txn3 = :blockchain_txn.sign(txn2, sig_fun)
-    IO.puts "\n"
-    IO.puts "expected txn"
-    IO.inspect txn3
-
-    IO.puts "\n"
-    IO.puts "is_valid?"
-    IO.inspect :blockchain_txn_payment_v1.is_valid(txn3)
-
-    IO.puts "\n"
-    IO.puts "serialized and base64 encoded txn"
-    IO.inspect Base.encode64(:blockchain_txn.serialize(txn3))
-
-    IO.puts "\n"
-    IO.puts "signature"
-    IO.inspect :blockchain_txn_payment_v1.signature(txn3)
-
-    conn |> resp(201, "{}")
+  def create(conn, %{"txn" => txn}) do
+    case BlockchainAPI.TxnManager.submit(txn) do
+      :ok ->
+        conn |> resp(200, %{status: "ok"})
+      _ ->
+        conn |> resp(201, %{status: "error"})
+    end
   end
 
 end
