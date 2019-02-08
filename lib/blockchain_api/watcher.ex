@@ -307,13 +307,14 @@ defmodule BlockchainAPI.Watcher do
     addr = :blockchain_txn_coinbase_v1.payee(txn)
     addr_str = to_string(:libp2p_crypto.bin_to_b58(addr))
     {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
+    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
     try do
       account = Explorer.get_account!(addr_str)
-      account_map = %{balance: :blockchain_ledger_entry_v1.balance(entry)}
+      account_map = %{balance: :blockchain_ledger_entry_v1.balance(entry), fee: fee}
       Explorer.update_account(account, account_map)
     rescue
       _error in Ecto.NoResultsError ->
-        account_map = %{address: addr_str, balance: :blockchain_ledger_entry_v1.balance(entry)}
+        account_map = %{address: addr_str, balance: :blockchain_ledger_entry_v1.balance(entry), fee: fee}
         Explorer.create_account(account_map)
     end
   end
@@ -325,22 +326,23 @@ defmodule BlockchainAPI.Watcher do
     payer_str = to_string(:libp2p_crypto.bin_to_b58(payer))
     {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
     {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
+    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
     try do
       payer_account = Explorer.get_account!(payer_str)
-      payer_map = %{balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+      payer_map = %{balance: :blockchain_ledger_entry_v1.balance(payer_entry), fee: fee}
       Explorer.update_account(payer_account, payer_map)
     rescue
       _error in Ecto.NoResultsError ->
-        payer_map = %{address: payer_str, balance: :blockchain_ledger_entry_v1.balance(payer_entry)}
+        payer_map = %{address: payer_str, balance: :blockchain_ledger_entry_v1.balance(payer_entry), fee: fee}
         Explorer.create_account(payer_map)
     end
     try do
       payee_account = Explorer.get_account!(payee_str)
-      payee_map = %{balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+      payee_map = %{balance: :blockchain_ledger_entry_v1.balance(payee_entry), fee: fee}
       Explorer.update_account(payee_account, payee_map)
     rescue
       _error in Ecto.NoResultsError ->
-        payee_map = %{address: payee_str, balance: :blockchain_ledger_entry_v1.balance(payee_entry)}
+        payee_map = %{address: payee_str, balance: :blockchain_ledger_entry_v1.balance(payee_entry), fee: fee}
         Explorer.create_account(payee_map)
     end
   end

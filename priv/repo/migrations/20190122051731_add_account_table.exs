@@ -6,6 +6,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTable do
       add :address, :string, null: false
       add :name, :string
       add :balance, :bigint, null: false
+      add :fee, :bigint, null: false
 
       timestamps()
     end
