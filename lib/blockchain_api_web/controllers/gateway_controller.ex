@@ -15,8 +15,8 @@ defmodule BlockchainAPIWeb.GatewayController do
     render(conn, "index.json", add_gateway_transactions: add_gateway_transactions)
   end
 
-  def show(conn, %{"id" => id}) do
-    gateway = Explorer.get_gateway!(id)
+  def show(conn, %{"hash" => hash}) do
+    gateway = Explorer.get_gateway!(hash)
     render(conn, "show.json", gateway: gateway)
   end
 end
