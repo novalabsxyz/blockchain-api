@@ -24,6 +24,9 @@ defmodule BlockchainAPIWeb.Router do
     # resources "/payment_transactions", PaymentController, except: [:new, :edit, :delete, :update]
     # resources "/gateway_transactions", GatewayController, except: [:new, :edit, :delete, :update]
     # resources "/location_transactions", LocationController, except: [:new, :edit, :delete, :update]
+  end
 
+  scope "/", BlockchainAPIWeb do
+    get "/", HealthCheckController, :index
   end
 end
