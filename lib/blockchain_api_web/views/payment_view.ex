@@ -12,14 +12,8 @@ defmodule BlockchainAPIWeb.PaymentView do
     }
   end
 
-  def render("show.json", page) do
-    %{
-      data: render_one(page.payment_transactions, PaymentView, "payment.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
-    }
+  def render("show.json", %{payment: payment}) do
+    %{data: render_one(payment, PaymentView, "payment.json")}
   end
 
   def render("payment.json", %{payment: payment}) do
