@@ -12,14 +12,8 @@ defmodule BlockchainAPIWeb.BlockView do
     }
   end
 
-  def render("show.json", page) do
-    %{
-      data: render_one(page.blocks, BlockView, "block.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
-    }
+  def render("show.json", %{block: block}) do
+    %{data: render_one(block, BlockView, "block.json")}
   end
 
   def render("block.json", %{block: block}) do
