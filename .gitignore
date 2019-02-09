@@ -37,3 +37,4 @@ blockchain_node-*.tar
 
 /data
 /log
+.elixir_ls
