@@ -85,6 +85,7 @@ defmodule BlockchainAPI.Explorer do
 
   def list_blocks(params) do
     Block
+    |> order_by([b], desc: b.height)
     |> Repo.paginate(params)
   end
 
