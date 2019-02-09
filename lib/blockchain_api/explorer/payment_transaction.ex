@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
 
 
   @derive {Phoenix.Param, key: :payment_hash}
-  @derive {Poison.Encoder, only: [:id, :payment_hash, :amount, :fee, :nonce, :payee, :payer]}
+  @derive {Jason.Encoder, only: [:id, :payment_hash, :amount, :fee, :nonce, :payee, :payer]}
   schema "payment_transactions" do
     field :amount, :integer, null: false
     field :fee, :integer, null: false

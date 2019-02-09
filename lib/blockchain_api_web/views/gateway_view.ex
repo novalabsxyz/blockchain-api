@@ -11,6 +11,6 @@ defmodule BlockchainAPIWeb.GatewayView do
   end
 
   def render("gateway.json", %{gateway: gateway}) do
-    gateway |> Poison.encode!
+    gateway
   end
 end

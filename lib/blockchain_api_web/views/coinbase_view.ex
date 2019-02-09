@@ -11,6 +11,6 @@ defmodule BlockchainAPIWeb.CoinbaseView do
   end
 
   def render("coinbase.json", %{coinbase: coinbase}) do
-    coinbase |> Poison.encode!
+    coinbase
   end
 end

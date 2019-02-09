@@ -11,6 +11,6 @@ defmodule BlockchainAPIWeb.PaymentView do
   end
 
   def render("payment.json", %{payment: payment}) do
-    payment |> Poison.encode!
+    payment
   end
 end

@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
 
 
   @derive {Phoenix.Param, key: :gateway_hash}
-  @derive {Poison.Encoder, only: [:id, :gateway_hash, :gateway, :owner]}
+  @derive {Jason.Encoder, only: [:id, :gateway_hash, :gateway, :owner]}
   schema "gateway_transactions" do
     field :gateway, :string, null: false
     field :owner, :string, null: false
