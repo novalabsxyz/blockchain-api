@@ -4,15 +4,19 @@ defmodule BlockchainAPIWeb.AccountController do
   alias BlockchainAPI.Explorer
   require Logger
 
-  @default_params %{page: 1, page_size: 10}
-
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, params) when map_size(params) == 0 do
-    render(conn, "index.json", accounts: Explorer.list_accounts(@default_params))
-  end
   def index(conn, params) do
-    render(conn, "index.json", accounts: Explorer.list_accounts(params))
+    page = Explorer.list_accounts(params)
+
+    render(conn,
+      "index.json",
+      accounts: page.entries,
+      page_number: page.page_number,
+      page_size: page.page_size,
+      total_pages: page.total_pages,
+      total_entries: page.total_entries
+    )
   end
 
   def show(conn, %{"address" => address}) do

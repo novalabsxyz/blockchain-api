@@ -209,6 +209,8 @@ defmodule BlockchainAPI.Explorer do
       where: at.account_address == ^address,
       left_join: transaction in Transaction,
       on: at.txn_hash == transaction.hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.coinbase_hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -217,18 +219,25 @@ defmodule BlockchainAPI.Explorer do
       on: transaction.hash == gateway_transaction.gateway_hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.location_hash,
-      select: [
-        coinbase_transaction,
-        payment_transaction,
-        gateway_transaction,
-        location_transaction
-      ]
+      order_by: [desc: block.height],
+      select: %{
+        time: block.time,
+        height: transaction.block_height,
+        coinbase: coinbase_transaction,
+        payment: payment_transaction,
+        gateway: gateway_transaction,
+        location: location_transaction
+      }
     )
 
     query
     |> Repo.paginate(params)
-    |> clean_transaction_page()
+    |> clean_account_transactions()
 
+  end
+
+  defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
+    %{page | entries: Enum.map(entries, fn map -> :maps.filter( fn _, v -> v != nil end, map ) end)}
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
