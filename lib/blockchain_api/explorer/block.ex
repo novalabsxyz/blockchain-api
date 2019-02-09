@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Explorer.Block do
   import Ecto.Changeset
 
   @derive {Phoenix.Param, key: :height}
-  @derive {Poison.Encoder, only: [:id, :height, :hash, :round, :time]}
+  @derive {Jason.Encoder, only: [:id, :height, :hash, :round, :time]}
   schema "blocks" do
     field :hash, :string, null: false
     field :round, :integer, null: false

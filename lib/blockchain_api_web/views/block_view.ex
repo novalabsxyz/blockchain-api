@@ -11,6 +11,6 @@ defmodule BlockchainAPIWeb.BlockView do
   end
 
   def render("block.json", %{block: block}) do
-    block |> Poison.encode!
+    block
   end
 end

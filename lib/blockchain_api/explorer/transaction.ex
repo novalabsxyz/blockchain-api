@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Explorer.Transaction do
 
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Poison.Encoder, only: [:id, :hash, :type, :block_height]}
+  @derive {Jason.Encoder, only: [:id, :hash, :type, :block_height]}
   schema "transactions" do
     field :type, :string, null: false
     field :block_height, :integer, null: false

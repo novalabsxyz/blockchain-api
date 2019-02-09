@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
 
 
   @derive {Phoenix.Param, key: :location_hash}
-  @derive {Poison.Encoder, only: [:id, :location_hash, :fee, :gateway, :location, :nonce, :owner]}
+  @derive {Jason.Encoder, only: [:id, :location_hash, :fee, :gateway, :location, :nonce, :owner]}
   schema "location_transactions" do
     field :fee, :integer, null: false
     field :gateway, :string, null: false

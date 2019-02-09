@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Explorer.AccountTransaction do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Poison.Encoder, only: [:id, :account_address, :txn_hash, :txn_type]}
+  @derive {Jason.Encoder, only: [:id, :account_address, :txn_hash, :txn_type]}
   schema "account_transactions" do
     field :account_address, :string, null: false
     field :txn_hash, :string, null: false
