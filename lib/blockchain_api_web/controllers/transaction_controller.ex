@@ -61,11 +61,12 @@ defmodule BlockchainAPIWeb.TransactionController do
   end
 
   def create(conn, %{"txn" => txn}) do
+
     case BlockchainAPI.TxnManager.submit(txn) do
       :ok ->
-        conn |> resp(200, %{status: "ok"})
+        conn |> send_resp(200, "ok")
       _ ->
-        conn |> resp(201, %{status: "error"})
+        conn |> send_resp(201, "error")
     end
   end
 
