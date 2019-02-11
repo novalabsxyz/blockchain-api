@@ -227,8 +227,8 @@ defmodule BlockchainAPI.ExplorerTest do
   describe "accounts" do
     alias BlockchainAPI.Explorer.Account
 
-    @valid_attrs %{address: "some address", balance: 42}
-    @invalid_attrs %{address: nil, balance: nil}
+    @valid_attrs %{address: "some address", balance: 42, fee: 42}
+    @invalid_attrs %{address: nil, balance: nil, fee: nil}
 
     def account_fixture(attrs \\ %{}) do
       {:ok, account} = Explorer.create_account(attrs)
@@ -239,6 +239,7 @@ defmodule BlockchainAPI.ExplorerTest do
       account = account_fixture(@valid_attrs)
       assert account.address == "some address"
       assert account.balance == 42
+      assert account.fee == 42
     end
 
     test "get_account!/1 returns account with given address" do

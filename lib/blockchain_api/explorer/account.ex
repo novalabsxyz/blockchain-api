@@ -8,6 +8,7 @@ defmodule BlockchainAPI.Explorer.Account do
     field :name, :string
     field :balance, :integer, null: false
     field :address, :string, null: false
+    field :fee, :integer, null: false
 
     timestamps()
 
@@ -16,8 +17,8 @@ defmodule BlockchainAPI.Explorer.Account do
   @doc false
   def changeset(account, attrs) do
     account
-    |> cast(attrs, [:address, :name, :balance])
-    |> validate_required([:address, :balance])
+    |> cast(attrs, [:address, :name, :balance, :fee])
+    |> validate_required([:address, :balance, :fee])
     |> unique_constraint(:address)
   end
 end
