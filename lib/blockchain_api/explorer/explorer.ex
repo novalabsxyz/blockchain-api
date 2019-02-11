@@ -237,7 +237,25 @@ defmodule BlockchainAPI.Explorer do
   end
 
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
-    %{page | entries: Enum.map(entries, fn map -> :maps.filter( fn _, v -> v != nil end, map ) end)}
+    data = entries
+           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+           |> Enum.reduce([], fn map, acc -> [clean_txn_struct(map) | acc] end)
+           |> Enum.reverse
+
+    %{page | entries: data}
+  end
+
+  defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
+    Map.merge(Map.drop(Map.from_struct(payment), [:__meta__, :transaction]), %{type: "payment", height: height, time: time})
+  end
+  defp clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
+    Map.merge(Map.drop(Map.from_struct(coinbase), [:__meta__, :transaction]), %{type: "coinbase", height: height, time: time})
+  end
+  defp clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
+    Map.merge(Map.drop(Map.from_struct(gateway), [:__meta__, :transaction]), %{type: "gateway", height: height, time: time})
+  end
+  defp clean_txn_struct(%{location: location, height: height, time: time}) do
+    Map.merge(Map.drop(Map.from_struct(location), [:__meta__, :transaction]), %{type: "location", height: height, time: time})
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do

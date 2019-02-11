@@ -11,8 +11,6 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     page = Explorer.get_account_transactions(address, @default_params)
 
-    IO.inspect page.entries
-
     render(conn,
       "index.json",
       account_transactions: page.entries,
