@@ -9,11 +9,11 @@ defmodule BlockchainAPI.Repo.Migrations.AddLocationTransactionsTable do
       add :nonce, :integer, null: false
       add :fee, :integer, null: false
 
-      add :location_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
       timestamps()
     end
 
-    create unique_index(:location_transactions, [:location_hash], name: :unique_location_hash)
+    create unique_index(:location_transactions, [:hash], name: :unique_location_hash)
 
   end
 end

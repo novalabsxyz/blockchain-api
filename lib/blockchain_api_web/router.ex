@@ -17,11 +17,11 @@ defmodule BlockchainAPIWeb.Router do
     end
 
     resources "/transactions", TransactionController, only: [:index, :show], param: "hash"
-    resources "/gateways", GatewayController, only: [:index, :show], param: "gateway_hash"
-    resources "/coinbase_transactions", CoinbaseController, only: [:index, :show], param: "coinbase_hash"
-    resources "/payment_transactions", PaymentController, only: [:index, :show], param: "payment_hash"
-    resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "gateway_hash"
-    resources "/location_transactions", LocationController, only: [:index, :show], param: "location_hash"
+    resources "/gateways", GatewayController, only: [:index, :show], param: "hash"
+    resources "/coinbase_transactions", CoinbaseController, only: [:index, :show], param: "hash"
+    resources "/payment_transactions", PaymentController, only: [:index, :show], param: "hash"
+    resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "hash"
+    resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
 
   end
 

@@ -21,13 +21,13 @@ defmodule BlockchainAPI.Explorer do
     query = from(
       transaction in Transaction,
       left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.coinbase_hash,
+      on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.payment_hash,
+      on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.gateway_hash,
+      on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.location_hash,
+      on: transaction.hash == location_transaction.hash,
       select: [
         coinbase_transaction,
         payment_transaction,
@@ -46,13 +46,13 @@ defmodule BlockchainAPI.Explorer do
       transaction in Transaction,
       where: transaction.block_height == ^block_height,
       left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.coinbase_hash,
+      on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.payment_hash,
+      on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.gateway_hash,
+      on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.location_hash,
+      on: transaction.hash == location_transaction.hash,
       select: [
         coinbase_transaction,
         payment_transaction,
@@ -110,14 +110,14 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_coinbase!(coinbase_hash) do
+  def get_coinbase!(hash) do
     CoinbaseTransaction
-    |> where([ct], ct.coinbase_hash == ^coinbase_hash)
+    |> where([ct], ct.hash == ^hash)
     |> Repo.one!
   end
 
   def create_coinbase(txn_hash, attrs \\ %{}) do
-    %CoinbaseTransaction{coinbase_hash: txn_hash}
+    %CoinbaseTransaction{hash: txn_hash}
     |> CoinbaseTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -127,14 +127,14 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_payment!(payment_hash) do
+  def get_payment!(hash) do
     PaymentTransaction
-    |> where([pt], pt.payment_hash == ^payment_hash)
+    |> where([pt], pt.hash == ^hash)
     |> Repo.one!
   end
 
   def create_payment(txn_hash, attrs \\ %{}) do
-    %PaymentTransaction{payment_hash: txn_hash}
+    %PaymentTransaction{hash: txn_hash}
     |> PaymentTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -144,14 +144,14 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_gateway!(gateway_hash) do
+  def get_gateway!(hash) do
     GatewayTransaction
-    |> where([gt], gt.gateway_hash == ^gateway_hash)
+    |> where([gt], gt.hash == ^hash)
     |> Repo.one!
   end
 
   def create_gateway(txn_hash, attrs \\ %{}) do
-    %GatewayTransaction{gateway_hash: txn_hash}
+    %GatewayTransaction{hash: txn_hash}
     |> GatewayTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -161,14 +161,14 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
-  def get_location!(location_hash) do
+  def get_location!(hash) do
     LocationTransaction
-    |> where([lt], lt.location_hash == ^location_hash)
+    |> where([lt], lt.hash == ^hash)
     |> Repo.one!
   end
 
   def create_location(txn_hash, attrs \\ %{}) do
-    %LocationTransaction{location_hash: txn_hash}
+    %LocationTransaction{hash: txn_hash}
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()
   end
@@ -212,13 +212,13 @@ defmodule BlockchainAPI.Explorer do
       left_join: block in Block,
       on: transaction.block_height == block.height,
       left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.coinbase_hash,
+      on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.payment_hash,
+      on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.gateway_hash,
+      on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.location_hash,
+      on: transaction.hash == location_transaction.hash,
       order_by: [desc: block.height],
       select: %{
         time: block.time,

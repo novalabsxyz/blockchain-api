@@ -9,11 +9,11 @@ defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
       add :fee, :integer, null: false
       add :nonce, :integer, null: false
 
-      add :payment_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
       timestamps()
     end
 
-    create unique_index(:payment_transactions, [:payment_hash], name: :unique_payment_hash)
+    create unique_index(:payment_transactions, [:hash], name: :unique_payment_hash)
 
   end
 end

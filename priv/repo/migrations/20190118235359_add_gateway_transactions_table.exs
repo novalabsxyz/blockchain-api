@@ -6,11 +6,11 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
       add :owner, :string, null: false
       add :gateway, :string, null: false
 
-      add :gateway_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
       timestamps()
     end
 
-    create unique_index(:gateway_transactions, [:gateway_hash], name: :unique_gateway_hash)
+    create unique_index(:gateway_transactions, [:hash], name: :unique_gateway_hash)
 
   end
 end

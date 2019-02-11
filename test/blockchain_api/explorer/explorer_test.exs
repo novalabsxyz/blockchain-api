@@ -74,8 +74,8 @@ defmodule BlockchainAPI.ExplorerTest do
   describe "coinbase_transactions" do
     alias BlockchainAPI.Explorer.CoinbaseTransaction
 
-    @valid_attrs %{coinbase_hash: "some hash", amount: 42, payee: "some payee"}
-    @invalid_attrs %{coinbase_hash: nil, amount: nil, payee: nil}
+    @valid_attrs %{hash: "some hash", amount: 42, payee: "some payee"}
+    @invalid_attrs %{hash: nil, amount: nil, payee: nil}
 
     def coinbase_fixture(attrs \\ %{}) do
       {:ok, block} = Explorer.create_block(@block_valid_attrs)
@@ -91,7 +91,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "get_coinbase!/1 returns the coinbase with given hash" do
       coinbase = coinbase_fixture(@valid_attrs)
-      assert Explorer.get_coinbase!(coinbase.coinbase_hash) == coinbase
+      assert Explorer.get_coinbase!(coinbase.hash) == coinbase
     end
 
     test "create_coinbase/1 with valid data creates a coinbase" do
@@ -111,8 +111,8 @@ defmodule BlockchainAPI.ExplorerTest do
   describe "payment_transactions" do
     alias BlockchainAPI.Explorer.PaymentTransaction
 
-    @valid_attrs %{payment_hash: "some hash", amount: 42, fee: 42, nonce: 42, payee: "some payee", payer: "some payer"}
-    @invalid_attrs %{payment_hash: nil, amount: nil, fee: nil, nonce: nil, payee: nil, payer: nil}
+    @valid_attrs %{hash: "some hash", amount: 42, fee: 42, nonce: 42, payee: "some payee", payer: "some payer"}
+    @invalid_attrs %{hash: nil, amount: nil, fee: nil, nonce: nil, payee: nil, payer: nil}
 
     def payment_fixture(attrs \\ %{}) do
       {:ok, block} = Explorer.create_block(@block_valid_attrs)
@@ -128,7 +128,7 @@ defmodule BlockchainAPI.ExplorerTest do
 
     test "get_payment!/1 returns the payment with given hash" do
       payment = payment_fixture(@valid_attrs)
-      assert Explorer.get_payment!(payment.payment_hash) == payment
+      assert Explorer.get_payment!(payment.hash) == payment
     end
 
     test "create_payment/1 with valid data creates a payment" do
@@ -150,8 +150,8 @@ defmodule BlockchainAPI.ExplorerTest do
   describe "gateway_transactions" do
     alias BlockchainAPI.Explorer.GatewayTransaction
 
-    @valid_attrs %{gateway_hash: "some hash", gateway: "some gateway", owner: "some owner"}
-    @invalid_attrs %{gateway_hash: nil, gateway: nil, owner: nil}
+    @valid_attrs %{hash: "some hash", gateway: "some gateway", owner: "some owner"}
+    @invalid_attrs %{hash: nil, gateway: nil, owner: nil}
 
     def gateway_fixture(attrs \\ %{}) do
       {:ok, block} = Explorer.create_block(@block_valid_attrs)
@@ -165,9 +165,9 @@ defmodule BlockchainAPI.ExplorerTest do
       assert Explorer.list_gateway_transactions(@default_params).entries == [gateway]
     end
 
-    test "get_gateway!/1 returns the gateway with given gateway_hash" do
+    test "get_gateway!/1 returns the gateway with given hash" do
       gateway = gateway_fixture(@valid_attrs)
-      assert Explorer.get_gateway!(gateway.gateway_hash) == gateway
+      assert Explorer.get_gateway!(gateway.hash) == gateway
     end
 
     test "create_gateway/1 with valid data creates a gateway" do
@@ -186,8 +186,8 @@ defmodule BlockchainAPI.ExplorerTest do
   describe "location_transactions" do
     alias BlockchainAPI.Explorer.LocationTransaction
 
-    @valid_attrs %{location_hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner"}
-    @invalid_attrs %{location_hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
+    @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner"}
+    @invalid_attrs %{hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
 
     def gateway_location_fixture(attrs \\ %{}) do
       {:ok, block} = Explorer.create_block(@block_valid_attrs)
@@ -201,15 +201,15 @@ defmodule BlockchainAPI.ExplorerTest do
       assert Explorer.list_location_transactions(@default_params).entries == [gateway_location]
     end
 
-    test "get_location!/1 returns the gateway_location with given location_hash" do
+    test "get_location!/1 returns the gateway_location with given hash" do
       gateway_location = gateway_location_fixture(@valid_attrs)
-      assert Explorer.get_location!(gateway_location.location_hash) == gateway_location
+      assert Explorer.get_location!(gateway_location.hash) == gateway_location
     end
 
     test "create_location/1 with valid data creates a gateway_location" do
       gateway_location = gateway_location_fixture(@valid_attrs)
       assert gateway_location.fee == 42
-      assert gateway_location.location_hash == "some hash"
+      assert gateway_location.hash == "some hash"
       assert gateway_location.gateway == "some gateway"
       assert gateway_location.location == "some location"
       assert gateway_location.nonce == 42

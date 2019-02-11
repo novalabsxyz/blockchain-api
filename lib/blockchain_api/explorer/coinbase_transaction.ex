@@ -3,12 +3,12 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
   import Ecto.Changeset
 
 
-  @derive {Phoenix.Param, key: :coinbase_hash}
-  @derive {Jason.Encoder, only: [:id, :coinbase_hash, :amount, :payee]}
+  @derive {Phoenix.Param, key: :hash}
+  @derive {Jason.Encoder, only: [:id, :hash, :amount, :payee]}
   schema "coinbase_transactions" do
     field :amount, :integer, null: false
     field :payee, :string, null: false
-    field :coinbase_hash, :string, null: false
+    field :hash, :string, null: false
 
     belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
 
@@ -18,8 +18,8 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
   @doc false
   def changeset(coinbase, attrs) do
     coinbase
-    |> cast(attrs, [:coinbase_hash, :amount, :payee, :coinbase_hash])
-    |> validate_required([:coinbase_hash, :amount, :payee, :coinbase_hash])
-    |> foreign_key_constraint(:coinbase_hash)
+    |> cast(attrs, [:hash, :amount, :payee, :hash])
+    |> validate_required([:hash, :amount, :payee, :hash])
+    |> foreign_key_constraint(:hash)
   end
 end

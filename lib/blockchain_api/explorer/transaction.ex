@@ -11,10 +11,10 @@ defmodule BlockchainAPI.Explorer.Transaction do
     field :hash, :string, null: false
 
     belongs_to :block, BlockchainAPI.Explorer.Block, foreign_key: :height, references: :height, define_field: false
-    has_many :coinbase_transactions, BlockchainAPI.Explorer.CoinbaseTransaction, foreign_key: :coinbase_hash
-    has_many :gateway_transactions, BlockchainAPI.Explorer.GatewayTransaction, foreign_key: :gateway_hash
-    has_many :payment_transactions, BlockchainAPI.Explorer.PaymentTransaction, foreign_key: :payment_hash
-    has_many :location_transactions, BlockchainAPI.Explorer.LocationTransaction, foreign_key: :location_hash
+    has_many :coinbase_transactions, BlockchainAPI.Explorer.CoinbaseTransaction, foreign_key: :hash
+    has_many :gateway_transactions, BlockchainAPI.Explorer.GatewayTransaction, foreign_key: :hash
+    has_many :payment_transactions, BlockchainAPI.Explorer.PaymentTransaction, foreign_key: :hash
+    has_many :location_transactions, BlockchainAPI.Explorer.LocationTransaction, foreign_key: :hash
 
     timestamps()
   end
