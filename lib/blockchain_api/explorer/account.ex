@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Explorer.Account do
   import Ecto.Changeset
 
   @derive {Phoenix.Param, key: :address}
-  @derive {Jason.Encoder, only: [:id, :address, :name, :balance]}
+  @derive {Jason.Encoder, only: [:id, :address, :name, :balance, :fee]}
   schema "accounts" do
     field :name, :string
     field :balance, :integer, null: false
