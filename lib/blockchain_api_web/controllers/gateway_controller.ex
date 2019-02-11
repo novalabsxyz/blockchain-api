@@ -6,7 +6,7 @@ defmodule BlockchainAPIWeb.GatewayController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Explorer.list_blocks(params)
+    page = Explorer.list_gateway_transactions(params)
 
     render(conn,
       "index.json",
