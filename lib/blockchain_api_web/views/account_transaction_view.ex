@@ -12,14 +12,8 @@ defmodule BlockchainAPIWeb.AccountTransactionView do
     }
   end
 
-  def render("show.json", page) do
-    %{
-      data: render_one(page.account_transactions, AccountTransactionView, "account_transaction.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
-    }
+  def render("show.json", %{account_transaction: txn}) do
+    %{data: render_one(txn, AccountTransactionView, "account_transaction.json")}
   end
 
   def render("account_transaction.json", %{account_transaction: txn}) do
