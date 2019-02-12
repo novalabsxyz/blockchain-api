@@ -35,7 +35,7 @@ defmodule BlockchainAPI.TxnManager do
           fn(res) ->
             case res do
               :ok ->
-                pending_txn
+                pending_txn_hash
                 |> Explorer.get_pending_transaction!()
                 |> Explorer.update_pending_transaction(%{status: "done"})
               {:error, _reason} ->
