@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Explorer.PendingTransaction do
   import Ecto.Changeset
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Jason.Encoder, only: [:id, :hash]}
+  @derive {Jason.Encoder, only: [:id, :hash, :status]}
   schema "pending_transactions" do
     field :hash, :string, null: false
     field :status, :string, null: false, default: "pending"

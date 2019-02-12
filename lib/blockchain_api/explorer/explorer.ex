@@ -244,6 +244,12 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.insert()
   end
 
+  def list_pending_transactions(params) do
+    PendingTransaction
+    |> order_by([pt], desc: pt.inserted_at)
+    |> Repo.paginate(params)
+  end
+
   def get_pending_transaction!(hash) do
     PendingTransaction
     |> where([pt], pt.hash == ^hash)
