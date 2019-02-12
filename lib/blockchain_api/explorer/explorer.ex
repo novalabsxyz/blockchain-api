@@ -14,7 +14,8 @@ defmodule BlockchainAPI.Explorer do
     PaymentTransaction,
     CoinbaseTransaction,
     GatewayTransaction,
-    LocationTransaction
+    LocationTransaction,
+    PendingTransaction
   }
 
   def list_transactions(params) do
@@ -235,6 +236,31 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
     |> clean_account_transactions()
 
+  end
+
+  def create_pending_transaction(attrs \\ %{}) do
+    %PendingTransaction{}
+    |> PendingTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_pending_transaction!(hash) do
+    PendingTransaction
+    |> where([pt], pt.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def get_pending_transaction(hash) do
+    PendingTransaction
+    |> where([pt], pt.hash == ^hash)
+    |> Repo.one
+  end
+
+  def update_pending_transaction(txn, attrs \\ %{}) do
+    txn.hash
+    |> get_pending_transaction!()
+    |> PendingTransaction.changeset(attrs)
+    |> Repo.update()
   end
 
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do

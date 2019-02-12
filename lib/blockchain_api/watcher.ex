@@ -221,7 +221,7 @@ defmodule BlockchainAPI.Watcher do
   defp insert_coinbase_account_transaction(txn) do
     try do
       account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_coinbase_v1.payee(txn))))
-      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower))
+      txn = Explorer.get_transaction!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_coinbase_v1.hash(txn))))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
@@ -232,7 +232,7 @@ defmodule BlockchainAPI.Watcher do
   defp insert_payment_account_transaction(txn) do
     try do
       account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payee(txn))))
-      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
+      txn = Explorer.get_transaction!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.hash(txn))))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
@@ -240,7 +240,7 @@ defmodule BlockchainAPI.Watcher do
     end
     try do
       account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn))))
-      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower))
+      txn = Explorer.get_transaction!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.hash(txn))))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
@@ -251,7 +251,7 @@ defmodule BlockchainAPI.Watcher do
   defp insert_location_account_transaction(txn) do
     try do
       account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn))))
-      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower))
+      txn = Explorer.get_transaction!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.hash(txn))))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
@@ -262,7 +262,7 @@ defmodule BlockchainAPI.Watcher do
   defp insert_gateway_account_transaction(txn) do
     try do
       account = Explorer.get_account!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn))))
-      txn = Explorer.get_transaction!(Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower))
+      txn = Explorer.get_transaction!(to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.hash(txn))))
       Explorer.create_account_transaction(account_txn_map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
@@ -275,25 +275,25 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
 
   defp insert_coinbase_transaction(txn, height) do
-    txn_map = %{type: "coinbase", hash: Base.encode16(:blockchain_txn_coinbase_v1.hash(txn), case: :lower)}
+    txn_map = %{type: "coinbase", hash: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_coinbase_v1.hash(txn)))}
     {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
     Explorer.create_coinbase(transaction_entry.hash, coinbase_map(txn))
   end
 
   defp insert_payment_transaction(txn, height) do
-    txn_map = %{type: "payment", hash: Base.encode16(:blockchain_txn_payment_v1.hash(txn), case: :lower)}
+    txn_map = %{type: "payment", hash: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.hash(txn)))}
     {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
     Explorer.create_payment(transaction_entry.hash, payment_map(txn))
   end
 
   defp insert_gateway_transaction(txn, height) do
-    txn_map = %{type: "gateway", hash: Base.encode16(:blockchain_txn_add_gateway_v1.hash(txn), case: :lower)}
+    txn_map = %{type: "gateway", hash: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.hash(txn)))}
     {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
     Explorer.create_gateway(transaction_entry.hash, gateway_map(txn))
   end
 
   defp insert_location_transaction(txn, height) do
-    txn_map = %{type: "location", hash: Base.encode16(:blockchain_txn_assert_location_v1.hash(txn), case: :lower)}
+    txn_map = %{type: "location", hash: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.hash(txn)))}
     {:ok, transaction_entry} = Explorer.create_transaction(height, txn_map)
     Explorer.create_location(transaction_entry.hash, location_map(txn))
   end
@@ -389,7 +389,7 @@ defmodule BlockchainAPI.Watcher do
 
   defp block_map(block) do
     height = :blockchain_block.height(block)
-    hash = :blockchain_block.hash_block(block) |> Base.encode16(case: :lower)
+    hash = to_string(:libp2p_crypto.bin_to_b58(:blockchain_block.hash_block(block)))
     time = :blockchain_block.time(block)
     round = :blockchain_block.hbbft_round(block)
     %{hash: hash, height: height, time: time, round: round}
