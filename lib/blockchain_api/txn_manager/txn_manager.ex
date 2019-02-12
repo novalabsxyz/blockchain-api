@@ -40,7 +40,7 @@ defmodule BlockchainAPI.TxnManager do
                 |> Explorer.update_pending_transaction(%{status: "done"})
               {:error, _reason} ->
                 Logger.error("Failed to submit #{pending_txn_hash}")
-                pending_txn
+                pending_txn_hash
                 |> Explorer.get_pending_transaction!()
                 |> Explorer.update_pending_transaction(%{status: "error"})
             end
