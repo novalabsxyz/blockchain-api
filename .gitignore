@@ -35,6 +35,6 @@ blockchain_node-*.tar
 # variables.
 /config/prod.secret.exs
 
-/data
+/data*
 /log
 .elixir_ls
