@@ -29,7 +29,7 @@ defmodule BlockchainAPI.TxnManager do
       true ->
         pending_txn_hash = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn.hash(txn)))
         pending_txn_map = %{hash: pending_txn_hash}
-        {:ok, pending_txn} = Explorer.create_pending_transaction(pending_txn_map)
+        {:ok, _pending_txn} = Explorer.create_pending_transaction(pending_txn_map)
         :blockchain_worker.submit_txn(
           txn,
           fn(res) ->
