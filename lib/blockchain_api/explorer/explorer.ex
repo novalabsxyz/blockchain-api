@@ -102,7 +102,7 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.insert()
   end
 
-  def get_latest() do
+  def get_latest_block() do
     query = from block in Block, select: max(block.height)
     Repo.all(query)
   end
@@ -198,6 +198,11 @@ defmodule BlockchainAPI.Explorer do
     Account
     |> Repo.paginate(params)
   end
+
+  def list_all_accounts() do
+    Account |> Repo.all()
+  end
+
 
   def create_account_transaction(attrs \\ %{}) do
     %AccountTransaction{}

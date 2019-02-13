@@ -8,8 +8,8 @@ defmodule BlockchainAPI.Explorer.Account do
     field :name, :string
     field :balance, :integer, null: false
     field :address, :string, null: false
-    field :fee, :integer, null: false
-    field :nonce, :integer, null: false
+    field :fee, :integer, null: false, default: 0
+    field :nonce, :integer, null: false, default: 0
 
     timestamps()
 
