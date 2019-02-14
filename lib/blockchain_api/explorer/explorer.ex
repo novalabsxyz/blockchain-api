@@ -21,6 +21,8 @@ defmodule BlockchainAPI.Explorer do
   def list_transactions(params) do
     query = from(
       transaction in Transaction,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -29,6 +31,7 @@ defmodule BlockchainAPI.Explorer do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
+      order_by: [desc: block.height],
       select: [
         coinbase_transaction,
         payment_transaction,
