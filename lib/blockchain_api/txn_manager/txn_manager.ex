@@ -70,7 +70,7 @@ defmodule BlockchainAPI.TxnManager do
       end)
   end
 
-  defp deserialize(txn) do
+  def deserialize(txn) do
     txn |> Base.decode64! |> :blockchain_txn.deserialize()
   end
 

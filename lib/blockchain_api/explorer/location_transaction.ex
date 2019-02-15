@@ -14,6 +14,7 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
     field :hash, :string, null: false
 
     belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
+    belongs_to :gateway_transaction, BlockchainAPI.Explorer.GatewayTransaction, foreign_key: :gateway, references: :gateway, define_field: false
 
     timestamps()
   end
@@ -24,6 +25,7 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
     |> cast(attrs, [:hash, :gateway, :owner, :location, :nonce, :fee])
     |> validate_required([:hash, :gateway, :owner, :location, :nonce, :fee])
     |> foreign_key_constraint(:hash)
+    |> foreign_key_constraint(:gateway)
 
   end
 end

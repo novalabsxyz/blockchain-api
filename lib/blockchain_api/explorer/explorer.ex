@@ -145,7 +145,23 @@ defmodule BlockchainAPI.Explorer do
   end
 
   def list_gateway_transactions(params) do
-    GatewayTransaction
+
+    query = from(
+      g in GatewayTransaction,
+      left_join: l in LocationTransaction,
+      on: g.gateway == l.gateway,
+      select: %{
+        gateway: g.gateway,
+        gateway_hash: g.hash,
+        owner: g.owner,
+        location: l.location,
+        location_fee: l.fee,
+        location_nonce: l.nonce,
+        location_hash: l.hash
+      }
+    )
+
+    query
     |> Repo.paginate(params)
   end
 

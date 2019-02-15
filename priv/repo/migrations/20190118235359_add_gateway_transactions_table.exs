@@ -11,6 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
     end
 
     create unique_index(:gateway_transactions, [:hash], name: :unique_gateway_hash)
+    create unique_index(:gateway_transactions, [:gateway], name: :unique_gateway)
 
   end
 end
