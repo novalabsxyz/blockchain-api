@@ -49,21 +49,21 @@ defmodule BlockchainAPI.TxnManager do
     deserialized_txn = txn |> deserialize()
     pending_txn_hash = deserialized_txn |> txn_hash()
 
-    {:ok, _pending_txn} = pending_txn_hash
-                          |> txn_map()
-                          |> Explorer.create_pending_transaction()
+    {:ok, pending_txn} = deserialized_txn
+                         |> txn_map()
+                         |> Explorer.create_pending_transaction()
 
     :ok = :blockchain_worker.submit_txn(
       deserialized_txn,
       fn(res) ->
         case res do
           :ok ->
-            pending_txn_hash
+            pending_txn.hash
             |> Explorer.get_pending_transaction!()
             |> Explorer.update_pending_transaction(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit #{pending_txn_hash}")
-            pending_txn_hash
+            pending_txn.hash
             |> Explorer.get_pending_transaction!()
             |> Explorer.update_pending_transaction(%{status: "error"})
         end
@@ -78,7 +78,34 @@ defmodule BlockchainAPI.TxnManager do
     to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn.hash(txn)))
   end
 
-  defp txn_map(hash) do
-    %{hash: hash}
+  defp txn_type(txn) do
+    :blockchain_txn.type(txn)
+  end
+
+  defp txn_map(txn) do
+
+    hash = txn_hash(txn)
+
+    case txn_type(txn) do
+      ## XXX: only doing payment, gateway and location txns for now...
+      :blockchain_txn_payment_v1 ->
+        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn)))
+        nonce = :blockchain_txn_payment_v1.nonce(txn)
+        type = "payment"
+        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
+      :blockchain_txn_add_gateway_v1 ->
+        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
+        ## FIXME: no nonce in add gateway txn for now
+        nonce = -1
+        type = "gateway"
+        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
+      :blockchain_txn_assert_location_v1 ->
+        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
+        ## XXX: no nonce in add gateway txn for now
+        nonce = :blockchain_txn_assert_location_v1.nonce(txn)
+        type = "location"
+        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
+    end
+
   end
 end
