@@ -337,7 +337,7 @@ defmodule BlockchainAPI.Explorer do
                  nil -> {nil, nil}
                  loc -> :h3.to_geo(loc)
                end
-               Map.merge(Map.drop(map, [:location]), %{lat: lat, long: long})
+               Map.merge(Map.drop(map, [:location]), %{lat: lat, lng: long})
            end)
 
     %{page | entries: data}
