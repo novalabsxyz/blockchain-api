@@ -201,9 +201,29 @@ defmodule BlockchainAPI.Explorer do
   end
 
   def get_account!(address) do
-    Account
-    |> where([a], a.address == ^address)
-    |> Repo.one!
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pt in PaymentTransaction,
+      on: a.address == pt.payer,
+      left_join: lt in LocationTransaction,
+      on: a.address == lt.owner,
+      order_by: [desc: pt.id, desc: lt.id],
+      select: %{
+        balance: a.balance,
+        address: a.address,
+        name: a.name,
+        fee: a.fee,
+        payment: %{
+          nonce: pt.nonce
+        },
+        location: %{
+          nonce: lt.nonce
+        }
+      }
+    )
+
+    query |> Repo.one!
   end
 
   def update_account(account, attrs \\ %{}) do
