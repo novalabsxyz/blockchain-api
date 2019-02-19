@@ -87,7 +87,7 @@ defmodule BlockchainAPI.TxnManager do
     hash = txn_hash(txn)
 
     case txn_type(txn) do
-      ## XXX: only doing payment, gateway and location txns for now...
+      ## NOTE: only doing payment, gateway and location txns for now...
       :blockchain_txn_payment_v1 ->
         account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn)))
         nonce = :blockchain_txn_payment_v1.nonce(txn)
@@ -95,13 +95,12 @@ defmodule BlockchainAPI.TxnManager do
         %{hash: hash, nonce: nonce, type: type, account_address: account_address}
       :blockchain_txn_add_gateway_v1 ->
         account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
-        ## FIXME: no nonce in add gateway txn for now
+        ## FIXME: no nonce in add gateway txn
         nonce = -1
         type = "gateway"
         %{hash: hash, nonce: nonce, type: type, account_address: account_address}
       :blockchain_txn_assert_location_v1 ->
         account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
-        ## XXX: no nonce in add gateway txn for now
         nonce = :blockchain_txn_assert_location_v1.nonce(txn)
         type = "location"
         %{hash: hash, nonce: nonce, type: type, account_address: account_address}
