@@ -293,11 +293,52 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.update()
   end
 
+  def get_account_gateways(address, params \\ %{}) do
+    query = from(
+      at in AccountTransaction,
+      where: at.account_address == ^address,
+      left_join: gt in GatewayTransaction,
+      on: at.account_address == gt.owner,
+      where: at.txn_hash == gt.hash,
+      left_join: lt in LocationTransaction,
+      on: gt.gateway == lt.gateway,
+      select: %{
+        account_address: at.account_address,
+        gateway: gt.gateway,
+        gateway_hash: gt.hash,
+        owner: gt.owner,
+        location: lt.location,
+        location_fee: lt.fee,
+        location_nonce: lt.nonce,
+        location_hash: lt.hash
+      })
+
+    query
+    |> Repo.paginate(params)
+    |> clean_account_gateways()
+  end
+
+  ## Helper functions
+
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
     data = entries
            |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
            |> Enum.reduce([], fn map, acc -> [clean_txn_struct(map) | acc] end)
            |> Enum.reverse
+
+    %{page | entries: data}
+  end
+
+  defp clean_account_gateways(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn map ->
+             {lat, long} =
+               case map.location do
+                 nil -> {nil, nil}
+                 loc -> :h3.to_geo(loc)
+               end
+               Map.merge(Map.drop(map, [:location]), %{lat: lat, long: long})
+           end)
 
     %{page | entries: data}
   end
