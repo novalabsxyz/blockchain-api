@@ -21,5 +21,6 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
     |> cast(attrs, [:hash, :owner, :gateway])
     |> validate_required([:hash, :owner, :gateway])
     |> foreign_key_constraint(:hash)
+    |> unique_constraint(:gateway)
   end
 end

@@ -40,6 +40,7 @@ defmodule BlockchainAPI.Application do
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
       {BlockchainAPI.Watcher, watcher_worker_opts},
+      {BlockchainAPI.TxnManager, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

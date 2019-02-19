@@ -14,12 +14,15 @@ defmodule BlockchainAPI.Explorer do
     PaymentTransaction,
     CoinbaseTransaction,
     GatewayTransaction,
-    LocationTransaction
+    LocationTransaction,
+    PendingTransaction
   }
 
   def list_transactions(params) do
     query = from(
       transaction in Transaction,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -28,6 +31,7 @@ defmodule BlockchainAPI.Explorer do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
+      order_by: [desc: block.height],
       select: [
         coinbase_transaction,
         payment_transaction,
@@ -101,7 +105,7 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.insert()
   end
 
-  def get_latest() do
+  def get_latest_block() do
     query = from block in Block, select: max(block.height)
     Repo.all(query)
   end
@@ -141,7 +145,23 @@ defmodule BlockchainAPI.Explorer do
   end
 
   def list_gateway_transactions(params) do
-    GatewayTransaction
+
+    query = from(
+      g in GatewayTransaction,
+      left_join: l in LocationTransaction,
+      on: g.gateway == l.gateway,
+      select: %{
+        gateway: g.gateway,
+        gateway_hash: g.hash,
+        owner: g.owner,
+        location: l.location,
+        location_fee: l.fee,
+        location_nonce: l.nonce,
+        location_hash: l.hash
+      }
+    )
+
+    query
     |> Repo.paginate(params)
   end
 
@@ -198,6 +218,11 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
   end
 
+  def list_all_accounts() do
+    Account |> Repo.all()
+  end
+
+
   def create_account_transaction(attrs \\ %{}) do
     %AccountTransaction{}
     |> AccountTransaction.changeset(attrs)
@@ -235,6 +260,37 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.paginate(params)
     |> clean_account_transactions()
 
+  end
+
+  def create_pending_transaction(attrs \\ %{}) do
+    %PendingTransaction{}
+    |> PendingTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def list_pending_transactions(params) do
+    PendingTransaction
+    |> order_by([pt], desc: pt.inserted_at)
+    |> Repo.paginate(params)
+  end
+
+  def get_pending_transaction!(hash) do
+    PendingTransaction
+    |> where([pt], pt.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def get_pending_transaction(hash) do
+    PendingTransaction
+    |> where([pt], pt.hash == ^hash)
+    |> Repo.one
+  end
+
+  def update_pending_transaction(txn, attrs \\ %{}) do
+    txn.hash
+    |> get_pending_transaction!()
+    |> PendingTransaction.changeset(attrs)
+    |> Repo.update()
   end
 
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
