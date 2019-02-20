@@ -47,7 +47,6 @@ defmodule BlockchainAPI.TxnManager do
   defp submit_txn(txn) do
 
     deserialized_txn = txn |> deserialize()
-    pending_txn_hash = deserialized_txn |> txn_hash()
 
     {:ok, pending_txn} = deserialized_txn
                          |> txn_map()
@@ -62,7 +61,7 @@ defmodule BlockchainAPI.TxnManager do
             |> Explorer.get_pending_transaction!()
             |> Explorer.update_pending_transaction(%{status: "done"})
           {:error, _reason} ->
-            Logger.error("Failed to submit #{pending_txn_hash}")
+            Logger.error("Failed to submit #{pending_txn.hash}")
             pending_txn.hash
             |> Explorer.get_pending_transaction!()
             |> Explorer.update_pending_transaction(%{status: "error"})
