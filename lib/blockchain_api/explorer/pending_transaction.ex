@@ -8,7 +8,7 @@ defmodule BlockchainAPI.Explorer.PendingTransaction do
     field :hash, :string, null: false
     field :status, :string, null: false, default: "pending"
     field :type, :string, null: false
-    field :nonce, :integer, null: false
+    field :nonce, :integer, null: false, default: 0
     field :account_address, :string, null: false
 
     timestamps()

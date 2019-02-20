@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
     field :fee, :integer, null: false
     field :gateway, :string, null: false
     field :location, :string, null: false
-    field :nonce, :integer, null: false
+    field :nonce, :integer, null: false, default: 0
     field :owner, :string, null: false
     field :hash, :string, null: false
 
