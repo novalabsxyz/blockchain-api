@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
       add :payee, :string, null: false
       add :payer, :string, null: false
       add :fee, :integer, null: false
-      add :nonce, :integer, null: false
+      add :nonce, :integer, null: false, default: 0
 
       add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
       timestamps()

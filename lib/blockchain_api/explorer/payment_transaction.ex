@@ -8,7 +8,7 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
   schema "payment_transactions" do
     field :amount, :integer, null: false
     field :fee, :integer, null: false
-    field :nonce, :integer, null: false
+    field :nonce, :integer, null: false, default: 0
     field :payee, :string, null: false
     field :payer, :string, null: false
     field :hash, :string, null: false

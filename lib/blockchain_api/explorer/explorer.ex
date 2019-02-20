@@ -206,6 +206,33 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.one!
   end
 
+  def get_account_detail(address) do
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pt in PaymentTransaction,
+      on: a.address == pt.payer,
+      left_join: lt in LocationTransaction,
+      on: a.address == lt.owner,
+      order_by: [desc: pt.id, desc: lt.id],
+      select: %{
+        balance: a.balance,
+        address: a.address,
+        name: a.name,
+        fee: a.fee,
+        payment: %{
+          nonce: pt.nonce
+        },
+        location: %{
+          nonce: lt.nonce
+        }
+      },
+      limit: 1
+    )
+
+    query |> Repo.one
+  end
+
   def update_account(account, attrs \\ %{}) do
     account.address
     |> get_account!()
@@ -344,16 +371,20 @@ defmodule BlockchainAPI.Explorer do
   end
 
   defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(payment), [:__meta__, :transaction]), %{type: "payment", height: height, time: time})
+    Map.merge(clean_struct(payment), %{type: "payment", height: height, time: time})
   end
   defp clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(coinbase), [:__meta__, :transaction]), %{type: "coinbase", height: height, time: time})
+    Map.merge(clean_struct(coinbase), %{type: "coinbase", height: height, time: time})
   end
   defp clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(gateway), [:__meta__, :transaction]), %{type: "gateway", height: height, time: time})
+    Map.merge(clean_struct(gateway), %{type: "gateway", height: height, time: time})
   end
   defp clean_txn_struct(%{location: location, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(location), [:__meta__, :transaction]), %{type: "location", height: height, time: time})
+    Map.merge(clean_struct(location), %{type: "location", height: height, time: time})
+  end
+
+  defp clean_struct(struct) do
+    Map.drop(Map.from_struct(struct), [:__meta__, :transaction, :id, :inserted_at, :updated_at])
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do

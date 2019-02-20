@@ -20,7 +20,7 @@ defmodule BlockchainAPIWeb.AccountController do
   end
 
   def show(conn, %{"address" => address}) do
-    render(conn, "show.json", account: Explorer.get_account!(address))
+    render(conn, "show.json", account: Explorer.get_account_detail(address))
   end
 
 end

@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingTransationTable do
       add :hash, :string, null: false
       add :status, :string, null: false, default: "pending"
       add :type, :string, null: false
-      add :nonce, :bigint, null: false
+      add :nonce, :bigint, null: false, default: 0
 
       add :account_address, references(:accounts, on_delete: :nothing, column: :address, type: :string), null: false
 
