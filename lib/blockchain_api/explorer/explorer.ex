@@ -201,6 +201,12 @@ defmodule BlockchainAPI.Explorer do
   end
 
   def get_account!(address) do
+    Account
+    |> where([a], a.address == ^address)
+    |> Repo.one!
+  end
+
+  def get_account_detail!(address) do
     query = from(
       a in Account,
       where: a.address == ^address,
@@ -220,7 +226,8 @@ defmodule BlockchainAPI.Explorer do
         location: %{
           nonce: lt.nonce
         }
-      }
+      },
+      limit: 1
     )
 
     query |> Repo.one!
