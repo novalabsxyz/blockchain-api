@@ -350,7 +350,8 @@ defmodule BlockchainAPI.Explorer do
         address: pt.account_address,
         hash: pt.hash,
         nonce: pt.nonce,
-        status: pt.status
+        status: pt.status,
+        type: pt.type
       }
     )
 
