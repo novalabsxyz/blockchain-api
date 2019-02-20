@@ -295,12 +295,6 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.insert()
   end
 
-  def list_pending_transactions(params) do
-    PendingTransaction
-    |> order_by([pt], desc: pt.inserted_at)
-    |> Repo.paginate(params)
-  end
-
   def get_pending_transaction!(hash) do
     PendingTransaction
     |> where([pt], pt.hash == ^hash)
@@ -345,7 +339,28 @@ defmodule BlockchainAPI.Explorer do
     |> clean_account_gateways()
   end
 
-  ## Helper functions
+  def get_account_pending_transactions(address, params) do
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pt in PendingTransaction,
+      on: a.address == pt.account_address,
+      order_by: [desc: pt.id],
+      select: %{
+        address: pt.account_address,
+        hash: pt.hash,
+        nonce: pt.nonce,
+        status: pt.status
+      }
+    )
+
+    query |> Repo.paginate(params)
+
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
 
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
     data = entries
