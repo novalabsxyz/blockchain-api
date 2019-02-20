@@ -206,7 +206,7 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.one!
   end
 
-  def get_account_detail!(address) do
+  def get_account_detail(address) do
     query = from(
       a in Account,
       where: a.address == ^address,
@@ -230,7 +230,7 @@ defmodule BlockchainAPI.Explorer do
       limit: 1
     )
 
-    query |> Repo.one!
+    query |> Repo.one
   end
 
   def update_account(account, attrs \\ %{}) do
