@@ -371,16 +371,20 @@ defmodule BlockchainAPI.Explorer do
   end
 
   defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(payment), [:__meta__, :transaction]), %{type: "payment", height: height, time: time})
+    Map.merge(clean_struct(payment), %{type: "payment", height: height, time: time})
   end
   defp clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(coinbase), [:__meta__, :transaction]), %{type: "coinbase", height: height, time: time})
+    Map.merge(clean_struct(coinbase), %{type: "coinbase", height: height, time: time})
   end
   defp clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(gateway), [:__meta__, :transaction]), %{type: "gateway", height: height, time: time})
+    Map.merge(clean_struct(gateway), %{type: "gateway", height: height, time: time})
   end
   defp clean_txn_struct(%{location: location, height: height, time: time}) do
-    Map.merge(Map.drop(Map.from_struct(location), [:__meta__, :transaction]), %{type: "location", height: height, time: time})
+    Map.merge(clean_struct(location), %{type: "location", height: height, time: time})
+  end
+
+  defp clean_struct(struct) do
+    Map.drop(Map.from_struct(struct), [:__meta__, :transaction, :id, :inserted_at, :updated_at])
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
