@@ -10,8 +10,6 @@ defmodule BlockchainAPI.Explorer.Block do
     field :time, :integer, null: false
     field :height, :integer, null: false
 
-    has_many :transactions, BlockchainAPI.Explorer.Transaction, foreign_key: :block_height
-
     timestamps()
   end
 

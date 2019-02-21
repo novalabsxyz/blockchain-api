@@ -24,10 +24,7 @@ defmodule BlockchainAPI.TxnManager do
   @impl true
   def handle_call({:submit, txn}, _from, state) do
     try do
-      pending_txn = txn
-                    |> deserialize()
-                    |> txn_hash()
-                    |> Explorer.get_pending_transaction!()
+      pending_txn = get_pending_transaction(txn)
 
       case pending_txn.status do
         "done" ->
@@ -45,26 +42,60 @@ defmodule BlockchainAPI.TxnManager do
   end
 
   defp submit_txn(txn) do
+    submit_txn(txn_type(deserialize(txn)), deserialize(txn))
+  end
 
-    deserialized_txn = txn |> deserialize()
-
-    {:ok, pending_txn} = deserialized_txn
-                         |> txn_map()
-                         |> Explorer.create_pending_transaction()
-
+  defp submit_txn(:blockchain_txn_payment_v1, txn) do
+    {:ok, pending_txn} = Explorer.create_pending_payment(pending_payment_map(txn))
     :ok = :blockchain_worker.submit_txn(
-      deserialized_txn,
+      txn,
       fn(res) ->
         case res do
           :ok ->
             pending_txn.hash
-            |> Explorer.get_pending_transaction!()
-            |> Explorer.update_pending_transaction(%{status: "done"})
+            |> Explorer.get_pending_payment!()
+            |> Explorer.update_pending_payment(%{status: "done"})
           {:error, _reason} ->
-            Logger.error("Failed to submit #{pending_txn.hash}")
+            Logger.error("Failed to submit payment: #{pending_txn.hash}")
             pending_txn.hash
-            |> Explorer.get_pending_transaction!()
-            |> Explorer.update_pending_transaction(%{status: "error"})
+            |> Explorer.get_pending_payment!()
+            |> Explorer.update_pending_payment(%{status: "error"})
+        end
+      end)
+  end
+  defp submit_txn(:blockchain_txn_add_gateway_v1, txn) do
+    {:ok, pending_txn} = Explorer.create_pending_gateway(pending_gateway_map(txn))
+    :ok = :blockchain_worker.submit_txn(
+      txn,
+      fn(res) ->
+        case res do
+          :ok ->
+            pending_txn.hash
+            |> Explorer.get_pending_gateway!()
+            |> Explorer.update_pending_gateway(%{status: "done"})
+          {:error, _reason} ->
+            Logger.error("Failed to submit gateway: #{pending_txn.hash}")
+            pending_txn.hash
+            |> Explorer.get_pending_gateway!()
+            |> Explorer.update_pending_gateway(%{status: "error"})
+        end
+      end)
+  end
+  defp submit_txn(:blockchain_txn_assert_location_v1, txn) do
+    {:ok, pending_txn} = Explorer.create_pending_location(pending_location_map(txn))
+    :ok = :blockchain_worker.submit_txn(
+      txn,
+      fn(res) ->
+        case res do
+          :ok ->
+            pending_txn.hash
+            |> Explorer.get_pending_location!()
+            |> Explorer.update_pending_location(%{status: "done"})
+          {:error, _reason} ->
+            Logger.error("Failed to submit location: #{pending_txn.hash}")
+            pending_txn.hash
+            |> Explorer.get_pending_location!()
+            |> Explorer.update_pending_location(%{status: "error"})
         end
       end)
   end
@@ -81,29 +112,43 @@ defmodule BlockchainAPI.TxnManager do
     :blockchain_txn.type(txn)
   end
 
-  defp txn_map(txn) do
-
-    hash = txn_hash(txn)
-
-    case txn_type(txn) do
-      ## NOTE: only doing payment, gateway and location txns for now...
-      :blockchain_txn_payment_v1 ->
-        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn)))
-        nonce = :blockchain_txn_payment_v1.nonce(txn)
-        type = "payment"
-        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
-      :blockchain_txn_add_gateway_v1 ->
-        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
-        ## FIXME: no nonce in add gateway txn
-        nonce = -1
-        type = "gateway"
-        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
-      :blockchain_txn_assert_location_v1 ->
-        account_address = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
-        nonce = :blockchain_txn_assert_location_v1.nonce(txn)
-        type = "location"
-        %{hash: hash, nonce: nonce, type: type, account_address: account_address}
-    end
-
+  defp pending_payment_map(txn) do
+    payer = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn)))
+    payee = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payee(txn)))
+    nonce = :blockchain_txn_payment_v1.nonce(txn)
+    fee = :blockchain_txn_payment_v1.fee(txn)
+    amount = :blockchain_txn_payment_v1.amount(txn)
+    %{hash: txn_hash(txn), nonce: nonce, amount: amount, fee: fee, payer: payer, payee: payee}
   end
+
+  defp pending_gateway_map(txn) do
+    owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
+    gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway(txn)))
+    %{hash: txn_hash(txn), owner: owner, gateway: gateway}
+  end
+
+  defp pending_location_map(txn) do
+    owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
+    gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway(txn)))
+    location = :blockchain_txn_assert_location_v1.location(txn)
+    nonce = :blockchain_txn_assert_location_v1.nonce(txn)
+    fee = :blockchain_txn_assert_location_v1.fee(txn)
+    %{hash: txn_hash(txn), nonce: nonce, fee: fee, owner: owner, location: location, gateway: gateway}
+  end
+
+  defp get_pending_transaction(txn) do
+    deserialized_txn = deserialize(txn)
+    get_pending_transaction(txn_type(deserialized_txn), txn_hash(deserialized_txn))
+  end
+
+  defp get_pending_transaction(:blockchain_txn_payment_v1, hash) do
+    Explorer.get_pending_payment!(hash)
+  end
+  defp get_pending_transaction(:blockchain_txn_add_gateway_v1, hash) do
+    Explorer.get_pending_gateway!(hash)
+  end
+  defp get_pending_transaction(:blockchain_txn_assert_location_v1, hash) do
+    Explorer.get_pending_location!(hash)
+  end
+
 end
