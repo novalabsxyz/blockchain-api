@@ -10,8 +10,6 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
     field :payee, :string, null: false
     field :hash, :string, null: false
 
-    belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
-
     timestamps()
   end
 

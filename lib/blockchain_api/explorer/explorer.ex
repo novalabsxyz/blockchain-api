@@ -15,7 +15,9 @@ defmodule BlockchainAPI.Explorer do
     CoinbaseTransaction,
     GatewayTransaction,
     LocationTransaction,
-    PendingTransaction
+    PendingPayment,
+    PendingGateway,
+    PendingLocation
   }
 
   def list_transactions(params) do
@@ -289,37 +291,6 @@ defmodule BlockchainAPI.Explorer do
 
   end
 
-  def create_pending_transaction(attrs \\ %{}) do
-    %PendingTransaction{}
-    |> PendingTransaction.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def list_pending_transactions(params) do
-    PendingTransaction
-    |> order_by([pt], desc: pt.inserted_at)
-    |> Repo.paginate(params)
-  end
-
-  def get_pending_transaction!(hash) do
-    PendingTransaction
-    |> where([pt], pt.hash == ^hash)
-    |> Repo.one!
-  end
-
-  def get_pending_transaction(hash) do
-    PendingTransaction
-    |> where([pt], pt.hash == ^hash)
-    |> Repo.one
-  end
-
-  def update_pending_transaction(txn, attrs \\ %{}) do
-    txn.hash
-    |> get_pending_transaction!()
-    |> PendingTransaction.changeset(attrs)
-    |> Repo.update()
-  end
-
   def get_account_gateways(address, params \\ %{}) do
     query = from(
       at in AccountTransaction,
@@ -345,7 +316,98 @@ defmodule BlockchainAPI.Explorer do
     |> clean_account_gateways()
   end
 
-  ## Helper functions
+  def create_pending_gateway(attrs \\ %{}) do
+    %PendingGateway{}
+    |> PendingGateway.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_pending_gateway!(hash) do
+    PendingGateway
+    |> where([pg], pg.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def update_pending_gateway(pg, attrs \\ %{}) do
+    pg.hash
+    |> get_pending_gateway!()
+    |> PendingGateway.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def create_pending_payment(attrs \\ %{}) do
+    %PendingPayment{}
+    |> PendingPayment.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_pending_payment!(hash) do
+    PendingPayment
+    |> where([pp], pp.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def update_pending_payment(pp, attrs \\ %{}) do
+    pp.hash
+    |> get_pending_payment!()
+    |> PendingPayment.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def create_pending_location(attrs \\ %{}) do
+    %PendingLocation{}
+    |> PendingLocation.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_pending_location!(hash) do
+    PendingLocation
+    |> where([pl], pl.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def update_pending_location(pl, attrs \\ %{}) do
+    pl.hash
+    |> get_pending_location!()
+    |> PendingLocation.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def get_account_pending_transactions(address, params) do
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pg in PendingGateway,
+      on: pg.owner == a.address,
+      left_join: pl in PendingLocation,
+      on: pl.owner == a.address,
+      left_join: pp in PendingPayment,
+      on: pp.payer == a.address,
+      order_by: [desc: pp.id, desc: pl.id, desc: pg.id],
+      select: %{
+        payment: pp,
+        gateway: pg,
+        location: pl
+      }
+    )
+
+    query
+    |> Repo.paginate(params)
+    |> clean_pending_transactions()
+
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp clean_pending_transactions(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+           |> Enum.reduce([], fn map, acc -> [clean_pending_txn_struct(map) | acc] end)
+           |> Enum.reverse
+
+    %{page | entries: data}
+  end
 
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
     data = entries
@@ -362,7 +424,11 @@ defmodule BlockchainAPI.Explorer do
              {lat, long} =
                case map.location do
                  nil -> {nil, nil}
-                 loc -> :h3.to_geo(loc)
+                 loc ->
+                   loc
+                   |> String.to_charlist()
+                   |> :h3.from_string()
+                   |> :h3.to_geo()
                end
                Map.merge(Map.drop(map, [:location]), %{lat: lat, lng: long})
            end)
@@ -381,6 +447,20 @@ defmodule BlockchainAPI.Explorer do
   end
   defp clean_txn_struct(%{location: location, height: height, time: time}) do
     Map.merge(clean_struct(location), %{type: "location", height: height, time: time})
+  end
+
+  defp clean_pending_txn_struct(%{payment: payment}) do
+    Map.merge(clean_pending_struct(payment), %{type: "payment"})
+  end
+  defp clean_pending_txn_struct(%{gateway: gateway}) do
+    Map.merge(clean_pending_struct(gateway), %{type: "gateway"})
+  end
+  defp clean_pending_txn_struct(%{location: location}) do
+    Map.merge(clean_pending_struct(location), %{type: "location"})
+  end
+
+  defp clean_pending_struct(struct) do
+    Map.drop(Map.from_struct(struct), [:__meta__, :id, :inserted_at, :updated_at])
   end
 
   defp clean_struct(struct) do
