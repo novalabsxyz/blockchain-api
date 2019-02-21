@@ -449,7 +449,8 @@ defmodule BlockchainAPI.Explorer do
     Map.merge(clean_pending_struct(gateway), %{type: "gateway"})
   end
   defp clean_pending_txn_struct(%{location: location}) do
-    Map.merge(clean_pending_struct(location), %{type: "location"})
+    {lat, lng} = h3_location_to_lat_long(location.location)
+    Map.merge(clean_pending_struct(location), %{type: "location", lat: lat, lng: lng})
   end
 
   defp clean_pending_struct(struct) do
