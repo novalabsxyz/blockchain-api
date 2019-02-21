@@ -130,7 +130,7 @@ defmodule BlockchainAPI.TxnManager do
   defp pending_location_map(txn) do
     owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
     gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway(txn)))
-    location = :blockchain_txn_assert_location_v1.location(txn)
+    location = to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
     nonce = :blockchain_txn_assert_location_v1.nonce(txn)
     fee = :blockchain_txn_assert_location_v1.fee(txn)
     %{hash: txn_hash(txn), nonce: nonce, fee: fee, owner: owner, location: location, gateway: gateway}
