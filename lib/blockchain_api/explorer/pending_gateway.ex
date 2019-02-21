@@ -17,8 +17,8 @@ defmodule BlockchainAPI.Explorer.PendingGateway do
   @doc false
   def changeset(pending_gateway, attrs) do
     pending_gateway
-    |> cast(attrs, [:hash, :status, :gateway, :owner])
-    |> validate_required([:hash, :status, :gateway, :owner])
+    |> cast(attrs, [:hash, :status, :gateway, :owner, :fee])
+    |> validate_required([:hash, :status, :gateway, :owner, :fee])
     |> foreign_key_constraint(:owner)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)
   end
