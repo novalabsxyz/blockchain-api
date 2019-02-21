@@ -3,12 +3,13 @@ defmodule BlockchainAPI.Explorer.PendingGateway do
   import Ecto.Changeset
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Jason.Encoder, only: [:id, :hash, :status, :owner, :gateway]}
+  @derive {Jason.Encoder, only: [:id, :hash, :status, :owner, :gateway, :fee]}
   schema "pending_gateways" do
     field :hash, :string, null: false
     field :status, :string, null: false, default: "pending"
     field :gateway, :string, null: false
     field :owner, :string, null: false
+    field :fee, :integer, null: false, default: 0
 
     timestamps()
   end
