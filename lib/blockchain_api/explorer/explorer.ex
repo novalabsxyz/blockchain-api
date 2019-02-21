@@ -421,16 +421,8 @@ defmodule BlockchainAPI.Explorer do
   defp clean_account_gateways(%Scrivener.Page{entries: entries}=page) do
     data = entries
            |> Enum.map(fn map ->
-             {lat, long} =
-               case map.location do
-                 nil -> {nil, nil}
-                 loc ->
-                   loc
-                   |> String.to_charlist()
-                   |> :h3.from_string()
-                   |> :h3.to_geo()
-               end
-               Map.merge(Map.drop(map, [:location]), %{lat: lat, lng: long})
+             {lat, lng} = h3_location_to_lat_long(map.location)
+             Map.merge(map, %{lat: lat, lng: lng})
            end)
 
     %{page | entries: data}
@@ -446,7 +438,8 @@ defmodule BlockchainAPI.Explorer do
     Map.merge(clean_struct(gateway), %{type: "gateway", height: height, time: time})
   end
   defp clean_txn_struct(%{location: location, height: height, time: time}) do
-    Map.merge(clean_struct(location), %{type: "location", height: height, time: time})
+    {lat, lng} = h3_location_to_lat_long(location.location)
+    Map.merge(clean_struct(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
   end
 
   defp clean_pending_txn_struct(%{payment: payment}) do
@@ -472,4 +465,14 @@ defmodule BlockchainAPI.Explorer do
     %{page | entries: clean_entries}
   end
 
+  defp h3_location_to_lat_long(h3location) do
+    case h3location do
+      nil -> {nil, nil}
+      loc ->
+        loc
+        |> String.to_charlist()
+        |> :h3.from_string()
+        |> :h3.to_geo()
+    end
+  end
 end
