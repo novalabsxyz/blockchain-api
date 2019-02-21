@@ -424,7 +424,11 @@ defmodule BlockchainAPI.Explorer do
              {lat, long} =
                case map.location do
                  nil -> {nil, nil}
-                 loc -> :h3.to_geo(loc)
+                 loc ->
+                   loc
+                   |> String.to_charlist()
+                   |> :h3.from_string()
+                   |> :h3.to_geo()
                end
                Map.merge(Map.drop(map, [:location]), %{lat: lat, lng: long})
            end)
