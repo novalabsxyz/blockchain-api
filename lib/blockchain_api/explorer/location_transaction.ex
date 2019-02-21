@@ -13,9 +13,6 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
     field :owner, :string, null: false
     field :hash, :string, null: false
 
-    belongs_to :transaction, BlockchainAPI.Explorer.Transaction, foreign_key: :hash, references: :hash, define_field: false
-    belongs_to :gateway_transaction, BlockchainAPI.Explorer.GatewayTransaction, foreign_key: :gateway, references: :gateway, define_field: false
-
     timestamps()
   end
 
