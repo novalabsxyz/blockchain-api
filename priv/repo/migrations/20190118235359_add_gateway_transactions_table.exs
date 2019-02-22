@@ -6,6 +6,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
       add :owner, :string, null: false
       add :gateway, :string, null: false
       add :fee, :bigint, null: false, default: 0
+      add :amount, :bigint, null: false, default: 0
 
       add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :string), null: false
       timestamps()

@@ -125,7 +125,8 @@ defmodule BlockchainAPI.TxnManager do
     owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
     gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway(txn)))
     fee = :blockchain_txn_add_gateway_v1.fee(txn)
-    %{hash: txn_hash(txn), owner: owner, fee: fee, gateway: gateway}
+    amount = :blockchain_txn_add_gateway_v1.amount(txn)
+    %{hash: txn_hash(txn), owner: owner, fee: fee, amount: amount, gateway: gateway}
   end
 
   defp pending_location_map(txn) do

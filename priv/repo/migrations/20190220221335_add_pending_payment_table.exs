@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
       add :status, :string, null: false, default: "pending"
       add :nonce, :bigint, null: false, default: 0
       add :payee, :string, null: false
-      add :fee, :integer, null: false
+      add :fee, :bigint, null: false
       add :amount, :bigint, null: false
 
       add :payer, references(:accounts, on_delete: :nothing, column: :address, type: :string), null: false
