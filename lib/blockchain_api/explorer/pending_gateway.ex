@@ -3,12 +3,14 @@ defmodule BlockchainAPI.Explorer.PendingGateway do
   import Ecto.Changeset
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Jason.Encoder, only: [:id, :hash, :status, :owner, :gateway]}
+  @derive {Jason.Encoder, only: [:id, :hash, :status, :owner, :gateway, :fee, :amount]}
   schema "pending_gateways" do
     field :hash, :string, null: false
     field :status, :string, null: false, default: "pending"
     field :gateway, :string, null: false
     field :owner, :string, null: false
+    field :fee, :integer, null: false, default: 0
+    field :amount, :integer, null: false, default: 0
 
     timestamps()
   end
@@ -16,8 +18,8 @@ defmodule BlockchainAPI.Explorer.PendingGateway do
   @doc false
   def changeset(pending_gateway, attrs) do
     pending_gateway
-    |> cast(attrs, [:hash, :status, :gateway, :owner])
-    |> validate_required([:hash, :status, :gateway, :owner])
+    |> cast(attrs, [:hash, :status, :gateway, :owner, :fee, :amount])
+    |> validate_required([:hash, :status, :gateway, :owner, :fee, :amount])
     |> foreign_key_constraint(:owner)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)
   end

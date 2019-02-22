@@ -412,6 +412,8 @@ defmodule BlockchainAPI.Watcher do
     %{
       owner: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn))),
       gateway: to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway(txn))),
+      fee: :blockchain_txn_add_gateway_v1.fee(txn),
+      amount: :blockchain_txn_add_gateway_v1.amount(txn)
     }
   end
 
