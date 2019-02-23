@@ -8,9 +8,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
       add :location, :string, null: false
       add :fee, :bigint, null: false
       add :nonce, :bigint, null: false
+      add :gateway, :string, null: false
 
       add :owner, references(:accounts, on_delete: :nothing, column: :address, type: :string), null: false
-      add :gateway, references(:gateway_transactions, on_delete: :nothing, column: :gateway, type: :string), null: false
 
       timestamps()
     end
