@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTable do
 
   def change do
     create table(:accounts) do
-      add :address, :string, null: false
+      add :address, :binary, null: false
       add :name, :string
       add :balance, :bigint, null: false
       add :fee, :bigint, null: false, default: 0

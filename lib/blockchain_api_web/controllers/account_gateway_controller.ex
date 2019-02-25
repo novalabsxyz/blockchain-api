@@ -1,14 +1,16 @@
 defmodule BlockchainAPIWeb.AccountGatewayController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.{Util, Explorer}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"account_address" => address}=params) do
 
-    page = Explorer.get_account_gateways(address, params)
+    page = address
+           |> Util.string_to_bin()
+           |> Explorer.get_account_gateways(params)
 
     render(conn,
       "index.json",

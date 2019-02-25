@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.PaymentController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.{Util, Explorer}
 
   action_fallback BlockchainAPIWeb.FallbackController
 
@@ -19,7 +19,10 @@ defmodule BlockchainAPIWeb.PaymentController do
   end
 
   def show(conn, %{"hash" => hash}) do
-    payment = Explorer.get_payment!(hash)
+    payment = hash
+              |> Util.string_to_bin()
+              |> Explorer.get_payment!()
+
     render(conn, "show.json", payment: payment)
   end
 end

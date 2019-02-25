@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.LocationController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.{Util, Explorer}
 
   action_fallback BlockchainAPIWeb.FallbackController
 
@@ -19,7 +19,10 @@ defmodule BlockchainAPIWeb.LocationController do
   end
 
   def show(conn, %{"hash" => hash}) do
-    location = Explorer.get_location!(hash)
+    location = hash
+               |> Util.string_to_bin()
+               |> Explorer.get_location!()
+
     render(conn, "show.json", location: location)
   end
 end
