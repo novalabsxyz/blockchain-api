@@ -5,7 +5,9 @@ defmodule BlockchainAPI.TxnManager do
   require Logger
   @me __MODULE__
 
-  # Client
+  #==================================================================
+  # API
+  #==================================================================
   def start_link(args) do
     GenServer.start_link(@me, args, name: @me)
   end
@@ -14,8 +16,9 @@ defmodule BlockchainAPI.TxnManager do
     GenServer.call(@me, {:submit, txn})
   end
 
+  #==================================================================
   # Callbacks
-
+  #==================================================================
   @impl true
   def init(state) do
     {:ok, state}
@@ -41,8 +44,12 @@ defmodule BlockchainAPI.TxnManager do
     end
   end
 
-  defp submit_txn(txn) do
-    submit_txn(txn_type(deserialize(txn)), deserialize(txn))
+  #==================================================================
+  # Helper Functions
+  #==================================================================
+  defp submit_txn(txn0) do
+    txn = txn0 |> deserialize()
+    submit_txn(:blockchain_txn.type(txn), txn)
   end
 
   defp submit_txn(:blockchain_txn_payment_v1, txn) do
@@ -104,43 +111,41 @@ defmodule BlockchainAPI.TxnManager do
     txn |> Base.decode64! |> :blockchain_txn.deserialize()
   end
 
-  defp txn_hash(txn) do
-    to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn.hash(txn)))
-  end
-
-  defp txn_type(txn) do
-    :blockchain_txn.type(txn)
-  end
-
   defp pending_payment_map(txn) do
-    payer = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payer(txn)))
-    payee = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_payment_v1.payee(txn)))
-    nonce = :blockchain_txn_payment_v1.nonce(txn)
-    fee = :blockchain_txn_payment_v1.fee(txn)
-    amount = :blockchain_txn_payment_v1.amount(txn)
-    %{hash: txn_hash(txn), nonce: nonce, amount: amount, fee: fee, payer: payer, payee: payee}
+    %{
+      hash: :blockchain_txn_payment_v1.hash(txn),
+      amount: :blockchain_txn_payment_v1.amount(txn),
+      fee: :blockchain_txn_payment_v1.fee(txn),
+      nonce: :blockchain_txn_payment_v1.nonce(txn),
+      payer: :blockchain_txn_payment_v1.payee(txn),
+      payee: :blockchain_txn_payment_v1.payer(txn)
+    }
   end
 
   defp pending_gateway_map(txn) do
-    owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.owner(txn)))
-    gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_add_gateway_v1.gateway(txn)))
-    fee = :blockchain_txn_add_gateway_v1.fee(txn)
-    amount = :blockchain_txn_add_gateway_v1.amount(txn)
-    %{hash: txn_hash(txn), owner: owner, fee: fee, amount: amount, gateway: gateway}
+    %{
+      hash: :blockchain_txn_add_gateway_v1.hash(txn),
+      owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      fee: :blockchain_txn_add_gateway_v1.fee(txn),
+      amount: :blockchain_txn_add_gateway_v1.amount(txn),
+      gateway: :blockchain_txn_add_gateway_v1.gateway(txn)
+    }
   end
 
   defp pending_location_map(txn) do
-    owner = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.owner(txn)))
-    gateway = to_string(:libp2p_crypto.bin_to_b58(:blockchain_txn_assert_location_v1.gateway(txn)))
-    location = to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn)))
-    nonce = :blockchain_txn_assert_location_v1.nonce(txn)
-    fee = :blockchain_txn_assert_location_v1.fee(txn)
-    %{hash: txn_hash(txn), nonce: nonce, fee: fee, owner: owner, location: location, gateway: gateway}
+    %{
+      hash: :blockchain_txn_assert_location_v1.hash(txn),
+      nonce: :blockchain_txn_assert_location_v1.nonce(txn),
+      fee: :blockchain_txn_assert_location_v1.fee(txn),
+      owner: :blockchain_txn_assert_location_v1.owner(txn),
+      location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
+      gateway: :blockchain_txn_assert_location_v1.gateway(txn)
+    }
   end
 
-  defp get_pending_transaction(txn) do
-    deserialized_txn = deserialize(txn)
-    get_pending_transaction(txn_type(deserialized_txn), txn_hash(deserialized_txn))
+  defp get_pending_transaction(txn0) do
+    txn = txn0 |> deserialize()
+    get_pending_transaction(:blockchain_txn.type(txn), :blockchain_txn.hash(txn))
   end
 
   defp get_pending_transaction(:blockchain_txn_payment_v1, hash) do
@@ -152,5 +157,4 @@ defmodule BlockchainAPI.TxnManager do
   defp get_pending_transaction(:blockchain_txn_assert_location_v1, hash) do
     Explorer.get_pending_location!(hash)
   end
-
 end
