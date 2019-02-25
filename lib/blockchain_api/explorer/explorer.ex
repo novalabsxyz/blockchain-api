@@ -271,6 +271,8 @@ defmodule BlockchainAPI.Explorer do
       where: at.txn_hash == gt.hash,
       left_join: lt in LocationTransaction,
       on: gt.gateway == lt.gateway,
+      distinct: gt.gateway,
+      order_by: [desc: lt.nonce],
       select: %{
         account_address: at.account_address,
         gateway: gt.gateway,
