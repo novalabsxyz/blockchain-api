@@ -5,7 +5,6 @@ defmodule BlockchainAPI.Watcher do
   @me __MODULE__
   require Logger
 
-
   #==================================================================
   # API
   #==================================================================
@@ -19,10 +18,6 @@ defmodule BlockchainAPI.Watcher do
 
   def height() do
     GenServer.call(@me, :height, :infinity)
-  end
-
-  def last_block_time() do
-    GenServer.call(@me, :last_block_time, :infinity)
   end
 
   #==================================================================
@@ -67,16 +62,6 @@ defmodule BlockchainAPI.Watcher do
   def handle_call(:height, _from, state = %{chain: chain}) do
     {:ok, height} = :blockchain.height(chain)
     {:reply, height, state}
-  end
-
-  @impl true
-  def handle_call(:last_block_time, _from, state = %{chain: nil}) do
-    {:reply, 0, state}
-  end
-  def handle_call(:last_block_time, _from, state = %{chain: chain}) do
-    {:ok, head_block} = :blockchain.head_block(chain)
-    time = :blockchain_block.time(head_block)
-    {:reply, time, state}
   end
 
   @impl true

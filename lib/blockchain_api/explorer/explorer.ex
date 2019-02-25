@@ -348,42 +348,64 @@ defmodule BlockchainAPI.Explorer do
     |> Repo.update()
   end
 
-  def get_account_pending_transactions(address, params) do
+  def get_account_pending_gateways(address) do
     query = from(
       a in Account,
       where: a.address == ^address,
       left_join: pg in PendingGateway,
       on: pg.owner == a.address,
-      left_join: pl in PendingLocation,
-      on: pl.owner == a.address,
-      left_join: pp in PendingPayment,
-      on: pp.payer == a.address,
-      order_by: [desc: pp.id, desc: pl.id, desc: pg.id],
-      select: %{
-        payment: pp,
-        gateway: pg,
-        location: pl
-      }
+      order_by: [desc: pg.id],
+      select: pg
     )
 
     query
-    |> Repo.paginate(params)
-    |> clean_pending_transactions()
+    |> Repo.all
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&clean_pending_gateway/1)
+  end
+
+  def get_account_pending_locations(address) do
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pl in PendingLocation,
+      on: pl.owner == a.address,
+      order_by: [desc: pl.nonce],
+      select: pl
+    )
+
+    query
+    |> Repo.all
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&clean_pending_location/1)
+  end
+
+  def get_account_pending_payments(address) do
+    query = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pp in PendingPayment,
+      on: pp.payer == a.address,
+      order_by: [desc: pp.nonce],
+      select: pp
+    )
+
+    query
+    |> Repo.all
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&clean_pending_payment/1)
+  end
+
+  def get_account_pending_transactions(address) do
+    get_account_pending_payments(address) ++
+    get_account_pending_gateways(address) ++
+    get_account_pending_locations(address)
 
   end
 
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_pending_transactions(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [clean_pending_txn_struct(map) | acc] end)
-           |> Enum.reverse
-
-    %{page | entries: data}
-  end
-
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
     data = entries
            |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
@@ -420,18 +442,24 @@ defmodule BlockchainAPI.Explorer do
     %{}
   end
 
-  defp clean_pending_txn_struct(%{payment: payment}) do
+  defp clean_pending_payment(%PendingPayment{}=payment) do
     Map.merge(clean_pending_struct(payment), %{type: "payment"})
   end
-  defp clean_pending_txn_struct(%{gateway: gateway}) do
+  defp clean_pending_payment(nil) do
+    nil
+  end
+  defp clean_pending_gateway(%PendingGateway{}=gateway) do
     Map.merge(clean_pending_struct(gateway), %{type: "gateway"})
   end
-  defp clean_pending_txn_struct(%{location: location}) do
+  defp clean_pending_gateway(nil) do
+    nil
+  end
+  defp clean_pending_location(%PendingLocation{}=location) do
     {lat, lng} = h3_location_to_lat_long(location.location)
     Map.merge(clean_pending_struct(location), %{type: "location", lat: lat, lng: lng})
   end
-  defp clean_pending_txn_struct(map) when map == %{} do
-    %{}
+  defp clean_pending_location(nil) do
+    nil
   end
 
   defp clean_pending_struct(struct) do

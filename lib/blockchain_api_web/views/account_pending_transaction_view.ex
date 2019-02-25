@@ -5,10 +5,6 @@ defmodule BlockchainAPIWeb.AccountPendingTransactionView do
   def render("index.json", page) do
     %{
       data: render_many(page.account_pending_transactions, AccountPendingTransactionView, "account_pending_transaction.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
     }
   end
 
