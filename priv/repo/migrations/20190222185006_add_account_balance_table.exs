@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountBalanceTable do
 
   def change do
     create table(:account_balances) do
-      add :account_address, references(:accounts, on_delete: :nothing, column: :address, type: :string), null: false
+      add :account_address, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
       add :block_time, references(:blocks, on_delete: :nothing, column: :time, type: :integer), null: false
       add :block_height, references(:blocks, on_delete: :nothing, column: :height, type: :integer), null: false
       add :balance, :bigint, null: false
