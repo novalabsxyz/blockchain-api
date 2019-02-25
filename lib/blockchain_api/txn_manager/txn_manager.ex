@@ -117,8 +117,8 @@ defmodule BlockchainAPI.TxnManager do
       amount: :blockchain_txn_payment_v1.amount(txn),
       fee: :blockchain_txn_payment_v1.fee(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
-      payer: :blockchain_txn_payment_v1.payee(txn),
-      payee: :blockchain_txn_payment_v1.payer(txn)
+      payer: :blockchain_txn_payment_v1.payer(txn),
+      payee: :blockchain_txn_payment_v1.payee(txn)
     }
   end
 
