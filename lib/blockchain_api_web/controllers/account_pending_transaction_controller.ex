@@ -6,11 +6,7 @@ defmodule BlockchainAPIWeb.AccountPendingTransactionController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, %{"account_address" => address}=params) do
-
-    page = address
-           |> Util.string_to_bin()
-           |> Explorer.get_account_pending_transactions(params)
+  def index(conn, %{"account_address" => address}=_params) do
 
     render(conn,
       "index.json",
