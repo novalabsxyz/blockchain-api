@@ -1,15 +1,17 @@
 defmodule BlockchainAPI.Explorer.PendingPayment do
   use Ecto.Schema
   import Ecto.Changeset
+  alias BlockchainAPI.{Util, Explorer.PendingPayment}
+  @fields [:id, :hash, :status, :payer, :payee, :nonce, :fee]
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Jason.Encoder, only: [:id, :hash, :status, :payer, :payee, :nonce, :fee]}
+  @derive {Jason.Encoder, only: @fields}
   schema "pending_payments" do
-    field :hash, :string, null: false
+    field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :nonce, :integer, null: false, default: 0
-    field :payer, :string, null: false
-    field :payee, :string, null: false
+    field :payer, :binary, null: false
+    field :payee, :binary, null: false
     field :fee, :integer, null: false
     field :amount, :integer, null: false
 
@@ -23,5 +25,22 @@ defmodule BlockchainAPI.Explorer.PendingPayment do
     |> validate_required([:hash, :status, :payer, :payee, :nonce, :fee, :amount])
     |> foreign_key_constraint(:payer)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
+  end
+
+  def encode_model(pending_payment) do
+    %{
+      Map.take(pending_payment, @fields) |
+      payer: Util.bin_to_string(pending_payment.payer),
+      payee: Util.bin_to_string(pending_payment.payee),
+      hash: Util.bin_to_string(pending_payment.hash)
+    }
+  end
+
+  defimpl Jason.Encoder, for: PendingPayment do
+    def encode(pending_payment, opts) do
+      pending_payment
+      |> PendingPayment.encode_model()
+      |> Jason.Encode.map(opts)
+    end
   end
 end
