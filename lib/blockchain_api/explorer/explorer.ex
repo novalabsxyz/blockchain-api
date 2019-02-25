@@ -1,13 +1,10 @@
 defmodule BlockchainAPI.Explorer do
-  @moduledoc """
-  The Explorer context.
-  """
-
+  @moduledoc false
   import Ecto.Query, warn: false
-  alias BlockchainAPI.Repo
 
-  alias BlockchainAPI.Explorer.Block
+  alias BlockchainAPI.{Repo, Util}
   alias BlockchainAPI.Explorer.{
+    Block,
     Transaction,
     Account,
     AccountTransaction,
@@ -418,56 +415,54 @@ defmodule BlockchainAPI.Explorer do
   defp clean_account_gateways(%Scrivener.Page{entries: entries}=page) do
     data = entries
            |> Enum.map(fn map ->
-             {lat, lng} = h3_location_to_lat_long(map.location)
-             Map.merge(map, %{lat: lat, lng: lng})
+             {lat, lng} = Util.h3_to_lat_lng(map.location)
+             map
+             |> encoded_account_gateway_map()
+             |> Map.merge(%{lat: lat, lng: lng})
            end)
 
     %{page | entries: data}
   end
 
+  defp encoded_account_gateway_map(map) do
+    %{map |
+      account_address: Util.bin_to_string(map.account_address),
+      gateway: Util.bin_to_string(map.gateway),
+      gateway_hash: Util.bin_to_string(map.gateway_hash),
+      location_hash: Util.bin_to_string(map.location_hash),
+      owner: Util.bin_to_string(map.owner)
+    }
+  end
+
   defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
-    Map.merge(clean_struct(payment), %{type: "payment", height: height, time: time})
+    Map.merge(PaymentTransaction.encode_model(payment), %{type: "payment", height: height, time: time})
   end
   defp clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
-    Map.merge(clean_struct(coinbase), %{type: "coinbase", height: height, time: time})
+    Map.merge(CoinbaseTransaction.encode_model(coinbase), %{type: "coinbase", height: height, time: time})
   end
   defp clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
-    Map.merge(clean_struct(gateway), %{type: "gateway", height: height, time: time})
+    Map.merge(GatewayTransaction.encode_model(gateway), %{type: "gateway", height: height, time: time})
   end
   defp clean_txn_struct(%{location: location, height: height, time: time}) do
-    {lat, lng} = h3_location_to_lat_long(location.location)
-    Map.merge(clean_struct(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
+    {lat, lng} = Util.h3_to_lat_lng(location.location)
+    Map.merge(LocationTransaction.encode_model(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
   end
   defp clean_txn_struct(map) when map == %{} do
     %{}
   end
 
-  defp clean_pending_payment(%PendingPayment{}=payment) do
-    Map.merge(clean_pending_struct(payment), %{type: "payment"})
+  defp clean_pending_txn_struct(%{payment: payment}) do
+    Map.merge(PendingPayment.encode_model(payment), %{type: "payment"})
   end
-  defp clean_pending_payment(nil) do
-    nil
+  defp clean_pending_txn_struct(%{gateway: gateway}) do
+    Map.merge(PendingGateway.encode_model(gateway), %{type: "gateway"})
   end
-  defp clean_pending_gateway(%PendingGateway{}=gateway) do
-    Map.merge(clean_pending_struct(gateway), %{type: "gateway"})
-  end
-  defp clean_pending_gateway(nil) do
-    nil
-  end
-  defp clean_pending_location(%PendingLocation{}=location) do
-    {lat, lng} = h3_location_to_lat_long(location.location)
-    Map.merge(clean_pending_struct(location), %{type: "location", lat: lat, lng: lng})
+  defp clean_pending_txn_struct(%{location: location}) do
+    {lat, lng} = Util.h3_to_lat_lng(location.location)
+    Map.merge(PendingLocation.encode_model(location), %{type: "location", lat: lat, lng: lng})
   end
   defp clean_pending_location(nil) do
     nil
-  end
-
-  defp clean_pending_struct(struct) do
-    Map.drop(Map.from_struct(struct), [:__meta__, :id, :inserted_at, :updated_at])
-  end
-
-  defp clean_struct(struct) do
-    Map.drop(Map.from_struct(struct), [:__meta__, :transaction, :id, :inserted_at, :updated_at])
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
@@ -475,14 +470,4 @@ defmodule BlockchainAPI.Explorer do
     %{page | entries: clean_entries}
   end
 
-  defp h3_location_to_lat_long(h3location) do
-    case h3location do
-      nil -> {nil, nil}
-      loc ->
-        loc
-        |> String.to_charlist()
-        |> :h3.from_string()
-        |> :h3.to_geo()
-    end
-  end
 end
