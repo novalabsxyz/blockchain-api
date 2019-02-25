@@ -1,13 +1,13 @@
 defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.{Util, Explorer}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, %{"block_height" => height, "page" => page, "page_size" => page_size}) do
-    page = Explorer.get_transactions(height, %{page: String.to_integer(page), page_size: String.to_integer(page_size)})
+  def index(conn, %{"block_height" => height}=params) do
+    page = Explorer.get_transactions(height, params)
 
     render(conn,
       "index.json",
