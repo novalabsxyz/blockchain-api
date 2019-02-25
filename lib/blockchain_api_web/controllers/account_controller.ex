@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.{Util, Explorer}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -20,7 +20,11 @@ defmodule BlockchainAPIWeb.AccountController do
   end
 
   def show(conn, %{"address" => address}) do
-    render(conn, "show.json", account: Explorer.get_account!(address))
+    account = address
+              |> Util.string_to_bin()
+              |> Explorer.get_account!()
+
+    render(conn, "show.json", account: account)
   end
 
 end
