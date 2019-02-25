@@ -8,9 +8,13 @@ defmodule BlockchainAPIWeb.AccountPendingTransactionController do
 
   def index(conn, %{"account_address" => address}=_params) do
 
+    account_pending_transactions = address
+                                   |> Util.string_to_bin()
+                                   |> Explorer.get_account_pending_transactions()
+
     render(conn,
       "index.json",
-      account_pending_transactions: Explorer.get_account_pending_transactions(address)
+      account_pending_transactions: account_pending_transactions
     )
   end
 

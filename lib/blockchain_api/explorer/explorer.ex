@@ -451,18 +451,20 @@ defmodule BlockchainAPI.Explorer do
     %{}
   end
 
-  defp clean_pending_txn_struct(%{payment: payment}) do
-    Map.merge(PendingPayment.encode_model(payment), %{type: "payment"})
+  defp clean_pending_payment(nil), do: nil
+  defp clean_pending_payment(%PendingPayment{}=pending_payment) do
+    Map.merge(PendingPayment.encode_model(pending_payment), %{type: "payment"})
   end
-  defp clean_pending_txn_struct(%{gateway: gateway}) do
-    Map.merge(PendingGateway.encode_model(gateway), %{type: "gateway"})
+
+  defp clean_pending_gateway(nil), do: nil
+  defp clean_pending_gateway(%PendingGateway{}=pending_gateway) do
+    Map.merge(PendingGateway.encode_model(pending_gateway), %{type: "gateway"})
   end
-  defp clean_pending_txn_struct(%{location: location}) do
-    {lat, lng} = Util.h3_to_lat_lng(location.location)
-    Map.merge(PendingLocation.encode_model(location), %{type: "location", lat: lat, lng: lng})
-  end
-  defp clean_pending_location(nil) do
-    nil
+
+  defp clean_pending_location(nil), do: nil
+  defp clean_pending_location(%PendingLocation{}=pending_location) do
+    {lat, lng} = Util.h3_to_lat_lng(pending_location.location)
+    Map.merge(PendingLocation.encode_model(pending_location), %{type: "location", lat: lat, lng: lng})
   end
 
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
