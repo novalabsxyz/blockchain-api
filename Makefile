@@ -28,11 +28,23 @@ reset-dev-db:
 reset-test-db:
 	NO_ESCRIPT=1 PORT=4002 MIX_ENV=test $(MIX) ecto.reset
 
+prod-interactive:
+	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod iex -S mix phx.server
+
+dev-console:
+	NO_ESCRIPT=1 PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api console
+
 prod-start:
-	PORT=4001 MIX_ENV=prod iex -S mix phx.server
+	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api start
+
+prod-foreground:
+	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api foreground
+
+prod-console:
+	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api console
 
 dev-start:
-	MIX_ENV=dev iex -S mix phx.server
+	NO_ESCRIPT=1 MIX_ENV=dev iex -S mix phx.server
 
 release:
 	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release
@@ -47,17 +59,17 @@ deployable: release
 	@mv _build/prod/rel/blockchain_api-$(NODE_OS).tgz latest/
 
 docker-build:
-	docker build -t blockchain-api .
-	docker create -p 4001:4001 -v /root/.helium --name=blockchain-api blockchain-api
+	docker build -t blockchain_api .
+	docker create -p 4001:4001 -v /root/.helium --name=blockchain_api blockchain_api
 
 docker-start:
-	docker start blockchain-api
+	docker start blockchain_api
 
 docker-stop:
-	docker stop blockchain-api
+	docker stop blockchain_api
 
 docker-genesis-onboard:
-	docker exec -it blockchain-api sh -c "/bin/blockchain_api genesis onboard"
+	docker exec -it blockchain_api sh -c "/bin/blockchain_api genesis onboard"
 
 docker-shell:
-	docker exec -it blockchain-api sh
+	docker exec -it blockchain_api sh
