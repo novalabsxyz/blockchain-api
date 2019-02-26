@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.Block do
+defmodule BlockchainAPI.Schema.Block do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.Block}
+  alias BlockchainAPI.{Util, Schema.Block}
   @fields [:hash, :round, :time, :height]
 
   @derive {Phoenix.Param, key: :height}

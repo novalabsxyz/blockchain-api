@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.PendingGateway do
+defmodule BlockchainAPI.Schema.PendingGateway do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.PendingGateway}
+  alias BlockchainAPI.{Util, Schema.PendingGateway}
   @fields [:id, :hash, :status, :owner, :gateway, :fee, :amount]
 
   @derive {Phoenix.Param, key: :hash}

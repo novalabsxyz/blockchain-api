@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.TxnManager do
 
   use GenServer
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.DBManager
   require Logger
   @me __MODULE__
 
@@ -53,56 +53,56 @@ defmodule BlockchainAPI.TxnManager do
   end
 
   defp submit_txn(:blockchain_txn_payment_v1, txn) do
-    {:ok, pending_txn} = Explorer.create_pending_payment(pending_payment_map(txn))
+    {:ok, pending_txn} = DBManager.create_pending_payment(pending_payment_map(txn))
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
         case res do
           :ok ->
             pending_txn.hash
-            |> Explorer.get_pending_payment!()
-            |> Explorer.update_pending_payment(%{status: "done"})
+            |> DBManager.get_pending_payment!()
+            |> DBManager.update_pending_payment(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit payment: #{pending_txn.hash}")
             pending_txn.hash
-            |> Explorer.get_pending_payment!()
-            |> Explorer.update_pending_payment(%{status: "error"})
+            |> DBManager.get_pending_payment!()
+            |> DBManager.update_pending_payment(%{status: "error"})
         end
       end)
   end
   defp submit_txn(:blockchain_txn_add_gateway_v1, txn) do
-    {:ok, pending_txn} = Explorer.create_pending_gateway(pending_gateway_map(txn))
+    {:ok, pending_txn} = DBManager.create_pending_gateway(pending_gateway_map(txn))
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
         case res do
           :ok ->
             pending_txn.hash
-            |> Explorer.get_pending_gateway!()
-            |> Explorer.update_pending_gateway(%{status: "done"})
+            |> DBManager.get_pending_gateway!()
+            |> DBManager.update_pending_gateway(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit gateway: #{pending_txn.hash}")
             pending_txn.hash
-            |> Explorer.get_pending_gateway!()
-            |> Explorer.update_pending_gateway(%{status: "error"})
+            |> DBManager.get_pending_gateway!()
+            |> DBManager.update_pending_gateway(%{status: "error"})
         end
       end)
   end
   defp submit_txn(:blockchain_txn_assert_location_v1, txn) do
-    {:ok, pending_txn} = Explorer.create_pending_location(pending_location_map(txn))
+    {:ok, pending_txn} = DBManager.create_pending_location(pending_location_map(txn))
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
         case res do
           :ok ->
             pending_txn.hash
-            |> Explorer.get_pending_location!()
-            |> Explorer.update_pending_location(%{status: "done"})
+            |> DBManager.get_pending_location!()
+            |> DBManager.update_pending_location(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit location: #{pending_txn.hash}")
             pending_txn.hash
-            |> Explorer.get_pending_location!()
-            |> Explorer.update_pending_location(%{status: "error"})
+            |> DBManager.get_pending_location!()
+            |> DBManager.update_pending_location(%{status: "error"})
         end
       end)
   end
@@ -149,12 +149,12 @@ defmodule BlockchainAPI.TxnManager do
   end
 
   defp get_pending_transaction(:blockchain_txn_payment_v1, hash) do
-    Explorer.get_pending_payment!(hash)
+    DBManager.get_pending_payment!(hash)
   end
   defp get_pending_transaction(:blockchain_txn_add_gateway_v1, hash) do
-    Explorer.get_pending_gateway!(hash)
+    DBManager.get_pending_gateway!(hash)
   end
   defp get_pending_transaction(:blockchain_txn_assert_location_v1, hash) do
-    Explorer.get_pending_location!(hash)
+    DBManager.get_pending_location!(hash)
   end
 end

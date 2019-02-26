@@ -1,12 +1,12 @@
 defmodule BlockchainAPIWeb.GatewayController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Explorer}
+  alias BlockchainAPI.{Util, DBManager}
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Explorer.list_gateway_transactions(params)
+    page = DBManager.list_gateway_transactions(params)
 
     render(conn,
       "index.json",
@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.GatewayController do
   def show(conn, %{"hash" => hash}) do
     gateway = hash
               |> Util.string_to_bin()
-              |> Explorer.get_gateway!()
+              |> DBManager.get_gateway!()
 
     render(conn, "show.json", gateway: gateway)
   end

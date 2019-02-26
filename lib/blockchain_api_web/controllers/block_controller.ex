@@ -1,12 +1,12 @@
 defmodule BlockchainAPIWeb.BlockController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.DBManager
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Explorer.list_blocks(params)
+    page = DBManager.list_blocks(params)
 
     render(conn,
       "index.json",
@@ -19,7 +19,7 @@ defmodule BlockchainAPIWeb.BlockController do
   end
 
   def show(conn, %{"height" => height}) do
-    block = Explorer.get_block!(height)
+    block = DBManager.get_block!(height)
     render(conn, "show.json", block: block)
   end
 
