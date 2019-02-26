@@ -42,4 +42,14 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(txn) do
+    %{
+      payee: :blockchain_txn_payment_v1.payee(txn),
+      payer: :blockchain_txn_payment_v1.payer(txn),
+      amount: :blockchain_txn_payment_v1.amount(txn),
+      nonce: :blockchain_txn_payment_v1.nonce(txn),
+      fee: :blockchain_txn_payment_v1.fee(txn),
+    }
+  end
 end

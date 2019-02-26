@@ -36,4 +36,11 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(coinbase) do
+    %{
+      payee: :blockchain_txn_coinbase_v1.payee(coinbase),
+      amount: :blockchain_txn_coinbase_v1.amount(coinbase)
+    }
+  end
 end

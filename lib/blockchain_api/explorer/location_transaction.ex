@@ -42,4 +42,14 @@ defmodule BlockchainAPI.Explorer.LocationTransaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(txn) do
+    %{
+      owner: :blockchain_txn_assert_location_v1.owner(txn),
+      gateway: :blockchain_txn_assert_location_v1.gateway(txn),
+      nonce: :blockchain_txn_assert_location_v1.nonce(txn),
+      fee: :blockchain_txn_assert_location_v1.fee(txn),
+      location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
+    }
+  end
 end

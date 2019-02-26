@@ -37,4 +37,20 @@ defmodule BlockchainAPI.Explorer.Transaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(:blockchain_txn_coinbase_v1, txn) do
+    %{type: "coinbase", hash: :blockchain_txn_coinbase_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_payment_v1, txn) do
+    %{type: "payment", hash: :blockchain_txn_payment_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_add_gateway_v1, txn) do
+    %{type: "gateway", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_assert_location_v1, txn) do
+    %{type: "location", hash: :blockchain_txn_assert_location_v1.hash(txn)}
+  end
 end

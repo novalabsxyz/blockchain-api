@@ -37,4 +37,12 @@ defmodule BlockchainAPI.Explorer.AccountTransaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(account, txn) do
+    %{
+      account_address: account.address,
+      txn_hash: txn.hash,
+      txn_type: txn.type
+    }
+  end
 end

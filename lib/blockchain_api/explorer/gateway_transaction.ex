@@ -41,4 +41,13 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(txn) do
+    %{
+      owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
+      fee: :blockchain_txn_add_gateway_v1.fee(txn),
+      amount: :blockchain_txn_add_gateway_v1.amount(txn)
+    }
+  end
 end
