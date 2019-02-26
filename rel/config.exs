@@ -31,14 +31,26 @@ environment :dev do
   # dev mode.
   set dev_mode: true
   set include_erts: false
-  set cookie: :"f64OeCh,B,q9IbtUW!.J|h4G*eGEe(z!44WZ,H%cXe{,!iQ~&YsnImi*yT$C5`H)"
+  set cookie: :"8VFkPrWsNYTxbNTGpx0GX8VPr%sOo`_k=k<wpL6{&U<K`Nz~XoMvQ:CT9JYjSHl9"
+  set commands: [
+    peer: "rel/commands/peer",
+    genesis: "rel/commands/genesis",
+    ledger: "rel/commands/ledger",
+    status: "rel/commands/status"
+  ]
 end
 
 environment :prod do
   set include_erts: true
   set include_src: false
-  set cookie: :"8g&K:nZ9o)^VL8r{<,3<`n>ubbjoO,|`@%:9R~`w~2qqm63_gkT=d&^Q:_@!_20@"
+  set cookie: :"P([Y>}gWxjmgP(zBsX;4UEF9JDm{,%)cRxZBn/1wMU/h<]qduyQb~p)%B=]jDo>f"
   set vm_args: "rel/vm.args"
+  set commands: [
+    peer: "rel/commands/peer",
+    genesis: "rel/commands/genesis",
+    ledger: "rel/commands/ledger",
+    status: "rel/commands/status"
+  ]
 end
 
 # You may define one or more releases in this file.
