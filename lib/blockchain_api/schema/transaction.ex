@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.Transaction do
+defmodule BlockchainAPI.Schema.Transaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.Transaction}
+  alias BlockchainAPI.{Util, Schema.Transaction}
   @fields [:id, :hash, :type, :block_height]
 
   @derive {Phoenix.Param, key: :hash}
@@ -36,5 +36,21 @@ defmodule BlockchainAPI.Explorer.Transaction do
       |> Transaction.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(:blockchain_txn_coinbase_v1, txn) do
+    %{type: "coinbase", hash: :blockchain_txn_coinbase_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_payment_v1, txn) do
+    %{type: "payment", hash: :blockchain_txn_payment_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_add_gateway_v1, txn) do
+    %{type: "gateway", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_assert_location_v1, txn) do
+    %{type: "location", hash: :blockchain_txn_assert_location_v1.hash(txn)}
   end
 end

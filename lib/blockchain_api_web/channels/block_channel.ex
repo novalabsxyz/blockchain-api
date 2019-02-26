@@ -1,6 +1,6 @@
 defmodule BlockchainAPIWeb.BlockChannel do
   use BlockchainAPIWeb, :channel
-  alias BlockchainAPI.Explorer.Block
+  alias BlockchainAPI.Schema.Block
 
   def join("block:update", _params, socket) do
     {:ok, %{data: "joined block:update"}, socket}

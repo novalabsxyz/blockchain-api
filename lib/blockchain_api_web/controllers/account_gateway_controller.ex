@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountGatewayController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Explorer}
+  alias BlockchainAPI.{Util, DBManager}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountGatewayController do
 
     page = address
            |> Util.string_to_bin()
-           |> Explorer.get_account_gateways(params)
+           |> DBManager.get_account_gateways(params)
 
     render(conn,
       "index.json",

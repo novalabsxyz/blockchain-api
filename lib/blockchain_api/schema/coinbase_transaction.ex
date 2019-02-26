@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
+defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.CoinbaseTransaction}
+  alias BlockchainAPI.{Util, Schema.CoinbaseTransaction}
   @fields [:id, :hash, :amount, :payee]
 
   @derive {Phoenix.Param, key: :hash}
@@ -35,5 +35,12 @@ defmodule BlockchainAPI.Explorer.CoinbaseTransaction do
       |> CoinbaseTransaction.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(coinbase) do
+    %{
+      payee: :blockchain_txn_coinbase_v1.payee(coinbase),
+      amount: :blockchain_txn_coinbase_v1.amount(coinbase)
+    }
   end
 end

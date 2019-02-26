@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.Block do
+defmodule BlockchainAPI.Schema.Block do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.Block}
+  alias BlockchainAPI.{Util, Schema.Block}
   @fields [:hash, :round, :time, :height]
 
   @derive {Phoenix.Param, key: :height}
@@ -38,4 +38,14 @@ defmodule BlockchainAPI.Explorer.Block do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(block) do
+    %{
+      hash: :blockchain_block.hash_block(block),
+      height: :blockchain_block.height(block),
+      time: :blockchain_block.time(block),
+      round: :blockchain_block.hbbft_round(block)
+    }
+  end
+
 end

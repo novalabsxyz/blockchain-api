@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.PaymentTransaction do
+defmodule BlockchainAPI.Schema.PaymentTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.PaymentTransaction}
+  alias BlockchainAPI.{Util, Schema.PaymentTransaction}
   @fields [:id, :hash, :amount, :fee, :nonce, :payee, :payer]
 
   @derive {Phoenix.Param, key: :hash}
@@ -41,5 +41,15 @@ defmodule BlockchainAPI.Explorer.PaymentTransaction do
       |> PaymentTransaction.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(txn) do
+    %{
+      payee: :blockchain_txn_payment_v1.payee(txn),
+      payer: :blockchain_txn_payment_v1.payer(txn),
+      amount: :blockchain_txn_payment_v1.amount(txn),
+      nonce: :blockchain_txn_payment_v1.nonce(txn),
+      fee: :blockchain_txn_payment_v1.fee(txn),
+    }
   end
 end

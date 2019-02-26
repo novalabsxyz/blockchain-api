@@ -1,11 +1,11 @@
 defmodule BlockchainAPI.BlockchainAPITest do
   use BlockchainAPI.DataCase
 
-  alias BlockchainAPI.Explorer
+  alias BlockchainAPI.DBManager
   @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
-    alias Explorer.Block
+    alias Schema.Block
 
     @valid_attrs %{hash: "some hash", height: 42, round: 42, time: 42}
     @invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}
@@ -14,23 +14,23 @@ defmodule BlockchainAPI.BlockchainAPITest do
       {:ok, block} =
         attrs
         |> Enum.into(@valid_attrs)
-        |> Explorer.create_block()
+        |> DBManager.create_block()
 
       block
     end
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert Explorer.list_blocks(@default_params).entries == [block]
+      assert DBManager.list_blocks(@default_params).entries == [block]
     end
 
     test "get_block!/1 returns the block with given id" do
       block = block_fixture()
-      assert Explorer.get_block!(block.height) == block
+      assert DBManager.get_block!(block.height) == block
     end
 
     test "create_block/1 with valid data creates a block" do
-      assert {:ok, %Block{} = block} = Explorer.create_block(@valid_attrs)
+      assert {:ok, %Block{} = block} = DBManager.create_block(@valid_attrs)
       assert block.hash == "some hash"
       assert block.height == 42
       assert block.round == 42
@@ -38,7 +38,7 @@ defmodule BlockchainAPI.BlockchainAPITest do
     end
 
     test "create_block/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Explorer.create_block(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = DBManager.create_block(@invalid_attrs)
     end
 
   end

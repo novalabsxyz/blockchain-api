@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.GatewayTransaction do
+defmodule BlockchainAPI.Schema.GatewayTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.GatewayTransaction}
+  alias BlockchainAPI.{Util, Schema.GatewayTransaction}
   @fields [:id, :hash, :gateway, :owner, :fee, :amount]
 
   @derive {Phoenix.Param, key: :hash}
@@ -40,5 +40,14 @@ defmodule BlockchainAPI.Explorer.GatewayTransaction do
       |> GatewayTransaction.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(txn) do
+    %{
+      owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
+      fee: :blockchain_txn_add_gateway_v1.fee(txn),
+      amount: :blockchain_txn_add_gateway_v1.amount(txn)
+    }
   end
 end

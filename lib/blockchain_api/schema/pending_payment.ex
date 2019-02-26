@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.PendingPayment do
+defmodule BlockchainAPI.Schema.PendingPayment do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.PendingPayment}
+  alias BlockchainAPI.{Util, Schema.PendingPayment}
   @fields [:id, :hash, :status, :payer, :payee, :nonce, :fee, :amount]
 
   @derive {Phoenix.Param, key: :hash}
