@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.PendingLocation do
+defmodule BlockchainAPI.Schema.PendingLocation do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.PendingLocation}
+  alias BlockchainAPI.{Util, Schema.PendingLocation}
   @fields [:id, :hash, :status, :nonce, :fee, :owner, :location, :gateway]
 
   @derive {Phoenix.Param, key: :hash}

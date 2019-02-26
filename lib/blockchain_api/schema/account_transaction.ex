@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.AccountTransaction do
+defmodule BlockchainAPI.Schema.AccountTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.AccountTransaction}
+  alias BlockchainAPI.{Util, Schema.AccountTransaction}
   @fields [:id, :account_address, :txn_hash, :txn_type]
 
   @derive {Jason.Encoder, only: @fields}

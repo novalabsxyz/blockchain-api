@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.LocationTransaction do
+defmodule BlockchainAPI.Schema.LocationTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.LocationTransaction}
+  alias BlockchainAPI.{Util, Schema.LocationTransaction}
   @fields [:id, :hash, :fee, :gateway, :location, :nonce, :owner]
 
   @derive {Phoenix.Param, key: :hash}

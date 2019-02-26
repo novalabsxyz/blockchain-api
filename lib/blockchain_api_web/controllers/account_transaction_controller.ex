@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountTransactionController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Explorer}
+  alias BlockchainAPI.{Util, DBManager}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     page = address
            |> Util.string_to_bin()
-           |> Explorer.get_account_transactions(params)
+           |> DBManager.get_account_transactions(params)
 
     render(conn,
       "index.json",

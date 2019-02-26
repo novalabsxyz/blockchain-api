@@ -1,12 +1,12 @@
 defmodule BlockchainAPIWeb.CoinbaseController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Explorer}
+  alias BlockchainAPI.{Util, DBManager}
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Explorer.list_coinbase_transactions(params)
+    page = DBManager.list_coinbase_transactions(params)
 
     render(conn,
       "index.json",
@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.CoinbaseController do
   def show(conn, %{"hash" => hash}) do
     coinbase = hash
                |> Util.string_to_bin()
-               |> Explorer.get_coinbase!()
+               |> DBManager.get_coinbase!()
 
     render(conn, "show.json", coinbase: coinbase)
   end

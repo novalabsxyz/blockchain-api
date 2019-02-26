@@ -1,9 +1,9 @@
-defmodule BlockchainAPI.Explorer do
+defmodule BlockchainAPI.DBManager do
   @moduledoc false
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{Repo, Util}
-  alias BlockchainAPI.Explorer.{
+  alias BlockchainAPI.Schema.{
     Block,
     Transaction,
     Account,

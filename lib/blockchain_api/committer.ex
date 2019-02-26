@@ -1,17 +1,16 @@
 defmodule BlockchainAPI.Committer do
   @moduledoc false
 
-  alias BlockchainAPI.Repo
   alias BlockchainAPI.{
     Repo,
-    Explorer,
-    Explorer.Block,
-    Explorer.Transaction,
-    Explorer.GatewayTransaction,
-    Explorer.PaymentTransaction,
-    Explorer.LocationTransaction,
-    Explorer.CoinbaseTransaction,
-    Explorer.AccountTransaction
+    DBManager,
+    Schema.Block,
+    Schema.Transaction,
+    Schema.GatewayTransaction,
+    Schema.PaymentTransaction,
+    Schema.LocationTransaction,
+    Schema.CoinbaseTransaction,
+    Schema.AccountTransaction
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -20,7 +19,7 @@ defmodule BlockchainAPI.Committer do
 
       {:ok, inserted_block} = block
                               |> Block.map()
-                              |> Explorer.create_block()
+                              |> DBManager.create_block()
       add_accounts(block, chain)
       add_transactions(block)
       add_account_transactions(block)
@@ -65,9 +64,9 @@ defmodule BlockchainAPI.Committer do
     # NOTE: We'd have added whatever accounts were added/updated for this block at this point
     # It should be "safe" to update the transaction fee for each account from the ledger
     Enum.map(
-      Explorer.list_all_accounts(),
+      DBManager.list_all_accounts(),
       fn account ->
-        Explorer.update_account(account, %{fee: fee})
+        DBManager.update_account(account, %{fee: fee})
       end)
   end
 
@@ -79,18 +78,18 @@ defmodule BlockchainAPI.Committer do
     addr = :blockchain_txn_coinbase_v1.payee(txn)
     {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
     try do
-      account = Explorer.get_account!(addr)
+      account = DBManager.get_account!(addr)
       account_map =
         %{balance: :blockchain_ledger_entry_v1.balance(entry),
           nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-      Explorer.update_account(account, account_map)
+      DBManager.update_account(account, account_map)
     rescue
       _error in Ecto.NoResultsError ->
         account_map =
           %{address: addr,
             balance: :blockchain_ledger_entry_v1.balance(entry),
             nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-        Explorer.create_account(account_map)
+        DBManager.create_account(account_map)
     end
   end
 
@@ -100,32 +99,32 @@ defmodule BlockchainAPI.Committer do
     {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
     {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
     try do
-      payer_account = Explorer.get_account!(payer)
+      payer_account = DBManager.get_account!(payer)
       payer_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payer_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-      Explorer.update_account(payer_account, payer_map)
+      DBManager.update_account(payer_account, payer_map)
     rescue
       _error in Ecto.NoResultsError ->
         payer_map =
           %{address: payer,
             balance: :blockchain_ledger_entry_v1.balance(payer_entry),
             nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-        Explorer.create_account(payer_map)
+        DBManager.create_account(payer_map)
     end
     try do
-      payee_account = Explorer.get_account!(payee)
+      payee_account = DBManager.get_account!(payee)
       payee_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payee_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-      Explorer.update_account(payee_account, payee_map)
+      DBManager.update_account(payee_account, payee_map)
     rescue
       _error in Ecto.NoResultsError ->
         payee_map =
           %{address: payee,
             balance: :blockchain_ledger_entry_v1.balance(payee_entry),
             nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-        Explorer.create_account(payee_map)
+        DBManager.create_account(payee_map)
     end
   end
 
@@ -155,23 +154,23 @@ defmodule BlockchainAPI.Committer do
   # Insert individual transactions
   #==================================================================
   defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
-    {:ok, transaction_entry} = Explorer.create_transaction(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-    Explorer.create_coinbase(transaction_entry.hash, CoinbaseTransaction.map(txn))
+    {:ok, transaction_entry} = DBManager.create_transaction(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
+    DBManager.create_coinbase(transaction_entry.hash, CoinbaseTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
-    {:ok, transaction_entry} = Explorer.create_transaction(height, Transaction.map(:blockchain_txn_payment_v1, txn))
-    Explorer.create_payment(transaction_entry.hash, PaymentTransaction.map(txn))
+    {:ok, transaction_entry} = DBManager.create_transaction(height, Transaction.map(:blockchain_txn_payment_v1, txn))
+    DBManager.create_payment(transaction_entry.hash, PaymentTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
-    {:ok, transaction_entry} = Explorer.create_transaction(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
-    Explorer.create_gateway(transaction_entry.hash, GatewayTransaction.map(txn))
+    {:ok, transaction_entry} = DBManager.create_transaction(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
+    DBManager.create_gateway(transaction_entry.hash, GatewayTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, transaction_entry} = Explorer.create_transaction(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-    Explorer.create_location(transaction_entry.hash, LocationTransaction.map(txn))
+    {:ok, transaction_entry} = DBManager.create_transaction(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
+    DBManager.create_location(transaction_entry.hash, LocationTransaction.map(txn))
   end
 
   #==================================================================
@@ -199,9 +198,9 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   defp insert_account_transaction(:blockchain_txn_coinbase_v1, txn) do
     try do
-      account = Explorer.get_account!(:blockchain_txn_coinbase_v1.payee(txn))
-      txn = Explorer.get_transaction!(:blockchain_txn_coinbase_v1.hash(txn))
-      Explorer.create_account_transaction(AccountTransaction.map(account, txn))
+      account = DBManager.get_account!(:blockchain_txn_coinbase_v1.payee(txn))
+      txn = DBManager.get_transaction!(:blockchain_txn_coinbase_v1.hash(txn))
+      DBManager.create_account_transaction(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}
@@ -210,17 +209,17 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_payment_v1, txn) do
     try do
-      account = Explorer.get_account!(:blockchain_txn_payment_v1.payee(txn))
-      txn = Explorer.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
-      Explorer.create_account_transaction(AccountTransaction.map(account, txn))
+      account = DBManager.get_account!(:blockchain_txn_payment_v1.payee(txn))
+      txn = DBManager.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
+      DBManager.create_account_transaction(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated payee account for payment transaction"}
     end
     try do
-      account = Explorer.get_account!(:blockchain_txn_payment_v1.payer(txn))
-      txn = Explorer.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
-      Explorer.create_account_transaction(AccountTransaction.map(account, txn))
+      account = DBManager.get_account!(:blockchain_txn_payment_v1.payer(txn))
+      txn = DBManager.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
+      DBManager.create_account_transaction(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated payer account for payment transaction"}
@@ -229,9 +228,9 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_add_gateway_v1, txn) do
     try do
-      account = Explorer.get_account!(:blockchain_txn_add_gateway_v1.owner(txn))
-      txn = Explorer.get_transaction!(:blockchain_txn_add_gateway_v1.hash(txn))
-      Explorer.create_account_transaction(AccountTransaction.map(account, txn))
+      account = DBManager.get_account!(:blockchain_txn_add_gateway_v1.owner(txn))
+      txn = DBManager.get_transaction!(:blockchain_txn_add_gateway_v1.hash(txn))
+      DBManager.create_account_transaction(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}
@@ -240,9 +239,9 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
     try do
-      account = Explorer.get_account!(:blockchain_txn_assert_location_v1.owner(txn))
-      txn = Explorer.get_transaction!(:blockchain_txn_assert_location_v1.hash(txn))
-      Explorer.create_account_transaction(AccountTransaction.map(account, txn))
+      account = DBManager.get_account!(:blockchain_txn_assert_location_v1.owner(txn))
+      txn = DBManager.get_transaction!(:blockchain_txn_assert_location_v1.hash(txn))
+      DBManager.create_account_transaction(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}

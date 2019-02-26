@@ -1,7 +1,7 @@
-defmodule BlockchainAPI.Explorer.PaymentTransaction do
+defmodule BlockchainAPI.Schema.PaymentTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Explorer.PaymentTransaction}
+  alias BlockchainAPI.{Util, Schema.PaymentTransaction}
   @fields [:id, :hash, :amount, :fee, :nonce, :payee, :payer]
 
   @derive {Phoenix.Param, key: :hash}
