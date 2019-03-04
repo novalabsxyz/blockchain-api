@@ -10,7 +10,8 @@ defmodule BlockchainAPI.Committer do
     Schema.PaymentTransaction,
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
-    Schema.AccountTransaction
+    Schema.AccountTransaction,
+    Schema.AccountBalance
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -23,6 +24,7 @@ defmodule BlockchainAPI.Committer do
       add_accounts(block, chain)
       add_transactions(block)
       add_account_transactions(block)
+      add_account_balances(block, chain)
       # NOTE: move this elsewhere...
       BlockChannel.broadcast_change(inserted_block)
     end)
@@ -64,6 +66,75 @@ defmodule BlockchainAPI.Committer do
     # NOTE: We'd have added whatever accounts were added/updated for this block at this point
     # It should be "safe" to update the transaction fee for each account from the ledger
     DBManager.update_all_account_fee(fee)
+  end
+
+  #==================================================================
+  # Add all transactions
+  #==================================================================
+  defp add_transactions(block) do
+    height = :blockchain_block.height(block)
+    case :blockchain_block.transactions(block) do
+      [] ->
+        :ok
+      txns ->
+        Enum.map(txns, fn txn ->
+          case :blockchain_txn.type(txn) do
+            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
+            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
+            :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
+            :blockchain_txn_assert_location_v1 -> insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
+            _ ->
+              :ok
+          end
+        end)
+    end
+  end
+
+  #==================================================================
+  # Add all account transactions
+  #==================================================================
+  defp add_account_transactions(block) do
+    case :blockchain_block.transactions(block) do
+      [] ->
+        :ok
+      txns ->
+        Enum.map(txns, fn txn ->
+          case :blockchain_txn.type(txn) do
+            :blockchain_txn_coinbase_v1 -> insert_account_transaction(:blockchain_txn_coinbase_v1, txn)
+            :blockchain_txn_payment_v1 -> insert_account_transaction(:blockchain_txn_payment_v1, txn)
+            :blockchain_txn_add_gateway_v1 -> insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
+            :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
+            _ -> :ok
+          end
+        end)
+    end
+  end
+
+  #==================================================================
+  # Add all account balances (if there is a change)
+  #==================================================================
+  defp add_account_balances(block, chain) do
+    chain
+    |> :blockchain.ledger()
+    |> :blockchain_ledger_v1.entries()
+    |> Enum.map(fn {address, entry} ->
+      try do
+        case DBManager.get_latest_account_balance!(address) do
+          nil ->
+            DBManager.create_account_balance(AccountBalance.map(address, entry, block))
+          account_balance_entry ->
+            case account_balance_entry.balance == :blockchain_ledger_entry_v1.balance(entry) do
+              true ->
+                :ok
+              false ->
+                DBManager.create_account_balance(AccountBalance.map(address, entry, block))
+            end
+        end
+      rescue
+        _error in Ecto.NoResultsError ->
+          DBManager.create_account_balance(AccountBalance.map(address, entry, block))
+      end
+    end)
   end
 
   #==================================================================
@@ -127,27 +198,6 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  #==================================================================
-  # Add all transactions
-  #==================================================================
-  defp add_transactions(block) do
-    height = :blockchain_block.height(block)
-    case :blockchain_block.transactions(block) do
-      [] ->
-        :ok
-      txns ->
-        Enum.map(txns, fn txn ->
-          case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
-            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
-            :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-            :blockchain_txn_assert_location_v1 -> insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
-            _ ->
-              :ok
-          end
-        end)
-    end
-  end
 
   #==================================================================
   # Insert individual transactions
@@ -170,26 +220,6 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
     {:ok, transaction_entry} = DBManager.create_transaction(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
     DBManager.create_location(transaction_entry.hash, LocationTransaction.map(txn))
-  end
-
-  #==================================================================
-  # Add all account transactions
-  #==================================================================
-  defp add_account_transactions(block) do
-    case :blockchain_block.transactions(block) do
-      [] ->
-        :ok
-      txns ->
-        Enum.map(txns, fn txn ->
-          case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 -> insert_account_transaction(:blockchain_txn_coinbase_v1, txn)
-            :blockchain_txn_payment_v1 -> insert_account_transaction(:blockchain_txn_payment_v1, txn)
-            :blockchain_txn_add_gateway_v1 -> insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
-            :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
-            _ -> :ok
-          end
-        end)
-    end
   end
 
   #==================================================================

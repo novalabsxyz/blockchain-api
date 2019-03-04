@@ -14,7 +14,8 @@ defmodule BlockchainAPI.DBManager do
     LocationTransaction,
     PendingPayment,
     PendingGateway,
-    PendingLocation
+    PendingLocation,
+    AccountBalance
   }
 
   def list_transactions(params) do
@@ -404,7 +405,20 @@ defmodule BlockchainAPI.DBManager do
     get_account_pending_payments(address) ++
     get_account_pending_gateways(address) ++
     get_account_pending_locations(address)
+  end
 
+  def get_latest_account_balance!(address) do
+    AccountBalance
+    |> where([a], a.account_address == ^address)
+    |> order_by([a], desc: a.block_height)
+    |> limit(1)
+    |> Repo.one!
+  end
+
+  def create_account_balance(attrs \\ %{}) do
+    %AccountBalance{}
+    |> AccountBalance.changeset(attrs)
+    |> Repo.insert()
   end
 
   #==================================================================

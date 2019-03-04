@@ -19,10 +19,7 @@ defmodule BlockchainAPI.Schema.AccountBalance do
     account_balance
     |> cast(attrs, [:account_address, :block_height, :block_time, :balance])
     |> validate_required([:account_address, :block_height, :block_time, :balance])
-    |> foreign_key_constraint(:address)
-    |> foreign_key_constraint(:height)
-    |> foreign_key_constraint(:time)
-    |> unique_constraint(:unique_account_time_balance, name: :unique_account_time_balance)
+    |> unique_constraint(:unique_account_height_balance, name: :unique_account_height_balance)
   end
 
   def encode_model(account_balance) do
@@ -38,5 +35,14 @@ defmodule BlockchainAPI.Schema.AccountBalance do
       |> AccountBalance.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(address, entry, block) do
+    %{
+      account_address: address,
+      block_height: :blockchain_block.height(block),
+      block_time: :blockchain_block.time(block),
+      balance: :blockchain_ledger_entry_v1.balance(entry)
+    }
   end
 end
