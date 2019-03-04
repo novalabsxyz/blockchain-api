@@ -206,11 +206,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_account(account, attrs \\ %{}) do
+  def update_account!(account, attrs \\ %{}) do
     account.address
     |> get_account!()
     |> Account.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def list_accounts(params) do
@@ -222,6 +222,11 @@ defmodule BlockchainAPI.DBManager do
     Account |> Repo.all()
   end
 
+  def update_all_account_fee(fee) do
+    Account
+    |> select([:address, :fee])
+    |> Repo.update_all(set: [fee: fee, updated_at: NaiveDateTime.utc_now()])
+  end
 
   def create_account_transaction(attrs \\ %{}) do
     %AccountTransaction{}
@@ -302,11 +307,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_gateway(pg, attrs \\ %{}) do
+  def update_pending_gateway!(pg, attrs \\ %{}) do
     pg.hash
     |> get_pending_gateway!()
     |> PendingGateway.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def create_pending_payment(attrs \\ %{}) do
@@ -321,11 +326,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_payment(pp, attrs \\ %{}) do
+  def update_pending_payment!(pp, attrs \\ %{}) do
     pp.hash
     |> get_pending_payment!()
     |> PendingPayment.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def create_pending_location(attrs \\ %{}) do
@@ -340,11 +345,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_location(pl, attrs \\ %{}) do
+  def update_pending_location!(pl, attrs \\ %{}) do
     pl.hash
     |> get_pending_location!()
     |> PendingLocation.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def get_account_pending_gateways(address) do

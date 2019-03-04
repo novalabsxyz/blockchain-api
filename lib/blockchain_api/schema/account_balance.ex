@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Schema.AccountBalance do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.Schema.AccountBalance
+  alias BlockchainAPI.{Schema.AccountBalance, Util}
   @fields [:id, :account_address, :block_height, :block_time, :balance]
 
   @derive {Jason.Encoder, only: @fields}

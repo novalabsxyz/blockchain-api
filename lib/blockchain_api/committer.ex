@@ -63,11 +63,7 @@ defmodule BlockchainAPI.Committer do
 
     # NOTE: We'd have added whatever accounts were added/updated for this block at this point
     # It should be "safe" to update the transaction fee for each account from the ledger
-    Enum.map(
-      DBManager.list_all_accounts(),
-      fn account ->
-        DBManager.update_account(account, %{fee: fee})
-      end)
+    DBManager.update_all_account_fee(fee)
   end
 
   #==================================================================
@@ -82,7 +78,8 @@ defmodule BlockchainAPI.Committer do
       account_map =
         %{balance: :blockchain_ledger_entry_v1.balance(entry),
           nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-      DBManager.update_account(account, account_map)
+      account = DBManager.update_account!(account, account_map)
+      {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
         account_map =
@@ -103,7 +100,8 @@ defmodule BlockchainAPI.Committer do
       payer_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payer_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-      DBManager.update_account(payer_account, payer_map)
+      account = DBManager.update_account!(payer_account, payer_map)
+      {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
         payer_map =
@@ -117,7 +115,8 @@ defmodule BlockchainAPI.Committer do
       payee_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payee_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-      DBManager.update_account(payee_account, payee_map)
+      account = DBManager.update_account!(payee_account, payee_map)
+      {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
         payee_map =
