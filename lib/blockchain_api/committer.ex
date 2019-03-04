@@ -16,6 +16,14 @@ defmodule BlockchainAPI.Committer do
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
   def commit(block, chain) do
+    # NOTE: the block commit _needs_ to happen as a single DB transaction
+    # to ensure consistency
+    commit_block(block, chain)
+    # This is extra information that we're gathering just for the application
+    commit_account_balances(block, chain)
+  end
+
+  defp commit_block(block, chain) do
     Repo.transaction(fn() ->
 
       {:ok, inserted_block} = block
@@ -24,9 +32,14 @@ defmodule BlockchainAPI.Committer do
       add_accounts(block, chain)
       add_transactions(block)
       add_account_transactions(block)
-      add_account_balances(block, chain)
       # NOTE: move this elsewhere...
       BlockChannel.broadcast_change(inserted_block)
+    end)
+  end
+
+  defp commit_account_balances(block, chain) do
+    Repo.transaction(fn() ->
+      add_account_balances(block, chain)
     end)
   end
 
