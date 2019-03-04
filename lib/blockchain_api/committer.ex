@@ -15,6 +15,8 @@ defmodule BlockchainAPI.Committer do
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
+  require Logger
+
   def commit(block, chain) do
     # NOTE: the block commit _needs_ to happen as a single DB transaction
     # to ensure consistency
@@ -24,23 +26,43 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp commit_block(block, chain) do
-    Repo.transaction(fn() ->
+    block_txn =
+      Repo.transaction(fn() ->
 
-      {:ok, inserted_block} = block
-                              |> Block.map()
-                              |> DBManager.create_block()
-      add_accounts(block, chain)
-      add_transactions(block)
-      add_account_transactions(block)
-      # NOTE: move this elsewhere...
-      BlockChannel.broadcast_change(inserted_block)
-    end)
+        {:ok, inserted_block} = block
+                                |> Block.map()
+                                |> DBManager.create_block()
+        add_accounts(block, chain)
+        add_transactions(block)
+        add_account_transactions(block)
+        # NOTE: move this elsewhere...
+        BlockChannel.broadcast_change(inserted_block)
+      end)
+
+    case block_txn do
+      {:ok, term} ->
+        Logger.info("Successfully committed block at height: #{:blockchain_block.height(block)} to db!")
+        {:ok, term}
+      {:error, reason} ->
+        Logger.error("Failed to commit block at height: #{:blockchain_block.height(block)}")
+        {:error, reason}
+    end
   end
 
   defp commit_account_balances(block, chain) do
-    Repo.transaction(fn() ->
-      add_account_balances(block, chain)
-    end)
+    account_bal_txn =
+      Repo.transaction(fn() ->
+        add_account_balances(block, chain)
+      end)
+
+    case account_bal_txn do
+      {:ok, term} ->
+        Logger.info("Successfully committed account_balances at height: #{:blockchain_block.height(block)} to db!")
+        {:ok, term}
+      {:error, reason} ->
+        Logger.info("Failed to commit account_balances at height: #{:blockchain_block.height(block)} to db!")
+        {:error, reason}
+    end
   end
 
   #==================================================================
