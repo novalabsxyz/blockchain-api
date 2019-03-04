@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.DBManager do
   @moduledoc false
   import Ecto.Query, warn: false
+  use Timex
 
   alias BlockchainAPI.{Repo, Util}
   alias BlockchainAPI.Schema.{
@@ -421,6 +422,14 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.insert()
   end
 
+  def get_account_balance_history(address) do
+    %{
+      day: get_account_balances_daily(address),
+      week: get_account_balances_weekly(address),
+      month: get_account_balances_monthly(address)
+    }
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
@@ -493,4 +502,33 @@ defmodule BlockchainAPI.DBManager do
     %{page | entries: clean_entries}
   end
 
+
+  defp get_account_balances_daily(address) do
+    start = Timex.now() |> Timex.beginning_of_day() |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp get_account_balances_weekly(address) do
+    start = Timex.now() |> Timex.beginning_of_week() |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp get_account_balances_monthly(address) do
+    start = Timex.now() |> Timex.beginning_of_month() |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp query_account_balance(address, start, finish) do
+    query = from(
+      a in AccountBalance,
+      where: a.account_address == ^address,
+      where: a.block_time >= ^start,
+      where: a.block_time <= ^finish,
+      select: a.balance
+    )
+    query |> Repo.all
+  end
 end

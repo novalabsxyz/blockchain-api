@@ -29,7 +29,8 @@ defmodule BlockchainAPI.MixProject do
         :wx,
         :inets,
         :xmerl,
-        :scrivener_ecto
+        :scrivener_ecto,
+        :timex
       ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
@@ -66,7 +67,8 @@ defmodule BlockchainAPI.MixProject do
       {:cors_plug, "~> 2.0"},
       {:poison, "~> 3.1"},
       {:logger_file_backend, "~> 0.0.10"},
-      {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
+      {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
+      {:timex, "~> 3.1"}
     ]
   end
 
