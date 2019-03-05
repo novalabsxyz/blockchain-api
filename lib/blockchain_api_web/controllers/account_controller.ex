@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, DBManager, Schema.Account}
+  alias BlockchainAPI.{Watcher, Util, DBManager, Schema.Account}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -20,11 +20,28 @@ defmodule BlockchainAPIWeb.AccountController do
   end
 
   def show(conn, %{"address" => address}) do
-    bin_address = address |> Util.string_to_bin()
-    account = bin_address |> DBManager.get_account!() |> Account.encode_model()
-    account_balance_history = bin_address |> DBManager.get_account_balance_history()
-    account_with_balance = Map.merge(account, %{history: account_balance_history})
-
-    render(conn, "show.json", account: account_with_balance)
+    try do
+      bin_address = address |> Util.string_to_bin()
+      account = bin_address |> DBManager.get_account!() |> Account.encode_model()
+      account_balance_history = bin_address |> DBManager.get_account_balance_history()
+      account_with_balance = Map.merge(account, %{history: account_balance_history})
+      render(conn, "show.json", account: account_with_balance)
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:ok, fee} = Watcher.chain()
+                     |> :blockchain.ledger()
+                     |> :blockchain_ledger_v1.transaction_fee()
+        non_existent_account =
+          %{
+            address: address,
+            fee: fee,
+            balance: 0,
+            history: [],
+            id: nil,
+            name: nil,
+            nonce: 0
+          }
+        render(conn, "show.json", account: non_existent_account)
+    end
   end
 end
