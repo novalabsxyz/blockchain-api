@@ -61,12 +61,12 @@ defmodule BlockchainAPI.TxnManager do
           :ok ->
             pending_txn.hash
             |> DBManager.get_pending_payment!()
-            |> DBManager.update_pending_payment(%{status: "done"})
+            |> DBManager.update_pending_payment!(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit payment: #{pending_txn.hash}")
             pending_txn.hash
             |> DBManager.get_pending_payment!()
-            |> DBManager.update_pending_payment(%{status: "error"})
+            |> DBManager.update_pending_payment!(%{status: "error"})
         end
       end)
   end
@@ -79,12 +79,12 @@ defmodule BlockchainAPI.TxnManager do
           :ok ->
             pending_txn.hash
             |> DBManager.get_pending_gateway!()
-            |> DBManager.update_pending_gateway(%{status: "done"})
+            |> DBManager.update_pending_gateway!(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit gateway: #{pending_txn.hash}")
             pending_txn.hash
             |> DBManager.get_pending_gateway!()
-            |> DBManager.update_pending_gateway(%{status: "error"})
+            |> DBManager.update_pending_gateway!(%{status: "error"})
         end
       end)
   end
@@ -97,12 +97,12 @@ defmodule BlockchainAPI.TxnManager do
           :ok ->
             pending_txn.hash
             |> DBManager.get_pending_location!()
-            |> DBManager.update_pending_location(%{status: "done"})
+            |> DBManager.update_pending_location!(%{status: "done"})
           {:error, _reason} ->
             Logger.error("Failed to submit location: #{pending_txn.hash}")
             pending_txn.hash
             |> DBManager.get_pending_location!()
-            |> DBManager.update_pending_location(%{status: "error"})
+            |> DBManager.update_pending_location!(%{status: "error"})
         end
       end)
   end

@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.DBManager do
   @moduledoc false
   import Ecto.Query, warn: false
+  use Timex
 
   alias BlockchainAPI.{Repo, Util}
   alias BlockchainAPI.Schema.{
@@ -14,7 +15,8 @@ defmodule BlockchainAPI.DBManager do
     LocationTransaction,
     PendingPayment,
     PendingGateway,
-    PendingLocation
+    PendingLocation,
+    AccountBalance
   }
 
   def list_transactions(params) do
@@ -206,11 +208,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_account(account, attrs \\ %{}) do
+  def update_account!(account, attrs \\ %{}) do
     account.address
     |> get_account!()
     |> Account.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def list_accounts(params) do
@@ -222,6 +224,11 @@ defmodule BlockchainAPI.DBManager do
     Account |> Repo.all()
   end
 
+  def update_all_account_fee(fee) do
+    Account
+    |> select([:address, :fee])
+    |> Repo.update_all(set: [fee: fee, updated_at: NaiveDateTime.utc_now()])
+  end
 
   def create_account_transaction(attrs \\ %{}) do
     %AccountTransaction{}
@@ -302,11 +309,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_gateway(pg, attrs \\ %{}) do
+  def update_pending_gateway!(pg, attrs \\ %{}) do
     pg.hash
     |> get_pending_gateway!()
     |> PendingGateway.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def create_pending_payment(attrs \\ %{}) do
@@ -321,11 +328,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_payment(pp, attrs \\ %{}) do
+  def update_pending_payment!(pp, attrs \\ %{}) do
     pp.hash
     |> get_pending_payment!()
     |> PendingPayment.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def create_pending_location(attrs \\ %{}) do
@@ -340,11 +347,11 @@ defmodule BlockchainAPI.DBManager do
     |> Repo.one!
   end
 
-  def update_pending_location(pl, attrs \\ %{}) do
+  def update_pending_location!(pl, attrs \\ %{}) do
     pl.hash
     |> get_pending_location!()
     |> PendingLocation.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update!()
   end
 
   def get_account_pending_gateways(address) do
@@ -399,7 +406,28 @@ defmodule BlockchainAPI.DBManager do
     get_account_pending_payments(address) ++
     get_account_pending_gateways(address) ++
     get_account_pending_locations(address)
+  end
 
+  def get_latest_account_balance!(address) do
+    AccountBalance
+    |> where([a], a.account_address == ^address)
+    |> order_by([a], desc: a.block_height)
+    |> limit(1)
+    |> Repo.one!
+  end
+
+  def create_account_balance(attrs \\ %{}) do
+    %AccountBalance{}
+    |> AccountBalance.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_account_balance_history(address) do
+    %{
+      day: get_account_balances_daily(address),
+      week: get_account_balances_weekly(address),
+      month: get_account_balances_monthly(address)
+    }
   end
 
   #==================================================================
@@ -474,4 +502,36 @@ defmodule BlockchainAPI.DBManager do
     %{page | entries: clean_entries}
   end
 
+  defp get_account_balances_daily(address) do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp get_account_balances_weekly(address) do
+    start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp get_account_balances_monthly(address) do
+    start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
+    finish = Timex.now() |> Timex.to_unix()
+    query_account_balance(address, start, finish)
+  end
+
+  defp query_account_balance(address, start, finish) do
+    query = from(
+      a in AccountBalance,
+      where: a.account_address == ^address,
+      where: a.block_time >= ^start,
+      where: a.block_time <= ^finish,
+      select: %{
+        time: a.block_time,
+        balance: a.balance
+      }
+    )
+
+    query |> Repo.all
+  end
 end

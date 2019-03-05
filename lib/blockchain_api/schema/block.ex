@@ -22,6 +22,7 @@ defmodule BlockchainAPI.Schema.Block do
     |> validate_required([:hash, :height, :round, :time])
     |> unique_constraint(:hash)
     |> unique_constraint(:height)
+    |> unique_constraint(:time)
   end
 
   def encode_model(block) do

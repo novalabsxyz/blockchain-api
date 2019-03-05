@@ -98,31 +98,19 @@ defmodule BlockchainAPI.Watcher do
         case DBManager.get_latest_block() do
           [nil] ->
             # nothing in the db yet
-            commit_block(block, chain)
+            Committer.commit(block, chain)
           [last_known_height] ->
             case height > last_known_height do
               true ->
                 Range.new(last_known_height + 1, height)
                 |> Enum.map(fn h ->
                   {:ok, b} = :blockchain.get_block(h, chain)
-                  commit_block(b, chain)
+                  Committer.commit(b, chain)
                 end)
               false ->
                 :ok
             end
         end
-    end
-  end
-
-  #==================================================================
-  # Add block with subsequent updates to account and transactions
-  #==================================================================
-  defp commit_block(block, chain) do
-    case Committer.commit(block, chain) do
-      {:ok, _res} ->
-        Logger.info("Successfully committed block at height: #{:blockchain_block.height(block)} to db!")
-      {:error, reason} ->
-        Logger.error("Error commiting block to db, #{reason}")
     end
   end
 end

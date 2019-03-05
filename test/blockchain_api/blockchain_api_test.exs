@@ -1,11 +1,11 @@
-defmodule BlockchainAPI.BlockchainAPITest do
+defmodule BlockchainAPI.BlockTest do
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.DBManager
   @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
-    alias Schema.Block
+    alias BlockchainAPI.Schema.Block
 
     @valid_attrs %{hash: "some hash", height: 42, round: 42, time: 42}
     @invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}

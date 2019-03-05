@@ -12,6 +12,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddBlocksTable do
     end
 
     create unique_index(:blocks, [:height], name: :unique_block_height)
+    # NOTE: uncertain to add this, but presumably block times are ALWAYS unique
+    # This helps in the creating the composite index for account_balances table
+    create unique_index(:blocks, [:time], name: :unique_block_time)
 
   end
 end
