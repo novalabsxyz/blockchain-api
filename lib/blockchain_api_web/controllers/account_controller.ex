@@ -27,6 +27,8 @@ defmodule BlockchainAPIWeb.AccountController do
       account_with_balance = Map.merge(account, %{history: account_balance_history})
       render(conn, "show.json", account: account_with_balance)
     rescue
+      # NOTE: This should probably be somewhere else and feels like a hack
+      # This account does not exist in the database, hence we return some default values
       _error in Ecto.NoResultsError ->
         {:ok, fee} = Watcher.chain()
                      |> :blockchain.ledger()
@@ -36,7 +38,11 @@ defmodule BlockchainAPIWeb.AccountController do
             address: address,
             fee: fee,
             balance: 0,
-            history: [],
+            history: %{
+              day: [],
+              week: [],
+              month: []
+            },
             id: nil,
             name: nil,
             nonce: 0
