@@ -502,9 +502,8 @@ defmodule BlockchainAPI.DBManager do
     %{page | entries: clean_entries}
   end
 
-
   defp get_account_balances_daily(address) do
-    start = Timex.now() |> Timex.beginning_of_day() |> Timex.to_unix()
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
     finish = Timex.now() |> Timex.to_unix()
     query_account_balance(address, start, finish)
   end
@@ -527,8 +526,12 @@ defmodule BlockchainAPI.DBManager do
       where: a.account_address == ^address,
       where: a.block_time >= ^start,
       where: a.block_time <= ^finish,
-      select: a.balance
+      select: %{
+        time: a.block_time,
+        balance: a.balance
+      }
     )
+
     query |> Repo.all
   end
 end

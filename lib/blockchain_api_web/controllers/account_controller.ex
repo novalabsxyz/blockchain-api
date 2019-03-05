@@ -20,14 +20,9 @@ defmodule BlockchainAPIWeb.AccountController do
   end
 
   def show(conn, %{"address" => address}) do
-    bin_address = address |> Util.string_to_bin()
-    account = bin_address |> DBManager.get_account!()
-    account_balance_history = bin_address |> DBManager.get_account_balance_history()
-
-    data = Map.merge(account, %{history: account_balance_history})
-    IO.inspect data
-
-    render(conn, "show.json", account: data)
+    account = address
+              |> Util.string_to_bin()
+              |> DBManager.get_account!()
+    render(conn, "show.json", account: account)
   end
-
 end
