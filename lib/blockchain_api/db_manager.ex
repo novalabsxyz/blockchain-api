@@ -509,13 +509,13 @@ defmodule BlockchainAPI.DBManager do
   end
 
   defp get_account_balances_weekly(address) do
-    start = Timex.now() |> Timex.beginning_of_week() |> Timex.to_unix()
+    start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
     finish = Timex.now() |> Timex.to_unix()
     query_account_balance(address, start, finish)
   end
 
   defp get_account_balances_monthly(address) do
-    start = Timex.now() |> Timex.beginning_of_month() |> Timex.to_unix()
+    start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
     finish = Timex.now() |> Timex.to_unix()
     query_account_balance(address, start, finish)
   end
