@@ -19,5 +19,4 @@ defmodule BlockchainAPIWeb.AccountView do
   def render("account.json", %{account: account}) do
     account
   end
-
 end
