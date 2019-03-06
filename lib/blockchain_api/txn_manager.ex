@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.TxnManager do
 
   use GenServer
-  alias BlockchainAPI.DBManager
+  alias BlockchainAPI.{DBManager, Util}
   require Logger
   @me __MODULE__
 
@@ -63,7 +63,7 @@ defmodule BlockchainAPI.TxnManager do
             |> DBManager.get_pending_payment!()
             |> DBManager.update_pending_payment!(%{status: "done"})
           {:error, _reason} ->
-            Logger.error("Failed to submit payment: #{pending_txn.hash}")
+            Logger.error("Failed to submit payment: #{Util.bin_to_string(pending_txn.hash)}")
             pending_txn.hash
             |> DBManager.get_pending_payment!()
             |> DBManager.update_pending_payment!(%{status: "error"})
@@ -81,7 +81,7 @@ defmodule BlockchainAPI.TxnManager do
             |> DBManager.get_pending_gateway!()
             |> DBManager.update_pending_gateway!(%{status: "done"})
           {:error, _reason} ->
-            Logger.error("Failed to submit gateway: #{pending_txn.hash}")
+            Logger.error("Failed to submit gateway: #{Util.bin_to_string(pending_txn.hash)}")
             pending_txn.hash
             |> DBManager.get_pending_gateway!()
             |> DBManager.update_pending_gateway!(%{status: "error"})
@@ -99,7 +99,7 @@ defmodule BlockchainAPI.TxnManager do
             |> DBManager.get_pending_location!()
             |> DBManager.update_pending_location!(%{status: "done"})
           {:error, _reason} ->
-            Logger.error("Failed to submit location: #{pending_txn.hash}")
+            Logger.error("Failed to submit location: #{Util.bin_to_string(pending_txn.hash)}")
             pending_txn.hash
             |> DBManager.get_pending_location!()
             |> DBManager.update_pending_location!(%{status: "error"})
