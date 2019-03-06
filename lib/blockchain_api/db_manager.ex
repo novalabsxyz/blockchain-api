@@ -547,7 +547,8 @@ defmodule BlockchainAPI.DBManager do
       where: a.block_time <= ^finish,
       select: %{
         time: a.block_time,
-        balance: a.balance
+        balance: a.balance,
+        delta: a.delta
       }
     )
 

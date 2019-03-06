@@ -154,20 +154,26 @@ defmodule BlockchainAPI.Committer do
     |> :blockchain_ledger_v1.entries()
     |> Enum.map(fn {address, entry} ->
       try do
+        ledger_entry_balance = :blockchain_ledger_entry_v1.balance(entry)
         case DBManager.get_latest_account_balance!(address) do
           nil ->
-            DBManager.create_account_balance(AccountBalance.map(address, entry, block))
-          account_balance_entry ->
-            case account_balance_entry.balance == :blockchain_ledger_entry_v1.balance(entry) do
+            AccountBalance.map(address, ledger_entry_balance, block, ledger_entry_balance)
+            |> DBManager.create_account_balance()
+          account_entry ->
+            account_entry_balance = account_entry.balance
+            case account_entry_balance == ledger_entry_balance do
               true ->
                 :ok
               false ->
-                DBManager.create_account_balance(AccountBalance.map(address, entry, block))
+                AccountBalance.map(address, ledger_entry_balance, block, (ledger_entry_balance - account_entry_balance))
+                |> DBManager.create_account_balance()
             end
         end
       rescue
         _error in Ecto.NoResultsError ->
-          DBManager.create_account_balance(AccountBalance.map(address, entry, block))
+          ledger_entry_balance = :blockchain_ledger_entry_v1.balance(entry)
+          AccountBalance.map(address, ledger_entry_balance, block, ledger_entry_balance)
+          |> DBManager.create_account_balance()
       end
     end)
   end
