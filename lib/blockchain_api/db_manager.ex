@@ -526,20 +526,17 @@ defmodule BlockchainAPI.DBManager do
 
   defp get_account_balances_daily(address) do
     start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp get_account_balances_weekly(address) do
     start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp get_account_balances_monthly(address) do
     start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp query_account_balance(address, start, finish) do
@@ -555,5 +552,9 @@ defmodule BlockchainAPI.DBManager do
     )
 
     query |> Repo.all
+  end
+
+  defp current_time() do
+    Timex.now() |> Timex.to_unix()
   end
 end
