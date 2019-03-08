@@ -165,6 +165,7 @@ defmodule BlockchainAPI.DBManager do
 
     query
     |> Repo.paginate(params)
+    |> clean_gateways()
   end
 
   def get_gateway!(hash) do
@@ -457,6 +458,27 @@ defmodule BlockchainAPI.DBManager do
   defp encoded_account_gateway_map(map) do
     %{map |
       account_address: Util.bin_to_string(map.account_address),
+      gateway: Util.bin_to_string(map.gateway),
+      gateway_hash: Util.bin_to_string(map.gateway_hash),
+      location_hash: Util.bin_to_string(map.location_hash),
+      owner: Util.bin_to_string(map.owner)
+    }
+  end
+
+  defp clean_gateways(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn map ->
+             {lat, lng} = Util.h3_to_lat_lng(map.location)
+             map
+             |> encoded_gateway_map()
+             |> Map.merge(%{lat: lat, lng: lng})
+           end)
+
+    %{page | entries: data}
+  end
+
+  defp encoded_gateway_map(map) do
+    %{map |
       gateway: Util.bin_to_string(map.gateway),
       gateway_hash: Util.bin_to_string(map.gateway_hash),
       location_hash: Util.bin_to_string(map.location_hash),
