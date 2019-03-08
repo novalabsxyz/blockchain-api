@@ -165,6 +165,7 @@ defmodule BlockchainAPI.DBManager do
 
     query
     |> Repo.paginate(params)
+    |> clean_gateways()
   end
 
   def get_gateway!(hash) do
@@ -464,6 +465,27 @@ defmodule BlockchainAPI.DBManager do
     }
   end
 
+  defp clean_gateways(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn map ->
+             {lat, lng} = Util.h3_to_lat_lng(map.location)
+             map
+             |> encoded_gateway_map()
+             |> Map.merge(%{lat: lat, lng: lng})
+           end)
+
+    %{page | entries: data}
+  end
+
+  defp encoded_gateway_map(map) do
+    %{map |
+      gateway: Util.bin_to_string(map.gateway),
+      gateway_hash: Util.bin_to_string(map.gateway_hash),
+      location_hash: Util.bin_to_string(map.location_hash),
+      owner: Util.bin_to_string(map.owner)
+    }
+  end
+
   defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
     Map.merge(PaymentTransaction.encode_model(payment), %{type: "payment", height: height, time: time})
   end
@@ -504,20 +526,17 @@ defmodule BlockchainAPI.DBManager do
 
   defp get_account_balances_daily(address) do
     start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp get_account_balances_weekly(address) do
     start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp get_account_balances_monthly(address) do
     start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
-    finish = Timex.now() |> Timex.to_unix()
-    query_account_balance(address, start, finish)
+    query_account_balance(address, start, current_time())
   end
 
   defp query_account_balance(address, start, finish) do
@@ -533,5 +552,9 @@ defmodule BlockchainAPI.DBManager do
     )
 
     query |> Repo.all
+  end
+
+  defp current_time() do
+    Timex.now() |> Timex.to_unix()
   end
 end
