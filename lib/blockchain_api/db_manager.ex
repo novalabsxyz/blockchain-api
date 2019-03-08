@@ -424,10 +424,14 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def get_account_balance_history(address) do
+    {0, _start, day_balances} = sample_daily_account_balance(address)
+    {0, _start, week_balances} = sample_weekly_account_balance(address)
+    {0, _start, month_balances} = sample_monthly_account_balance(address)
+
     %{
-      day: get_account_balances_daily(address),
-      week: get_account_balances_weekly(address),
-      month: get_account_balances_monthly(address)
+      day: day_balances,
+      week: week_balances,
+      month: month_balances
     }
   end
 
@@ -553,6 +557,85 @@ defmodule BlockchainAPI.DBManager do
     )
 
     query |> Repo.all
+  end
+
+  def sample_daily_account_balance(address) do
+    1..24
+    |> balance_filter(address, &get_account_balances_daily/1, 1)
+    |> populated_time_data()
+  end
+
+  defp sample_weekly_account_balance(address) do
+    1..22
+    |> balance_filter(address, &get_account_balances_weekly/1, 8)
+    |> populated_time_data()
+  end
+
+  defp sample_monthly_account_balance(address) do
+    1..31
+    |> balance_filter(address, &get_account_balances_monthly/1, 24)
+    |> populated_time_data()
+  end
+
+  defp balance_filter(range, address, fun, shift) do
+    range
+    |> Enum.reduce([], fn _, acc ->
+      # filter values which fit within each time interval
+      # fun = day/week/month functions
+      # shift = time shift 1/8/24 hrs
+      address
+      |> interval_filter(range, fun, shift)
+      |> Enum.reduce([], fn list, acc->
+        case list do
+          list when list != [] ->
+            x = list |> Enum.max_by(fn item -> item.time end)
+            y = list |> Enum.map(fn item -> item.delta end) |> Enum.sum()
+            [%{x | delta: y} | acc]
+          _ ->
+            [nil | acc]
+        end
+      end)
+    end)
+    |> Enum.reverse()
+  end
+
+  defp interval_filter(address, range, fun, shift) do
+    hr_shift = 3600*shift
+    offset= rem(current_time(), hr_shift)
+    now = div(current_time() - offset, hr_shift)
+    then = div(current_time() - (offset + (hr_shift * length(Enum.to_list(range)))), hr_shift)
+
+    map = Range.new(then, now)
+          |> Enum.map(fn key -> {key, []} end)
+          |> Map.new()
+
+    filtered_map =
+      address
+      |> fun.()
+      |> Enum.group_by(fn x -> div((x.time - offset), hr_shift) end)
+
+    map
+    |> Map.merge(filtered_map)
+    |> Map.values()
+  end
+
+  defp populated_time_data(filtered_time_data) do
+    filtered_time_data
+    |> Enum.reduce({0, nil, []},
+      fn
+        (nil, {p, nil, acc}) ->
+          {p+1, nil, acc}
+        (nil, {_, current_balance, acc}) ->
+          {0, current_balance, acc ++ [current_balance]}
+        (%{balance: balance}, {0, _, acc0}) ->
+          {0, balance, acc0 ++ [balance]}
+        (%{balance: balance, delta: delta}, {p, _, acc0}) ->
+          acc1 =
+            1..p
+            |> Enum.to_list()
+            |> Enum.reduce([], fn (_, a) -> [balance-delta | a] end)
+          {0, balance, acc0 ++ acc1 ++ [balance]}
+      end)
   end
 
   defp current_time() do
