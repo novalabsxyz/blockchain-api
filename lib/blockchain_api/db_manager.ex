@@ -424,14 +424,28 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def get_account_balance_history(address) do
-    {0, _start, day_balances} = sample_daily_account_balance(address)
-    {0, _start, week_balances} = sample_weekly_account_balance(address)
-    {0, _start, month_balances} = sample_monthly_account_balance(address)
+    day_data =
+      case sample_daily_account_balance(address) do
+        {0, _start, day_balances} -> day_balances
+        _ -> []
+      end
+
+    week_data =
+      case sample_weekly_account_balance(address) do
+        {0, _start, week_balances} -> week_balances
+        _ -> []
+      end
+
+    month_data =
+      case sample_monthly_account_balance(address) do
+        {0, _start, month_balances} -> month_balances
+        _ -> []
+      end
 
     %{
-      day: day_balances,
-      week: week_balances,
-      month: month_balances
+      day: day_data,
+      week: week_data,
+      month: month_data
     }
   end
 
@@ -578,23 +592,17 @@ defmodule BlockchainAPI.DBManager do
   end
 
   defp balance_filter(range, address, fun, shift) do
-    range
-    |> Enum.reduce([], fn _, acc ->
-      # filter values which fit within each time interval
-      # fun = day/week/month functions
-      # shift = time shift 1/8/24 hrs
-      address
-      |> interval_filter(range, fun, shift)
-      |> Enum.reduce([], fn list, acc->
-        case list do
-          list when list != [] ->
-            x = list |> Enum.max_by(fn item -> item.time end)
-            y = list |> Enum.map(fn item -> item.delta end) |> Enum.sum()
-            [%{x | delta: y} | acc]
-          _ ->
-            [nil | acc]
-        end
-      end)
+    address
+    |> interval_filter(range, fun, shift)
+    |> Enum.reduce([], fn list, acc->
+      case list do
+        list when list != [] ->
+          x = list |> Enum.max_by(fn item -> item.time end)
+          y = list |> Enum.map(fn item -> item.delta end) |> Enum.sum()
+          [%{x | delta: y} | acc]
+        _ ->
+          [nil | acc]
+      end
     end)
     |> Enum.reverse()
   end
