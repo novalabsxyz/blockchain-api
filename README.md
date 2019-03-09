@@ -51,7 +51,7 @@ $ sudo -u postgres createuser --superuser $USER
 Clone the `blockchain-api` project somewhere.
 
 ```
-$ git clone git@github.com:helium/blockchain-api.git
+$ git clone git@github.com:helium/blockchain_api.git
 ```
 
 ### Fetch deps
