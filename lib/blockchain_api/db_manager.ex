@@ -424,28 +424,10 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def get_account_balance_history(address) do
-    day_data =
-      case sample_daily_account_balance(address) do
-        {0, _start, day_balances} -> day_balances
-        _ -> []
-      end
-
-    week_data =
-      case sample_weekly_account_balance(address) do
-        {0, _start, week_balances} -> week_balances
-        _ -> []
-      end
-
-    month_data =
-      case sample_monthly_account_balance(address) do
-        {0, _start, month_balances} -> month_balances
-        _ -> []
-      end
-
     %{
-      day: day_data,
-      week: week_data,
-      month: month_data
+      day: sample_daily_account_balance(address),
+      week: sample_weekly_account_balance(address),
+      month: sample_monthly_account_balance(address)
     }
   end
 
@@ -573,22 +555,35 @@ defmodule BlockchainAPI.DBManager do
     query |> Repo.all
   end
 
+  defp current_time() do
+    Timex.now() |> Timex.to_unix()
+  end
+
   def sample_daily_account_balance(address) do
-    1..24
+    range = 1..24
+
+    range
     |> balance_filter(address, &get_account_balances_daily/1, 1)
     |> populated_time_data()
+    |> parse_balance_history(range, address)
   end
 
   defp sample_weekly_account_balance(address) do
-    1..22
+    range = 1..22
+
+    range
     |> balance_filter(address, &get_account_balances_weekly/1, 8)
     |> populated_time_data()
+    |> parse_balance_history(range, address)
   end
 
   defp sample_monthly_account_balance(address) do
-    1..31
+    range = 1..31
+
+    range
     |> balance_filter(address, &get_account_balances_monthly/1, 24)
     |> populated_time_data()
+    |> parse_balance_history(range, address)
   end
 
   defp balance_filter(range, address, fun, shift) do
@@ -646,7 +641,20 @@ defmodule BlockchainAPI.DBManager do
       end)
   end
 
-  defp current_time() do
-    Timex.now() |> Timex.to_unix()
+  defp parse_balance_history(data, range, address) do
+    case data do
+      {0, _start, balances} -> balances
+      _ -> default_balance_history(range, address)
+    end
+  end
+
+  defp default_balance_history(range, address) do
+    range
+    |> Enum.map(fn _i ->
+      case get_latest_account_balance!(address) do
+        nil -> 0
+        account_entry -> account_entry.balance
+      end
+    end)
   end
 end
