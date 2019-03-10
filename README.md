@@ -46,9 +46,9 @@ $ sudo -u postgres createuser --superuser $USER
 ```
 
 
-### Clone blockchain-api
+### Clone blockchain_api
 
-Clone the `blockchain-api` project somewhere.
+Clone the `blockchain_api` project somewhere.
 
 ```
 $ git clone git@github.com:helium/blockchain_api.git
@@ -56,7 +56,7 @@ $ git clone git@github.com:helium/blockchain_api.git
 
 ### Fetch deps
 
-`cd` into `blockchain-api` and use mix to fetch the erlang/elixir dependencies.
+`cd` into `blockchain_api` and use mix to fetch the erlang/elixir dependencies.
 
 ```
 $ mix deps.get
@@ -67,14 +67,14 @@ $ mix deps.get
 Unless you're doing some development on the node, you'll want to build a `prod` release.
 
 #### Building a prod release
-`cd` into the `blockchain-api` project and then run:
+`cd` into the `blockchain_api` project and then run:
 
 ```
 $ make release
 ```
 
 #### Building a dev release
-`cd` into the `blockchain-api` project and then run:
+`cd` into the `blockchain_api` project and then run:
 
 ```
 $ make devrelease
@@ -85,7 +85,7 @@ Note: A devrelease is not connected to the seed nodes, you need to have a local 
 #### Running Interactively (Prod)
 Doing so will connect you to the seed nodes and boot the chain with the priv/genesis block
 
-`cd` into the `blockchain-api` project and then run:
+`cd` into the `blockchain_api` project and then run:
 
 Remove existing data folder (if any). NOTE: This will wipe an existing chain if you had one before.
 
@@ -107,7 +107,7 @@ Start interactively
 #### Running Interactively (Dev)
 Doing so will NOT connect you to the seed nodes, you'll have to supply it manually on the interactive shell.
 
-`cd` into the `blockchain-api` project and then run:
+`cd` into the `blockchain_api` project and then run:
 
 Remove existing data folder (if any)
 
@@ -127,7 +127,7 @@ Start interactively
 
 #### Running Tests
 
-`cd` into the `blockchain-api` project and run:
+`cd` into the `blockchain_api` project and run:
 
 ```
 make clean && make reset-test-db && make test
