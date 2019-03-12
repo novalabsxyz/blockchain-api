@@ -14,6 +14,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
       timestamps()
     end
 
-    create unique_index(:pending_gateways, [:owner, :hash], name: :unique_pending_gateway)
+    create unique_index(:pending_gateways, [:owner, :hash, :status], name: :unique_pending_gateway)
   end
 end
