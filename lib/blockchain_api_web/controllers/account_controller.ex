@@ -24,8 +24,18 @@ defmodule BlockchainAPIWeb.AccountController do
       bin_address = address |> Util.string_to_bin()
       account = bin_address |> DBManager.get_account!() |> Account.encode_model()
       account_balance_history = bin_address |> DBManager.get_account_balance_history()
-      account_with_balance = Map.merge(account, %{history: account_balance_history})
-      render(conn, "show.json", account: account_with_balance)
+
+      speculative_nonce =
+        case DBManager.get_payer_speculative_nonce(address) do
+          nil -> 0
+          nonce -> nonce
+        end
+
+      account_data = Map.merge(account,
+        %{history: account_balance_history,
+          speculative_nonce: speculative_nonce})
+
+      render(conn, "show.json", account: account_data)
     rescue
       # NOTE: This should probably be somewhere else and feels like a hack
       # This account does not exist in the database, hence we return some default values
@@ -45,7 +55,8 @@ defmodule BlockchainAPIWeb.AccountController do
             },
             id: nil,
             name: nil,
-            nonce: 0
+            nonce: 0,
+            speculative_nonce: 0
           }
         render(conn, "show.json", account: non_existent_account)
     end

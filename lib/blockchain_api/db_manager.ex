@@ -431,6 +431,21 @@ defmodule BlockchainAPI.DBManager do
     }
   end
 
+  def get_payer_speculative_nonce(address) do
+    query = from(
+      pp in PendingPayment,
+      where: pp.payer == ^address,
+      where: pp.status == "done",
+      select: pp.nonce,
+      order_by: [desc: pp.id],
+      limit: 1
+    )
+
+    query
+    |> Repo.one
+  end
+
+
   #==================================================================
   # Helper functions
   #==================================================================
