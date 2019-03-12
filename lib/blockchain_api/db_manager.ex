@@ -559,7 +559,7 @@ defmodule BlockchainAPI.DBManager do
     Timex.now() |> Timex.to_unix()
   end
 
-  def sample_daily_account_balance(address) do
+  defp sample_daily_account_balance(address) do
     range = 1..24
 
     range
