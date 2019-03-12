@@ -19,7 +19,7 @@ For OSX, make sure you have [Homebrew](https://brew.sh/) installed. We'll use it
 ### Native Dependencies
 
 ```
-$ brew install autoconf automake wget yasm gmp libtool cmake clang-format lcov doxygen
+$ brew install autoconf automake wget yasm gmp libtool cmake clang-format lcov doxygen libsodium
 ```
 
 ### Elixir
