@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.AccountBalance do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Schema.AccountBalance, Util}
-  @fields [:id, :account_address, :block_height, :block_time, :balance]
+  @fields [:id, :account_address, :block_height, :block_time, :balance, :delta]
 
   @derive {Jason.Encoder, only: @fields}
   schema "account_balances" do
@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Schema.AccountBalance do
     field :block_height, :integer, null: false
     field :block_time, :integer, null: false
     field :balance, :integer, null: false
+    field :delta, :integer, null: false
 
     timestamps()
   end
@@ -17,8 +18,8 @@ defmodule BlockchainAPI.Schema.AccountBalance do
   @doc false
   def changeset(account_balance, attrs) do
     account_balance
-    |> cast(attrs, [:account_address, :block_height, :block_time, :balance])
-    |> validate_required([:account_address, :block_height, :block_time, :balance])
+    |> cast(attrs, [:account_address, :block_height, :block_time, :balance, :delta])
+    |> validate_required([:account_address, :block_height, :block_time, :balance, :delta])
     |> unique_constraint(:unique_account_height_balance, name: :unique_account_height_balance)
   end
 
@@ -37,12 +38,13 @@ defmodule BlockchainAPI.Schema.AccountBalance do
     end
   end
 
-  def map(address, entry, block) do
+  def map(address, balance, block, delta) do
     %{
       account_address: address,
       block_height: :blockchain_block.height(block),
       block_time: :blockchain_block.time(block),
-      balance: :blockchain_ledger_entry_v1.balance(entry)
+      balance: balance,
+      delta: delta
     }
   end
 end

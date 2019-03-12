@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountBalanceTable do
       add :block_time, :integer, null: false
       add :block_height, :integer, null: false
       add :balance, :bigint, null: false
+      add :delta, :bigint, null: false
 
       timestamps()
     end
