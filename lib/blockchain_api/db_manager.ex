@@ -435,7 +435,8 @@ defmodule BlockchainAPI.DBManager do
     query_pending_nonce = from(
       pp in PendingPayment,
       where: pp.payer == ^address,
-      select: [pp.status, pp.nonce],
+      where: pp.status != "error",
+      select: pp.nonce,
       order_by: [desc: pp.id],
       limit: 1
     )
@@ -448,24 +449,22 @@ defmodule BlockchainAPI.DBManager do
       limit: 1
     )
 
-    case Repo.one(query_pending_nonce) do
-      ["error", _] ->
-        # if there is a pending_nonce but resulted in an
-        # error, lookup last account nonce
-        case Repo.one(query_account_nonce) do
-          nil -> 0
-          nonce -> nonce
-        end
-      [_, pending_nonce] ->
-        # return the most recent pending_nonce in any other case
+    pending_nonce = Repo.one(query_pending_nonce)
+    account_nonce = Repo.one(query_account_nonce)
+
+    case {pending_nonce, account_nonce} do
+      {nil, nil} ->
+        # there is neither a pending_nonce nor an account_nonce
+        0
+      {nil, account_nonce} ->
+        # there is no pending_nonce but an account_nonce
+        account_nonce
+      {pending_nonce, nil} ->
+        # this shouldn't be possible _ideally_
         pending_nonce
-      nil ->
-        # if pending nonce isn't found, lookup account nonce
-        case Repo.one(query_account_nonce) do
-          # if account nonce is also not found, return 0
-          nil -> 0
-          nonce -> nonce
-        end
+      {pending_nonce, account_nonce} ->
+        # return the max of pending_nonce, account_nonce
+        max(pending_nonce, account_nonce)
     end
   end
 

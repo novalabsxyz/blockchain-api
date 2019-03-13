@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.Account do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.Account}
-  @fields [:id, :address, :name, :balance, :fee, :nonce, :speculative_nonce]
+  @fields [:id, :address, :name, :balance, :fee, :nonce]
 
   @derive {Phoenix.Param, key: :address}
   @derive {Jason.Encoder, only: @fields}
