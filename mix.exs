@@ -30,7 +30,8 @@ defmodule BlockchainAPI.MixProject do
         :inets,
         :xmerl,
         :scrivener_ecto,
-        :timex
+        :timex,
+        :httpoison
       ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
@@ -58,6 +59,7 @@ defmodule BlockchainAPI.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:ranch, "~> 1.7.1", override: true},
       {:scrivener_ecto, "~> 2.0"},
+      {:httpoison, "~> 1.4"},
 
       # blockchain requirements
       {:distillery, "~> 2.0"},

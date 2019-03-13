@@ -16,7 +16,8 @@ defmodule BlockchainAPI.DBManager do
     PendingPayment,
     PendingGateway,
     PendingLocation,
-    AccountBalance
+    AccountBalance,
+    Hotspot
   }
 
   def list_transactions(params) do
@@ -436,6 +437,28 @@ defmodule BlockchainAPI.DBManager do
     }
   end
 
+  def list_hotspots(params) do
+    Hotspot |> Repo.paginate(params)
+  end
+
+  def get_hotspot!(gateway) do
+    Hotspot
+    |> where([h], h.gateway == ^gateway)
+    |> Repo.one!
+  end
+
+  def create_hotspot(attrs \\ %{}) do
+    %Hotspot{}
+    |> Hotspot.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_hotspot!(hotspot, attrs \\ %{}) do
+    hotspot
+    |> Hotspot.changeset(attrs)
+    |> Repo.update!()
+  end
+
   def get_payer_speculative_nonce(address) do
     query_pending_nonce = from(
       pp in PendingPayment,
@@ -456,7 +479,6 @@ defmodule BlockchainAPI.DBManager do
 
     pending_nonce = Repo.one(query_pending_nonce)
     account_nonce = Repo.one(query_account_nonce)
-
     case {pending_nonce, account_nonce} do
       {nil, nil} ->
         # there is neither a pending_nonce nor an account_nonce
@@ -472,8 +494,6 @@ defmodule BlockchainAPI.DBManager do
         max(pending_nonce, account_nonce)
     end
   end
-
-
   #==================================================================
   # Helper functions
   #==================================================================
