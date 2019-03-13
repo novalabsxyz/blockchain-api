@@ -211,8 +211,7 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def update_account!(account, attrs \\ %{}) do
-    account.address
-    |> get_account!()
+    account
     |> Account.changeset(attrs)
     |> Repo.update!()
   end
@@ -317,8 +316,7 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def update_pending_gateway!(pg, attrs \\ %{}) do
-    pg.hash
-    |> get_pending_gateway!()
+    pg
     |> PendingGateway.changeset(attrs)
     |> Repo.update!()
   end
@@ -336,8 +334,7 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def update_pending_payment!(pp, attrs \\ %{}) do
-    pp.hash
-    |> get_pending_payment!()
+    pp
     |> PendingPayment.changeset(attrs)
     |> Repo.update!()
   end
@@ -355,8 +352,7 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def update_pending_location!(pl, attrs \\ %{}) do
-    pl.hash
-    |> get_pending_location!()
+    pl
     |> PendingLocation.changeset(attrs)
     |> Repo.update!()
   end
