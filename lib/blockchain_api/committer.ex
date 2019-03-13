@@ -11,7 +11,9 @@ defmodule BlockchainAPI.Committer do
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
     Schema.AccountTransaction,
-    Schema.AccountBalance
+    Schema.AccountBalance,
+    Schema.Hotspot,
+    Util
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -117,7 +119,10 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-            :blockchain_txn_assert_location_v1 -> insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
+            :blockchain_txn_assert_location_v1 ->
+              insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
+              # also upsert hotspot
+              upsert_hotspot(txn)
             _ ->
               :ok
           end
@@ -317,4 +322,38 @@ defmodule BlockchainAPI.Committer do
         {:error, "No associated account for coinbase transaction"}
     end
   end
+
+  defp upsert_hotspot(txn) do
+    try do
+      gateway = :blockchain_txn_assert_location_v1.gateway(txn)
+      loc = :blockchain_txn_assert_location_v1.location(txn)
+      hotspot = DBManager.get_hotspot!(gateway)
+
+      case Util.reverse_geocode(loc) do
+        {:ok, {street, city, state, country}} ->
+          hotspot_map =
+            %{
+              street: street,
+              city: city,
+              state: state,
+              country: country
+            }
+          DBManager.update_hotspot!(hotspot, hotspot_map)
+        error ->
+          #XXX: Don't do anything when you cannot decode via the googleapi
+          error
+      end
+    rescue
+      _error in Ecto.NoResultsError ->
+        # No hotspot entry exists in the hotspot table
+        case Hotspot.map(txn) do
+          {:error, _}=error ->
+            #XXX: Don't add it if googleapi failed?
+            error
+          map ->
+            DBManager.create_hotspot(map)
+        end
+    end
+  end
+
 end

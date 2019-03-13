@@ -25,6 +25,7 @@
   "gpb": {:hex, :gpb, "4.2.1", "3ae57fdfa1b78c155ea27d86886eb248002180c447d8b450d276a908da272509", [:make, :rebar], [], "hexpm"},
   "h3": {:git, "https://github.com/helium/erlang-h3.git", "584d6b20f5b64c8c0a3570d23bebcea2537d68bc", [branch: "master"]},
   "hackney": {:hex, :hackney, "1.15.1", "9f8f471c844b8ce395f7b6d8398139e26ddca9ebc171a8b91342ee15a19963f4", [:rebar3], [{:certifi, "2.5.1", [hex: :certifi, repo: "hexpm", optional: false]}, {:idna, "6.0.0", [hex: :idna, repo: "hexpm", optional: false]}, {:metrics, "1.0.1", [hex: :metrics, repo: "hexpm", optional: false]}, {:mimerl, "~>1.1", [hex: :mimerl, repo: "hexpm", optional: false]}, {:ssl_verify_fun, "1.1.4", [hex: :ssl_verify_fun, repo: "hexpm", optional: false]}], "hexpm"},
+  "httpoison": {:hex, :httpoison, "1.5.0", "71ae9f304bdf7f00e9cd1823f275c955bdfc68282bc5eb5c85c3a9ade865d68e", [:mix], [{:hackney, "~> 1.8", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
   "idna": {:hex, :idna, "6.0.0", "689c46cbcdf3524c44d5f3dde8001f364cd7608a99556d8fbd8239a5798d4c10", [:rebar3], [{:unicode_util_compat, "0.4.1", [hex: :unicode_util_compat, repo: "hexpm", optional: false]}], "hexpm"},
   "inert": {:hex, :inert, "1.0.0", "df4a4e0239c5d25fe192620f7be054df88845e8fc9f3a8049837de334f04068e", [:rebar3], [], "hexpm"},
   "inet_cidr": {:hex, :erl_cidr, "1.0.2", "4814a5b78b969a5e069b0cecbb102622ab0c459b690053ed94543cd529915a43", [:rebar3], [], "hexpm"},

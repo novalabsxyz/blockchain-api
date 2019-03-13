@@ -16,7 +16,8 @@ defmodule BlockchainAPI.DBManager do
     PendingPayment,
     PendingGateway,
     PendingLocation,
-    AccountBalance
+    AccountBalance,
+    Hotspot
   }
 
   def list_transactions(params) do
@@ -429,6 +430,28 @@ defmodule BlockchainAPI.DBManager do
       week: sample_weekly_account_balance(address),
       month: sample_monthly_account_balance(address)
     }
+  end
+
+  def list_hotspots(params) do
+    Hotspot |> Repo.paginate(params)
+  end
+
+  def get_hotspot!(gateway) do
+    Hotspot
+    |> where([h], h.gateway == ^gateway)
+    |> Repo.one!
+  end
+
+  def create_hotspot(attrs \\ %{}) do
+    %Hotspot{}
+    |> Hotspot.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_hotspot!(hotspot, attrs \\ %{}) do
+    hotspot
+    |> Hotspot.changeset(attrs)
+    |> Repo.update!()
   end
 
   #==================================================================
