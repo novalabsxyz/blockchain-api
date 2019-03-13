@@ -432,17 +432,41 @@ defmodule BlockchainAPI.DBManager do
   end
 
   def get_payer_speculative_nonce(address) do
-    query = from(
+    query_pending_nonce = from(
       pp in PendingPayment,
       where: pp.payer == ^address,
-      where: pp.status == "done",
-      select: pp.nonce,
+      select: [pp.status, pp.nonce],
       order_by: [desc: pp.id],
       limit: 1
     )
 
-    query
-    |> Repo.one
+    query_account_nonce = from(
+      a in Account,
+      where: a.address == ^address,
+      select: a.nonce,
+      order_by: [desc: a.id],
+      limit: 1
+    )
+
+    case Repo.one(query_pending_nonce) do
+      ["error", _] ->
+        # if there is a pending_nonce but resulted in an
+        # error, lookup last account nonce
+        case Repo.one(query_account_nonce) do
+          nil -> 0
+          nonce -> nonce
+        end
+      [_, pending_nonce] ->
+        # return the most recent pending_nonce in any other case
+        pending_nonce
+      nil ->
+        # if pending nonce isn't found, lookup account nonce
+        case Repo.one(query_account_nonce) do
+          # if account nonce is also not found, return 0
+          nil -> 0
+          nonce -> nonce
+        end
+    end
   end
 
 
