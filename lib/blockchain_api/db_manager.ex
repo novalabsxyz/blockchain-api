@@ -436,9 +436,9 @@ defmodule BlockchainAPI.DBManager do
     Hotspot |> Repo.paginate(params)
   end
 
-  def get_hotspot!(gateway) do
+  def get_hotspot!(hotspot) do
     Hotspot
-    |> where([h], h.gateway == ^gateway)
+    |> where([h], h.gateway == ^hotspot)
     |> Repo.one!
   end
 

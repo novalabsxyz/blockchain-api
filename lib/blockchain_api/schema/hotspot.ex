@@ -2,7 +2,18 @@ defmodule BlockchainAPI.Schema.Hotspot do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.Hotspot}
-  @fields [:id, :gateway, :owner, :location, :city, :stree, :state, :country]
+  @fields [
+    :id,
+    :gateway,
+    :owner,
+    :location,
+    :city,
+    :street,
+    :state,
+    :country,
+    :lat,
+    :lng
+  ]
 
   @primary_key {:gateway, :binary, []}
   @derive {Phoenix.Param, key: :gateway}
@@ -27,11 +38,16 @@ defmodule BlockchainAPI.Schema.Hotspot do
   end
 
   def encode_model(hotspot) do
-    %{
-      Map.take(hotspot, @fields) |
+    {lat, lng} = Util.h3_to_lat_lng(hotspot.location)
+
+    hotspot
+    |> Map.take(@fields)
+    |> Map.merge(%{
       gateway: Util.bin_to_string(hotspot.gateway),
-      owner: Util.bin_to_string(hotspot.owner)
-    }
+      owner: Util.bin_to_string(hotspot.owner),
+      lat: lat,
+      lng: lng
+    })
   end
 
   defimpl Jason.Encoder, for: Hotspot do
