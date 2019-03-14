@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Query.Hotspot do
 
   def list(params) do
     Hotspot
-    |> order_by([h], [desc: h.id]
+    |> order_by([h], [desc: h.id])
     |> Repo.paginate(params)
   end
 
