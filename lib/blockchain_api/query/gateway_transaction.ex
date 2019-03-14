@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     Schema.LocationTransaction
   }
 
-  def list_gateway_transactions(params) do
+  def list(params) do
     query = from(
       g in GatewayTransaction,
       left_join: l in LocationTransaction,
@@ -31,13 +31,13 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     |> clean_gateways()
   end
 
-  def get_gateway!(hash) do
+  def get!(hash) do
     GatewayTransaction
     |> where([gt], gt.hash == ^hash)
     |> Repo.one!
   end
 
-  def create_gateway(txn_hash, attrs \\ %{}) do
+  def create(txn_hash, attrs \\ %{}) do
     %GatewayTransaction{hash: txn_hash}
     |> GatewayTransaction.changeset(attrs)
     |> Repo.insert()

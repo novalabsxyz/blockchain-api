@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountGatewayController do
 
     page = address
            |> Util.string_to_bin()
-           |> Query.AccountTransaction.get_account_gateways(params)
+           |> Query.AccountTransaction.get_gateways(params)
 
     render(conn,
       "index.json",

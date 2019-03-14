@@ -4,25 +4,25 @@ defmodule BlockchainAPI.Query.Block do
 
   alias BlockchainAPI.{Repo, Schema.Block}
 
-  def list_blocks(params) do
+  def list(params) do
     Block
     |> order_by([b], desc: b.height)
     |> Repo.paginate(params)
   end
 
-  def get_block!(height) do
+  def get!(height) do
     Block
     |> where([b], b.height == ^height)
     |> Repo.one!
   end
 
-  def create_block(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %Block{}
     |> Block.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_latest_block() do
+  def get_latest() do
     query = from block in Block, select: max(block.height)
     Repo.all(query)
   end

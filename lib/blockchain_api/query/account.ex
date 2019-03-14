@@ -11,40 +11,40 @@ defmodule BlockchainAPI.Query.Account do
     Schema.PendingLocation
   }
 
-  def create_account(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %Account{}
     |> Account.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_account!(address) do
+  def get!(address) do
     Account
     |> where([a], a.address == ^address)
     |> Repo.one!
   end
 
-  def update_account!(account, attrs \\ %{}) do
+  def update!(account, attrs \\ %{}) do
     account
     |> Account.changeset(attrs)
     |> Repo.update!()
   end
 
-  def list_accounts(params) do
+  def list(params) do
     Account
     |> Repo.paginate(params)
   end
 
-  def list_all_accounts() do
+  def list_all() do
     Account |> Repo.all()
   end
 
-  def update_all_account_fee(fee) do
+  def update_all_fee(fee) do
     Account
     |> select([:address, :fee])
     |> Repo.update_all(set: [fee: fee, updated_at: NaiveDateTime.utc_now()])
   end
 
-  def get_account_pending_transactions(address) do
+  def get_pending_transactions(address) do
     get_account_pending_payments(address) ++
     get_account_pending_gateways(address) ++
     get_account_pending_locations(address)

@@ -7,7 +7,7 @@ defmodule BlockchainAPIWeb.AccountController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.Account.list_accounts(params)
+    page = Query.Account.list(params)
 
     render(conn,
       "index.json",
@@ -22,8 +22,8 @@ defmodule BlockchainAPIWeb.AccountController do
   def show(conn, %{"address" => address}) do
     try do
       bin_address = address |> Util.string_to_bin()
-      account = bin_address |> Query.Account.get_account!() |> Schema.Account.encode_model()
-      account_balance_history = bin_address |> Query.AccountBalance.get_account_balance_history()
+      account = bin_address |> Query.Account.get!() |> Schema.Account.encode_model()
+      account_balance_history = bin_address |> Query.AccountBalance.get_history()
       account_with_balance = Map.merge(account, %{history: account_balance_history})
       render(conn, "show.json", account: account_with_balance)
     rescue

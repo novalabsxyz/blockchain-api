@@ -4,18 +4,18 @@ defmodule BlockchainAPI.Query.PaymentTransaction do
 
   alias BlockchainAPI.{Repo, Schema.PaymentTransaction}
 
-  def list_payment_transactions(params) do
+  def list(params) do
     PaymentTransaction
     |> Repo.paginate(params)
   end
 
-  def get_payment!(hash) do
+  def get!(hash) do
     PaymentTransaction
     |> where([pt], pt.hash == ^hash)
     |> Repo.one!
   end
 
-  def create_payment(txn_hash, attrs \\ %{}) do
+  def create(txn_hash, attrs \\ %{}) do
     %PaymentTransaction{hash: txn_hash}
     |> PaymentTransaction.changeset(attrs)
     |> Repo.insert()

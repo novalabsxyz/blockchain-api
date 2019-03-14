@@ -6,7 +6,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.Hotspot.list_hotspots(params)
+    page = Query.Hotspot.list(params)
 
     render(conn,
       "index.json",
@@ -21,8 +21,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   def show(conn, %{"address" => address}) do
     hotspot = address
               |> Util.string_to_bin()
-              |> Query.Hotspot.get_hotspot!()
+              |> Query.Hotspot.get!()
     render(conn, "show.json", hotspot: hotspot)
   end
-
 end

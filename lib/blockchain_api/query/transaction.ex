@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.LocationTransaction
   }
 
-  def list_transactions(params) do
+  def list(params) do
     query = from(
       transaction in Transaction,
       left_join: block in Block,
@@ -39,7 +39,7 @@ defmodule BlockchainAPI.Query.Transaction do
 
   end
 
-  def get_transactions(block_height, params) do
+  def at_height(block_height, params) do
     query = from(
       transaction in Transaction,
       where: transaction.block_height == ^block_height,
@@ -63,19 +63,19 @@ defmodule BlockchainAPI.Query.Transaction do
     |> clean_transaction_page()
   end
 
-  def get_transaction_type(hash) do
+  def type(hash) do
     Repo.one from t in Transaction,
       where: t.hash == ^hash,
       select: t.type
   end
 
-  def get_transaction!(txn_hash) do
+  def get!(txn_hash) do
     Transaction
     |> where([t], t.hash == ^txn_hash)
     |> Repo.one!
   end
 
-  def create_transaction(block_height, attrs \\ %{}) do
+  def create(block_height, attrs \\ %{}) do
     %Transaction{block_height: block_height}
     |> Transaction.changeset(attrs)
     |> Repo.insert()

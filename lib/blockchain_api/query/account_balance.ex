@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Query.AccountBalance do
 
   alias BlockchainAPI.{Repo, Schema.AccountBalance}
 
-  def get_latest_account_balance!(address) do
+  def get_latest!(address) do
     AccountBalance
     |> where([a], a.account_address == ^address)
     |> order_by([a], desc: a.block_height)
@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.AccountBalance do
     |> Repo.one!
   end
 
-  def create_account_balance(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %AccountBalance{}
     |> AccountBalance.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_account_balance_history(address) do
+  def get_history(address) do
     %{
       day: sample_daily_account_balance(address),
       week: sample_weekly_account_balance(address),
@@ -157,7 +157,7 @@ defmodule BlockchainAPI.Query.AccountBalance do
   defp default_balance_history(range, address) do
     range
     |> Enum.map(fn _i ->
-      case get_latest_account_balance!(address) do
+      case get_latest!(address) do
         nil -> 0
         account_entry -> account_entry.balance
       end

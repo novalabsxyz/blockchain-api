@@ -6,7 +6,7 @@ defmodule BlockchainAPIWeb.PaymentController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.PaymentTransaction.list_payment_transactions(params)
+    page = Query.PaymentTransaction.list(params)
 
     render(conn,
       "index.json",
@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.PaymentController do
   def show(conn, %{"hash" => hash}) do
     payment = hash
               |> Util.string_to_bin()
-              |> Query.PaymentTransaction.get_payment!()
+              |> Query.PaymentTransaction.get!()
 
     render(conn, "show.json", payment: payment)
   end

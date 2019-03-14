@@ -4,19 +4,19 @@ defmodule BlockchainAPI.Query.PendingPayment do
 
   alias BlockchainAPI.{Repo, Schema.PendingPayment}
 
-  def create_pending_payment(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %PendingPayment{}
     |> PendingPayment.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_pending_payment!(hash) do
+  def get!(hash) do
     PendingPayment
     |> where([pp], pp.hash == ^hash)
     |> Repo.one!
   end
 
-  def update_pending_payment!(pp, attrs \\ %{}) do
+  def update!(pp, attrs \\ %{}) do
     pp
     |> PendingPayment.changeset(attrs)
     |> Repo.update!()

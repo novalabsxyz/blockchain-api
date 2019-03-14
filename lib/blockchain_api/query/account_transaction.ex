@@ -14,13 +14,13 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.LocationTransaction
   }
 
-  def create_account_transaction(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %AccountTransaction{}
     |> AccountTransaction.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_account_transactions(address, params) do
+  def get(address, params) do
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
@@ -52,7 +52,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> clean_account_transactions()
   end
 
-  def get_account_gateways(address, params \\ %{}) do
+  def get_gateways(address, params \\ %{}) do
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,

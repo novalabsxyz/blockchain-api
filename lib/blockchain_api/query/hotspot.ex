@@ -4,23 +4,23 @@ defmodule BlockchainAPI.Query.Hotspot do
 
   alias BlockchainAPI.{Repo, Schema.Hotspot}
 
-  def list_hotspots(params) do
+  def list(params) do
     Hotspot |> Repo.paginate(params)
   end
 
-  def get_hotspot!(address) do
+  def get!(address) do
     Hotspot
     |> where([h], h.address == ^address)
     |> Repo.one!
   end
 
-  def create_hotspot(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %Hotspot{}
     |> Hotspot.changeset(attrs)
     |> Repo.insert()
   end
 
-  def update_hotspot!(hotspot, attrs \\ %{}) do
+  def update!(hotspot, attrs \\ %{}) do
     hotspot
     |> Hotspot.changeset(attrs)
     |> Repo.update!()

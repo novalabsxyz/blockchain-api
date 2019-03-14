@@ -6,7 +6,7 @@ defmodule BlockchainAPIWeb.BlockController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.Block.list_blocks(params)
+    page = Query.Block.list(params)
 
     render(conn,
       "index.json",
@@ -19,8 +19,7 @@ defmodule BlockchainAPIWeb.BlockController do
   end
 
   def show(conn, %{"height" => height}) do
-    block = Query.Block.get_block!(height)
+    block = Query.Block.get!(height)
     render(conn, "show.json", block: block)
   end
-
 end

@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     page = address
            |> Util.string_to_bin()
-           |> Query.AccountTransaction.get_account_transactions(params)
+           |> Query.AccountTransaction.get(params)
 
     render(conn,
       "index.json",

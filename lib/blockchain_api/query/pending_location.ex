@@ -4,19 +4,19 @@ defmodule BlockchainAPI.Query.PendingLocation do
 
   alias BlockchainAPI.{Repo, Schema.PendingLocation}
 
-  def create_pending_location(attrs \\ %{}) do
+  def create(attrs \\ %{}) do
     %PendingLocation{}
     |> PendingLocation.changeset(attrs)
     |> Repo.insert()
   end
 
-  def get_pending_location!(hash) do
+  def get!(hash) do
     PendingLocation
     |> where([pl], pl.hash == ^hash)
     |> Repo.one!
   end
 
-  def update_pending_location!(pl, attrs \\ %{}) do
+  def update!(pl, attrs \\ %{}) do
     pl
     |> PendingLocation.changeset(attrs)
     |> Repo.update!()

@@ -7,7 +7,7 @@ defmodule BlockchainAPIWeb.TransactionController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"block_height" => height}=params) do
-    page = Query.Transaction.get_transactions(height, params)
+    page = Query.Transaction.at_height(height, params)
 
     render(conn,
       "index.json",
@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   def index(conn, params) do
 
-    page = Query.Transaction.list_transactions(params)
+    page = Query.Transaction.list(params)
 
     render(conn,
       "index.json",
@@ -35,24 +35,24 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   def show(conn, %{"hash" => hash}) do
     bin_hash = hash |> Util.string_to_bin()
-    case Query.Transaction.get_transaction_type(bin_hash) do
+    case Query.Transaction.type(bin_hash) do
       "payment" ->
-        payment = Query.PaymentTransaction.get_payment!(bin_hash)
+        payment = Query.PaymentTransaction.get!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.PaymentView)
         |> render("show.json", payment: payment)
       "gateway" ->
-        gateway = Query.GatewayTransaction.get_gateway!(bin_hash)
+        gateway = Query.GatewayTransaction.get!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.GatewayView)
         |> render("show.json", gateway: gateway)
       "coinbase" ->
-        coinbase = Query.CoinbaseTransaction.get_coinbase!(bin_hash)
+        coinbase = Query.CoinbaseTransaction.get!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.CoinbaseView)
         |> render("show.json", coinbase: coinbase)
       "location" ->
-        location = Query.LocationTransaction.get_location!(bin_hash)
+        location = Query.LocationTransaction.get!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.LocationView)
         |> render("show.json", location: location)
@@ -76,5 +76,4 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn |> send_resp(404, "Not Found")
     end
   end
-
 end

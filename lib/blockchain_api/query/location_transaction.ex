@@ -4,18 +4,18 @@ defmodule BlockchainAPI.Query.LocationTransaction do
 
   alias BlockchainAPI.{Repo, Schema.LocationTransaction}
 
-  def list_location_transactions(params) do
+  def list(params) do
     LocationTransaction
     |> Repo.paginate(params)
   end
 
-  def get_location!(hash) do
+  def get!(hash) do
     LocationTransaction
     |> where([lt], lt.hash == ^hash)
     |> Repo.one!
   end
 
-  def create_location(txn_hash, attrs \\ %{}) do
+  def create(txn_hash, attrs \\ %{}) do
     %LocationTransaction{hash: txn_hash}
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()

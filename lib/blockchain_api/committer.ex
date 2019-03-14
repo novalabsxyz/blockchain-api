@@ -33,7 +33,7 @@ defmodule BlockchainAPI.Committer do
 
         {:ok, inserted_block} = block
                                 |> Block.map()
-                                |> Query.Block.create_block()
+                                |> Query.Block.create()
         add_accounts(block, chain)
         add_transactions(block)
         add_account_transactions(block)
@@ -102,7 +102,7 @@ defmodule BlockchainAPI.Committer do
 
     # NOTE: We'd have added whatever accounts were added/updated for this block at this point
     # It should be "safe" to update the transaction fee for each account from the ledger
-    Query.Account.update_all_account_fee(fee)
+    Query.Account.update_all_fee(fee)
   end
 
   #==================================================================
@@ -160,10 +160,10 @@ defmodule BlockchainAPI.Committer do
     |> Enum.map(fn {address, entry} ->
       try do
         ledger_entry_balance = :blockchain_ledger_entry_v1.balance(entry)
-        case Query.AccountBalance.get_latest_account_balance!(address) do
+        case Query.AccountBalance.get_latest!(address) do
           nil ->
             AccountBalance.map(address, ledger_entry_balance, block, ledger_entry_balance)
-            |> Query.AccountBalance.create_account_balance()
+            |> Query.AccountBalance.create()
           account_entry ->
             account_entry_balance = account_entry.balance
             case account_entry_balance == ledger_entry_balance do
@@ -171,14 +171,14 @@ defmodule BlockchainAPI.Committer do
                 :ok
               false ->
                 AccountBalance.map(address, ledger_entry_balance, block, (ledger_entry_balance - account_entry_balance))
-                |> Query.AccountBalance.create_account_balance()
+                |> Query.AccountBalance.create()
             end
         end
       rescue
         _error in Ecto.NoResultsError ->
           ledger_entry_balance = :blockchain_ledger_entry_v1.balance(entry)
           AccountBalance.map(address, ledger_entry_balance, block, ledger_entry_balance)
-          |> Query.AccountBalance.create_account_balance()
+          |> Query.AccountBalance.create()
       end
     end)
   end
@@ -191,11 +191,11 @@ defmodule BlockchainAPI.Committer do
     addr = :blockchain_txn_coinbase_v1.payee(txn)
     {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
     try do
-      account = Query.Account.get_account!(addr)
+      account = Query.Account.get!(addr)
       account_map =
         %{balance: :blockchain_ledger_entry_v1.balance(entry),
           nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-      account = Query.Account.update_account!(account, account_map)
+      account = Query.Account.update!(account, account_map)
       {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
@@ -203,7 +203,7 @@ defmodule BlockchainAPI.Committer do
           %{address: addr,
             balance: :blockchain_ledger_entry_v1.balance(entry),
             nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-        Query.Account.create_account(account_map)
+        Query.Account.create(account_map)
     end
   end
 
@@ -213,11 +213,11 @@ defmodule BlockchainAPI.Committer do
     {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
     {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
     try do
-      payer_account = Query.Account.get_account!(payer)
+      payer_account = Query.Account.get!(payer)
       payer_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payer_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-      account = Query.Account.update_account!(payer_account, payer_map)
+      account = Query.Account.update!(payer_account, payer_map)
       {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
@@ -225,14 +225,14 @@ defmodule BlockchainAPI.Committer do
           %{address: payer,
             balance: :blockchain_ledger_entry_v1.balance(payer_entry),
             nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-        Query.Account.create_account(payer_map)
+        Query.Account.create(payer_map)
     end
     try do
-      payee_account = Query.Account.get_account!(payee)
+      payee_account = Query.Account.get!(payee)
       payee_map =
         %{balance: :blockchain_ledger_entry_v1.balance(payee_entry),
           nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-      account = Query.Account.update_account!(payee_account, payee_map)
+      account = Query.Account.update!(payee_account, payee_map)
       {:ok, account}
     rescue
       _error in Ecto.NoResultsError ->
@@ -240,7 +240,7 @@ defmodule BlockchainAPI.Committer do
           %{address: payee,
             balance: :blockchain_ledger_entry_v1.balance(payee_entry),
             nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-        Query.Account.create_account(payee_map)
+        Query.Account.create(payee_map)
     end
   end
 
@@ -249,23 +249,23 @@ defmodule BlockchainAPI.Committer do
   # Insert individual transactions
   #==================================================================
   defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create_transaction(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-    Query.CoinbaseTransaction.create_coinbase(transaction_entry.hash, CoinbaseTransaction.map(txn))
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
+    Query.CoinbaseTransaction.create(transaction_entry.hash, CoinbaseTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create_transaction(height, Transaction.map(:blockchain_txn_payment_v1, txn))
-    Query.PaymentTransaction.create_payment(transaction_entry.hash, PaymentTransaction.map(txn))
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
+    Query.PaymentTransaction.create(transaction_entry.hash, PaymentTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create_transaction(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
-    Query.GatewayTransaction.create_gateway(transaction_entry.hash, GatewayTransaction.map(txn))
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
+    Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create_transaction(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-    Query.LocationTransaction.create_location(transaction_entry.hash, LocationTransaction.map(txn))
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
+    Query.LocationTransaction.create(transaction_entry.hash, LocationTransaction.map(txn))
   end
 
   #==================================================================
@@ -273,9 +273,9 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   defp insert_account_transaction(:blockchain_txn_coinbase_v1, txn) do
     try do
-      account = Query.Account.get_account!(:blockchain_txn_coinbase_v1.payee(txn))
-      txn = Query.Transaction.get_transaction!(:blockchain_txn_coinbase_v1.hash(txn))
-      Query.AccountTransaction.create_account_transaction(AccountTransaction.map(account, txn))
+      account = Query.Account.get!(:blockchain_txn_coinbase_v1.payee(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_coinbase_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}
@@ -284,17 +284,17 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_payment_v1, txn) do
     try do
-      account = Query.Account.get_account!(:blockchain_txn_payment_v1.payee(txn))
-      txn = Query.Transaction.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
-      Query.AccountTransaction.create_account_transaction(AccountTransaction.map(account, txn))
+      account = Query.Account.get!(:blockchain_txn_payment_v1.payee(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_payment_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated payee account for payment transaction"}
     end
     try do
-      account = Query.Account.get_account!(:blockchain_txn_payment_v1.payer(txn))
-      txn = Query.Transaction.get_transaction!(:blockchain_txn_payment_v1.hash(txn))
-      Query.AccountTransaction.create_account_transaction(AccountTransaction.map(account, txn))
+      account = Query.Account.get!(:blockchain_txn_payment_v1.payer(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_payment_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated payer account for payment transaction"}
@@ -303,9 +303,9 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_add_gateway_v1, txn) do
     try do
-      account = Query.Account.get_account!(:blockchain_txn_add_gateway_v1.owner(txn))
-      txn = Query.Transaction.get_transaction!(:blockchain_txn_add_gateway_v1.hash(txn))
-      Query.AccountTransaction.create_account_transaction(AccountTransaction.map(account, txn))
+      account = Query.Account.get!(:blockchain_txn_add_gateway_v1.owner(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_add_gateway_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}
@@ -314,9 +314,9 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
     try do
-      account = Query.Account.get_account!(:blockchain_txn_assert_location_v1.owner(txn))
-      txn = Query.Transaction.get_transaction!(:blockchain_txn_assert_location_v1.hash(txn))
-      Query.AccountTransaction.create_account_transaction(AccountTransaction.map(account, txn))
+      account = Query.Account.get!(:blockchain_txn_assert_location_v1.owner(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_assert_location_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
         {:error, "No associated account for coinbase transaction"}
@@ -327,7 +327,7 @@ defmodule BlockchainAPI.Committer do
     try do
       gateway = :blockchain_txn_assert_location_v1.gateway(txn)
       loc = :blockchain_txn_assert_location_v1.location(txn)
-      hotspot = Query.Hotspot.get_hotspot!(gateway)
+      hotspot = Query.Hotspot.get!(gateway)
 
       case Util.reverse_geocode(loc) do
         {:ok, {street, city, state, country}} ->
@@ -338,7 +338,7 @@ defmodule BlockchainAPI.Committer do
               state: state,
               country: country
             }
-          Query.Hotspot.update_hotspot!(hotspot, hotspot_map)
+          Query.Hotspot.update!(hotspot, hotspot_map)
         error ->
           #XXX: Don't do anything when you cannot decode via the googleapi
           error
@@ -351,7 +351,7 @@ defmodule BlockchainAPI.Committer do
             #XXX: Don't add it if googleapi failed?
             error
           map ->
-            Query.Hotspot.create_hotspot(map)
+            Query.Hotspot.create(map)
         end
     end
   end

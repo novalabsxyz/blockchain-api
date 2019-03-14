@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountPendingTransactionController do
 
     account_pending_transactions = address
                                    |> Util.string_to_bin()
-                                   |> Query.Account.get_account_pending_transactions()
+                                   |> Query.Account.get_pending_transactions()
 
     render(conn,
       "index.json",
