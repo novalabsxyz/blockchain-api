@@ -253,7 +253,12 @@ defmodule BlockchainAPI.DBManager do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
-      order_by: [desc: block.height],
+      order_by: [
+        desc: block.height,
+        desc: transaction.id,
+        desc: payment_transaction.nonce,
+        desc: location_transaction.nonce
+      ],
       select: %{
         time: block.time,
         height: transaction.block_height,
