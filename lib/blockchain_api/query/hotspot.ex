@@ -5,7 +5,9 @@ defmodule BlockchainAPI.Query.Hotspot do
   alias BlockchainAPI.{Repo, Schema.Hotspot}
 
   def list(params) do
-    Hotspot |> Repo.paginate(params)
+    Hotspot
+    |> order_by([h], [desc: h.id]
+    |> Repo.paginate(params)
   end
 
   def get!(address) do

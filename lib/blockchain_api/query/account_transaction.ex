@@ -36,7 +36,12 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
-      order_by: [desc: block.height],
+      order_by: [
+        desc: block.height,
+        desc: transaction.id,
+        desc: payment_transaction.nonce,
+        desc: location_transaction.nonce
+      ],
       select: %{
         time: block.time,
         height: transaction.block_height,
@@ -62,7 +67,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       left_join: lt in LocationTransaction,
       on: gt.gateway == lt.gateway,
       distinct: gt.gateway,
-      order_by: [desc: lt.nonce],
+      order_by: [desc: gt.id, desc: lt.nonce],
       select: %{
         account_address: at.account_address,
         gateway: gt.gateway,
