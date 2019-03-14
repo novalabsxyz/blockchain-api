@@ -7,10 +7,14 @@ defmodule BlockchainAPI.Schema.Hotspot do
     :address,
     :owner,
     :location,
-    :city,
-    :street,
-    :state,
-    :country,
+    :long_city,
+    :long_street,
+    :short_street,
+    :long_state,
+    :long_country,
+    :short_city,
+    :short_state,
+    :short_country,
     :lat,
     :lng
   ]
@@ -21,10 +25,14 @@ defmodule BlockchainAPI.Schema.Hotspot do
     field :address, :binary, null: false
     field :owner, :binary, null: false
     field :location, :string, null: false
-    field :street, :string, null: false
-    field :city, :string, null: false
-    field :state, :string, null: false
-    field :country, :string, null: false
+    field :long_street, :string, null: false
+    field :long_city, :string, null: false
+    field :long_state, :string, null: false
+    field :long_country, :string, null: false
+    field :short_street, :string, null: false
+    field :short_city, :string, null: false
+    field :short_state, :string, null: false
+    field :short_country, :string, null: false
 
     timestamps()
   end
@@ -32,8 +40,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
   @doc false
   def changeset(hotspot, attrs) do
     hotspot
-    |> cast(attrs, [:address, :owner, :location, :city, :country, :street, :state])
-    |> validate_required([:address, :owner, :location, :city, :country, :street, :state])
+    |> cast(attrs, [:address, :owner, :location, :long_city, :long_country, :long_street, :long_state, :short_street, :short_city, :short_country, :short_state])
+    |> validate_required([:address, :owner, :location, :long_city, :long_country, :long_street, :long_state, :short_street, :short_city, :short_country, :short_state])
     |> unique_constraint(:unique_hotspots)
     |> unique_constraint(:unique_city_hotspots)
   end
@@ -63,16 +71,13 @@ defmodule BlockchainAPI.Schema.Hotspot do
     loc = :blockchain_txn_assert_location_v1.location(location_txn)
 
     case Util.reverse_geocode(loc) do
-      {:ok, {street, city, state, country}} ->
+      {:ok, loc_info_map} ->
+        Map.merge(
         %{
           address: :blockchain_txn_assert_location_v1.gateway(location_txn),
           owner: :blockchain_txn_assert_location_v1.owner(location_txn),
-          location: Util.h3_to_string(loc),
-          city: city,
-          street: street,
-          state: state,
-          country: country
-        }
+          location: Util.h3_to_string(loc)
+        }, loc_info_map)
       error ->
         # XXX: What if googleapi lookup fails!
         error

@@ -34,11 +34,18 @@ defmodule BlockchainAPI.Util do
         decoded_body = Jason.decode!(body)
         case hd(decoded_body["results"]) do
           %{"address_components" => address_components} ->
-            street = Enum.find(address_components, fn c -> c["types"] == ["route"] end)["long_name"] || "Unknown"
-            city = Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)["long_name"] || "Unknown"
-            state = Enum.find(address_components, fn c -> c["types"] == ["administrative_area_level_1", "political"] end)["long_name"] || "Unknown"
-            country = Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)["short_name"] || "Unknown"
-            {:ok, {street, city, state, country}}
+            {:ok,
+              %{
+                long_street: Enum.find(address_components, fn c -> c["types"] == ["route"] end)["long_name"] || "Unknown",
+                short_street: Enum.find(address_components, fn c -> c["types"] == ["route"] end)["short_name"] || "Unknown",
+                long_city: Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)["long_name"] || "Unknown",
+                long_state: Enum.find(address_components, fn c -> c["types"] == ["administrative_area_level_1", "political"] end)["long_name"] || "Unknown",
+                long_country: Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)["long_name"] || "Unknown",
+                short_city: Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)["short_name"] || "Unknown",
+                short_state: Enum.find(address_components, fn c -> c["types"] == ["administrative_area_level_1", "political"] end)["short_name"] || "Unknown",
+                short_country: Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)["short_name"] || "Unknown"
+              }
+            }
           _ ->
             {:error, :unknown_location}
         end

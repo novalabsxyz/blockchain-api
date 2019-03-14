@@ -330,15 +330,8 @@ defmodule BlockchainAPI.Committer do
       hotspot = Query.Hotspot.get!(gateway)
 
       case Util.reverse_geocode(loc) do
-        {:ok, {street, city, state, country}} ->
-          hotspot_map =
-            %{
-              street: street,
-              city: city,
-              state: state,
-              country: country
-            }
-          Query.Hotspot.update!(hotspot, hotspot_map)
+        {:ok, loc_info_map} ->
+          Query.Hotspot.update!(hotspot, loc_info_map)
         error ->
           #XXX: Don't do anything when you cannot decode via the googleapi
           error
