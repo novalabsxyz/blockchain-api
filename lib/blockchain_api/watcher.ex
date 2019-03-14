@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{DBManager, Committer}
+  alias BlockchainAPI.{Query, Committer}
 
   @me __MODULE__
   require Logger
@@ -92,10 +92,10 @@ defmodule BlockchainAPI.Watcher do
   defp add_block(block, chain) do
     height = :blockchain_block.height(block)
     try do
-      DBManager.get_block!(height)
+      Query.Block.get_block!(height)
     rescue
       _error in Ecto.NoResultsError ->
-        case DBManager.get_latest_block() do
+        case Query.Block.get_latest_block() do
           [nil] ->
             # nothing in the db yet
             Committer.commit(block, chain)

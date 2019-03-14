@@ -1,13 +1,13 @@
 defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, DBManager}
+  alias BlockchainAPI.{Util, Query}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"block_height" => height}=params) do
-    page = DBManager.get_transactions(height, params)
+    page = Query.Transaction.get_transactions(height, params)
 
     render(conn,
       "index.json",
@@ -21,7 +21,7 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   def index(conn, params) do
 
-    page = DBManager.list_transactions(params)
+    page = Query.Transaction.list_transactions(params)
 
     render(conn,
       "index.json",
@@ -35,24 +35,24 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   def show(conn, %{"hash" => hash}) do
     bin_hash = hash |> Util.string_to_bin()
-    case DBManager.get_transaction_type(bin_hash) do
+    case Query.Transaction.get_transaction_type(bin_hash) do
       "payment" ->
-        payment = DBManager.get_payment!(bin_hash)
+        payment = Query.PaymentTransaction.get_payment!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.PaymentView)
         |> render("show.json", payment: payment)
       "gateway" ->
-        gateway = DBManager.get_gateway!(bin_hash)
+        gateway = Query.GatewayTransaction.get_gateway!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.GatewayView)
         |> render("show.json", gateway: gateway)
       "coinbase" ->
-        coinbase = DBManager.get_coinbase!(bin_hash)
+        coinbase = Query.CoinbaseTransaction.get_coinbase!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.CoinbaseView)
         |> render("show.json", coinbase: coinbase)
       "location" ->
-        location = DBManager.get_location!(bin_hash)
+        location = Query.LocationTransaction.get_location!(bin_hash)
         conn
         |> put_view(BlockchainAPIWeb.LocationView)
         |> render("show.json", location: location)

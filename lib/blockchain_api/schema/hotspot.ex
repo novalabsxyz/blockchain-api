@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
   alias BlockchainAPI.{Util, Schema.Hotspot}
   @fields [
     :id,
-    :gateway,
+    :address,
     :owner,
     :location,
     :city,
@@ -15,10 +15,10 @@ defmodule BlockchainAPI.Schema.Hotspot do
     :lng
   ]
 
-  @primary_key {:gateway, :binary, []}
-  @derive {Phoenix.Param, key: :gateway}
+  @derive {Phoenix.Param, key: :address}
   @derive {Jason.Encoder, only: @fields}
   schema "hotspots" do
+    field :address, :binary, null: false
     field :owner, :binary, null: false
     field :location, :string, null: false
     field :street, :string, null: false
@@ -32,9 +32,10 @@ defmodule BlockchainAPI.Schema.Hotspot do
   @doc false
   def changeset(hotspot, attrs) do
     hotspot
-    |> cast(attrs, [:gateway, :owner, :location, :city, :country, :street, :state])
-    |> validate_required([:gateway, :owner, :location, :city, :country, :street, :state])
-    |> unique_constraint(:unique_city_gateways)
+    |> cast(attrs, [:address, :owner, :location, :city, :country, :street, :state])
+    |> validate_required([:address, :owner, :location, :city, :country, :street, :state])
+    |> unique_constraint(:unique_hotspots)
+    |> unique_constraint(:unique_city_hotspots)
   end
 
   def encode_model(hotspot) do
@@ -43,7 +44,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
     hotspot
     |> Map.take(@fields)
     |> Map.merge(%{
-      gateway: Util.bin_to_string(hotspot.gateway),
+      address: Util.bin_to_string(hotspot.address),
       owner: Util.bin_to_string(hotspot.owner),
       lat: lat,
       lng: lng
@@ -64,7 +65,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
     case Util.reverse_geocode(loc) do
       {:ok, {street, city, state, country}} ->
         %{
-          gateway: :blockchain_txn_assert_location_v1.gateway(location_txn),
+          address: :blockchain_txn_assert_location_v1.gateway(location_txn),
           owner: :blockchain_txn_assert_location_v1.owner(location_txn),
           location: Util.h3_to_string(loc),
           city: city,
