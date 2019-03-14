@@ -50,6 +50,42 @@ defmodule BlockchainAPI.Query.Account do
     get_account_pending_locations(address)
   end
 
+  def get_speculative_nonce(address) do
+    query_pending_nonce = from(
+      pp in PendingPayment,
+      where: pp.payer == ^address,
+      where: pp.status != "error",
+      select: pp.nonce,
+      order_by: [desc: pp.id],
+      limit: 1
+    )
+
+    query_account_nonce = from(
+      a in Account,
+      where: a.address == ^address,
+      select: a.nonce,
+      order_by: [desc: a.id],
+      limit: 1
+    )
+
+    pending_nonce = Repo.one(query_pending_nonce)
+    account_nonce = Repo.one(query_account_nonce)
+    case {pending_nonce, account_nonce} do
+      {nil, nil} ->
+        # there is neither a pending_nonce nor an account_nonce
+        0
+      {nil, account_nonce} ->
+        # there is no pending_nonce but an account_nonce
+        account_nonce
+      {pending_nonce, nil} ->
+        # this shouldn't be possible _ideally_
+        pending_nonce
+      {pending_nonce, account_nonce} ->
+        # return the max of pending_nonce, account_nonce
+        max(pending_nonce, account_nonce)
+    end
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================

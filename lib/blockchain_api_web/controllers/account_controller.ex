@@ -28,7 +28,7 @@ defmodule BlockchainAPIWeb.AccountController do
       account_data = account
                      |> Map.merge(
                        %{history: account_balance_history,
-                         nonce: DBManager.get_payer_speculative_nonce(bin_address)
+                         nonce: Query.Account.get_speculative_nonce(bin_address)
                        })
 
       render(conn, "show.json", account: account_data)
