@@ -1,13 +1,13 @@
 defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Watcher, Util, DBManager, Schema.Account}
+  alias BlockchainAPI.{Watcher, Util, Query, Schema}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = DBManager.list_accounts(params)
+    page = Query.Account.list(params)
 
     render(conn,
       "index.json",
@@ -22,8 +22,8 @@ defmodule BlockchainAPIWeb.AccountController do
   def show(conn, %{"address" => address}) do
     try do
       bin_address = address |> Util.string_to_bin()
-      account = bin_address |> DBManager.get_account!() |> Account.encode_model()
-      account_balance_history = bin_address |> DBManager.get_account_balance_history()
+      account = bin_address |> Query.Account.get!() |> Schema.Account.encode_model()
+      account_balance_history = bin_address |> Query.AccountBalance.get_history()
 
       account_data = account
                      |> Map.merge(

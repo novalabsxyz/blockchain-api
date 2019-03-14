@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.BlockTest do
   use BlockchainAPI.DataCase
 
-  alias BlockchainAPI.DBManager
+  alias BlockchainAPI.Query
   @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
@@ -14,23 +14,23 @@ defmodule BlockchainAPI.BlockTest do
       {:ok, block} =
         attrs
         |> Enum.into(@valid_attrs)
-        |> DBManager.create_block()
+        |> Query.Block.create_block()
 
       block
     end
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert DBManager.list_blocks(@default_params).entries == [block]
+      assert Query.Block.list_blocks(@default_params).entries == [block]
     end
 
     test "get_block!/1 returns the block with given id" do
       block = block_fixture()
-      assert DBManager.get_block!(block.height) == block
+      assert Query.Block.get_block!(block.height) == block
     end
 
     test "create_block/1 with valid data creates a block" do
-      assert {:ok, %Block{} = block} = DBManager.create_block(@valid_attrs)
+      assert {:ok, %Block{} = block} = Query.Block.create_block(@valid_attrs)
       assert block.hash == "some hash"
       assert block.height == 42
       assert block.round == 42
@@ -38,7 +38,7 @@ defmodule BlockchainAPI.BlockTest do
     end
 
     test "create_block/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = DBManager.create_block(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.Block.create_block(@invalid_attrs)
     end
 
   end

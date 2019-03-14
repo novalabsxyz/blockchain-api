@@ -1,12 +1,12 @@
 defmodule BlockchainAPIWeb.HotspotController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{DBManager, Util}
+  alias BlockchainAPI.{Query, Util}
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = DBManager.list_hotspots(params)
+    page = Query.Hotspot.list(params)
 
     render(conn,
       "index.json",
@@ -21,8 +21,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   def show(conn, %{"address" => address}) do
     hotspot = address
               |> Util.string_to_bin()
-              |> DBManager.get_hotspot!()
+              |> Query.Hotspot.get!()
     render(conn, "show.json", hotspot: hotspot)
   end
-
 end
