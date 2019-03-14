@@ -14,23 +14,23 @@ defmodule BlockchainAPI.BlockTest do
       {:ok, block} =
         attrs
         |> Enum.into(@valid_attrs)
-        |> Query.Block.create_block()
+        |> Query.Block.create()
 
       block
     end
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert Query.Block.list_blocks(@default_params).entries == [block]
+      assert Query.Block.list(@default_params).entries == [block]
     end
 
     test "get_block!/1 returns the block with given id" do
       block = block_fixture()
-      assert Query.Block.get_block!(block.height) == block
+      assert Query.Block.get!(block.height) == block
     end
 
     test "create_block/1 with valid data creates a block" do
-      assert {:ok, %Block{} = block} = Query.Block.create_block(@valid_attrs)
+      assert {:ok, %Block{} = block} = Query.Block.create(@valid_attrs)
       assert block.hash == "some hash"
       assert block.height == 42
       assert block.round == 42
@@ -38,7 +38,7 @@ defmodule BlockchainAPI.BlockTest do
     end
 
     test "create_block/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Query.Block.create_block(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.Block.create(@invalid_attrs)
     end
 
   end
