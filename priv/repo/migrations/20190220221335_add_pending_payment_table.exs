@@ -15,7 +15,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
       timestamps()
     end
 
-    create unique_index(:pending_payments, [:payer, :hash], name: :unique_pending_payment)
+    create unique_index(:pending_payments, [:payer, :hash, :status], name: :unique_pending_payment)
 
   end
 end
