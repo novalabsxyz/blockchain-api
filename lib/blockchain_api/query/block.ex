@@ -52,4 +52,20 @@ defmodule BlockchainAPI.Query.Block do
     query = from block in Block, select: max(block.height)
     Repo.all(query)
   end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp encode(nil), do: nil
+  defp encode(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn %{hash: hash}=block ->
+             %{block | hash: Util.bin_to_string(hash)}
+           end)
+
+    %{page | entries: data}
+  end
+  defp encode(%{hash: hash}=block) do
+    %{block | hash: Util.bin_to_string(hash)}
+  end
 end
