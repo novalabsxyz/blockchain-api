@@ -122,18 +122,27 @@ defmodule BlockchainAPI.Query.Account do
   end
 
   defp get_account_pending_payments(address) do
-    query = from(
+    query_sent = from(
       a in Account,
       where: a.address == ^address,
       left_join: pp in PendingPayment,
       on: pp.payer == a.address,
-      order_by: [desc: pp.nonce],
       select: pp
     )
 
-    query
-    |> Repo.all
+    query_recv = from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pp in PendingPayment,
+      on: pp.payee == a.address,
+      select: pp
+    )
+
+    total = Repo.all(query_sent) ++ Repo.all(query_recv)
+
+    total
     |> Enum.reject(&is_nil/1)
+    |> Enum.sort_by(&(&1.id), &>=/2)
     |> Enum.map(&clean_pending_payment/1)
   end
 
