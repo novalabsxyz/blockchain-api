@@ -2,18 +2,44 @@ defmodule BlockchainAPI.Query.Block do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.Block}
+  alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
 
   def list(params) do
-    Block
-    |> order_by([b], desc: b.height)
-    |> Repo.paginate(params)
+    query = from(
+      block in Block,
+      full_join: txn in Transaction,
+      on: block.height == txn.block_height,
+      group_by: block.id,
+      order_by: [desc: block.height],
+      select: %{
+        hash: block.hash,
+        height: block.height,
+        time: block.time,
+        round: block.round,
+        txns: count(txn.id)
+      })
+
+    query |> Repo.paginate(params) |> encode()
   end
 
   def get!(height) do
-    Block
-    |> where([b], b.height == ^height)
-    |> Repo.one!
+
+    query = from(
+      block in Block,
+      full_join: txn in Transaction,
+      on: block.height == txn.block_height,
+      where: block.height == ^height,
+      group_by: block.id,
+      order_by: [desc: block.height],
+      select: %{
+        hash: block.hash,
+        height: block.height,
+        time: block.time,
+        round: block.round,
+        txns: count(txn.id)
+      })
+
+    query |> Repo.one!() |> encode()
   end
 
   def create(attrs \\ %{}) do
