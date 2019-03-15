@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Query.Transaction do
 
   alias BlockchainAPI.{
     Repo,
+    Util,
     Schema.Block,
     Schema.Transaction,
     Schema.PaymentTransaction,
@@ -41,8 +42,10 @@ defmodule BlockchainAPI.Query.Transaction do
 
   def at_height(block_height, params) do
     query = from(
-      transaction in Transaction,
-      where: transaction.block_height == ^block_height,
+      block in Block,
+      where: block.height == ^block_height,
+      left_join: transaction in Transaction,
+      on: block.height == transaction.block_height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -51,16 +54,24 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
-      select: [
-        coinbase_transaction,
-        payment_transaction,
-        gateway_transaction,
-        location_transaction
-      ])
+      order_by: [
+        desc: block.height,
+        desc: transaction.id,
+        desc: payment_transaction.nonce,
+        desc: location_transaction.nonce
+      ],
+      select: %{
+        time: block.time,
+        height: block.height,
+        coinbase: coinbase_transaction,
+        payment: payment_transaction,
+        gateway: gateway_transaction,
+        location: location_transaction
+      })
 
     query
     |> Repo.paginate(params)
-    |> clean_transaction_page()
+    |> clean_block_transaction_page()
   end
 
   def type(hash) do
@@ -87,5 +98,14 @@ defmodule BlockchainAPI.Query.Transaction do
   defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
     clean_entries = entries |> List.flatten |> Enum.reject(&is_nil/1)
     %{page | entries: clean_entries}
+  end
+
+  defp clean_block_transaction_page(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
+           |> Enum.reverse
+
+    %{page | entries: data}
   end
 end
