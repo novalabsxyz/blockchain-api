@@ -2,18 +2,44 @@ defmodule BlockchainAPI.Query.Block do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.Block}
+  alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
 
   def list(params) do
-    Block
-    |> order_by([b], desc: b.height)
-    |> Repo.paginate(params)
+    query = from(
+      block in Block,
+      full_join: txn in Transaction,
+      on: block.height == txn.block_height,
+      group_by: block.id,
+      order_by: [desc: block.height],
+      select: %{
+        hash: block.hash,
+        height: block.height,
+        time: block.time,
+        round: block.round,
+        txns: count(txn.id)
+      })
+
+    query |> Repo.paginate(params) |> encode()
   end
 
   def get!(height) do
-    Block
-    |> where([b], b.height == ^height)
-    |> Repo.one!
+
+    query = from(
+      block in Block,
+      full_join: txn in Transaction,
+      on: block.height == txn.block_height,
+      where: block.height == ^height,
+      group_by: block.id,
+      order_by: [desc: block.height],
+      select: %{
+        hash: block.hash,
+        height: block.height,
+        time: block.time,
+        round: block.round,
+        txns: count(txn.id)
+      })
+
+    query |> Repo.one!() |> encode()
   end
 
   def create(attrs \\ %{}) do
@@ -25,5 +51,21 @@ defmodule BlockchainAPI.Query.Block do
   def get_latest() do
     query = from block in Block, select: max(block.height)
     Repo.all(query)
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp encode(nil), do: nil
+  defp encode(%Scrivener.Page{entries: entries}=page) do
+    data = entries
+           |> Enum.map(fn %{hash: hash}=block ->
+             %{block | hash: Util.bin_to_string(hash)}
+           end)
+
+    %{page | entries: data}
+  end
+  defp encode(%{hash: hash}=block) do
+    %{block | hash: Util.bin_to_string(hash)}
   end
 end
