@@ -1,4 +1,12 @@
 defmodule BlockchainAPI.Util do
+
+  alias BlockchainAPI.Schema.{
+    PaymentTransaction,
+    CoinbaseTransaction,
+    LocationTransaction,
+    GatewayTransaction
+  }
+
   def bin_to_string(nil), do: nil
   def bin_to_string(bin) do
     bin
@@ -52,5 +60,22 @@ defmodule BlockchainAPI.Util do
       _ ->
         {:error, :bad_response}
     end
+  end
+
+  def clean_txn_struct(%{payment: payment, height: height, time: time}) do
+    Map.merge(PaymentTransaction.encode_model(payment), %{type: "payment", height: height, time: time})
+  end
+  def clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
+    Map.merge(CoinbaseTransaction.encode_model(coinbase), %{type: "coinbase", height: height, time: time})
+  end
+  def clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
+    Map.merge(GatewayTransaction.encode_model(gateway), %{type: "gateway", height: height, time: time})
+  end
+  def clean_txn_struct(%{location: location, height: height, time: time}) do
+    {lat, lng} = h3_to_lat_lng(location.location)
+    Map.merge(LocationTransaction.encode_model(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
+  end
+  def clean_txn_struct(map) when map == %{} do
+    %{}
   end
 end

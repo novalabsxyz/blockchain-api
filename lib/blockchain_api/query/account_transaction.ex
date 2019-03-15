@@ -91,7 +91,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
     data = entries
            |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [clean_txn_struct(map) | acc] end)
+           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
            |> Enum.reverse
 
     %{page | entries: data}
@@ -117,22 +117,5 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       location_hash: Util.bin_to_string(map.location_hash),
       owner: Util.bin_to_string(map.owner)
     }
-  end
-
-  defp clean_txn_struct(%{payment: payment, height: height, time: time}) do
-    Map.merge(PaymentTransaction.encode_model(payment), %{type: "payment", height: height, time: time})
-  end
-  defp clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) do
-    Map.merge(CoinbaseTransaction.encode_model(coinbase), %{type: "coinbase", height: height, time: time})
-  end
-  defp clean_txn_struct(%{gateway: gateway, height: height, time: time}) do
-    Map.merge(GatewayTransaction.encode_model(gateway), %{type: "gateway", height: height, time: time})
-  end
-  defp clean_txn_struct(%{location: location, height: height, time: time}) do
-    {lat, lng} = Util.h3_to_lat_lng(location.location)
-    Map.merge(LocationTransaction.encode_model(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
-  end
-  defp clean_txn_struct(map) when map == %{} do
-    %{}
   end
 end
