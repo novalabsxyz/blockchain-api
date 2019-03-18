@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Committer do
     Schema.PaymentTransaction,
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
+    Schema.POCRequestTransaction,
     Schema.AccountTransaction,
     Schema.AccountBalance,
     Schema.Hotspot
@@ -281,6 +282,16 @@ defmodule BlockchainAPI.Committer do
         {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_gen_gateway_v1, txn))
         upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn)
     end
+  end
+
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
+    txn |> LocationTransaction.map() |> Query.LocationTransaction.create()
+  end
+
+  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
+    txn |> POCRequestTransaction.map() |> Query.POCRequestTransaction.create()
   end
 
   #==================================================================
