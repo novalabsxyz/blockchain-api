@@ -13,7 +13,10 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
     page = bin_address |> Query.AccountTransaction.get(params)
     account_txns = page.entries
 
-    # If txn has already appeared in account_txns then remove it from pending_transactions list
+    # TODO: This really needs to be in a view with some complicated join involved
+    # Since doing this _would_ give false positives when a pending_txn is way before where
+    # the current account txns are.
+    # NOTE: If txn has already appeared in account_txns then remove it from pending_transactions list
     pending_txns =
       bin_address
       |> Query.Account.get_pending_transactions()
