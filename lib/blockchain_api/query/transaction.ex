@@ -102,7 +102,13 @@ defmodule BlockchainAPI.Query.Transaction do
 
   defp clean_block_transaction_page(%Scrivener.Page{entries: entries}=page) do
     data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+           |> Enum.map(fn res ->
+             :maps.map(
+               fn
+                (_k, nil) -> []
+                ( _k, v) -> v
+               end, res)
+           end)
            |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
            |> Enum.reverse
 

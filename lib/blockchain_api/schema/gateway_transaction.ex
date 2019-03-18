@@ -50,4 +50,12 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
       amount: :blockchain_txn_add_gateway_v1.amount(txn)
     }
   end
+
+  def map(:genesis, txn) do
+    %{
+      owner: :blockchain_txn_gen_gateway_v1.owner(txn),
+      gateway: :blockchain_txn_gen_gateway_v1.gateway(txn),
+      fee: :blockchain_txn_gen_gateway_v1.fee(txn)
+    }
+  end
 end

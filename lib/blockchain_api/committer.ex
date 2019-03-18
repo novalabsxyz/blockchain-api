@@ -119,6 +119,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
+            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -144,6 +145,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_payment_v1 -> insert_account_transaction(:blockchain_txn_payment_v1, txn)
             :blockchain_txn_add_gateway_v1 -> insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
             :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
+            :blockchain_txn_gen_gateway_v1 -> insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
             _ -> :ok
           end
         end)
@@ -263,6 +265,11 @@ defmodule BlockchainAPI.Committer do
     Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(txn))
   end
 
+  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
+    Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(:genesis, txn))
+  end
+
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
     {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
     Query.LocationTransaction.create(transaction_entry.hash, LocationTransaction.map(txn))
@@ -308,7 +315,18 @@ defmodule BlockchainAPI.Committer do
       Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated account for coinbase transaction"}
+        {:error, "No associated account for gateway transaction"}
+    end
+  end
+
+  defp insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn) do
+    try do
+      account = Query.Account.get!(:blockchain_txn_gen_gateway_v1.owner(txn))
+      txn = Query.Transaction.get!(:blockchain_txn_gen_gateway_v1.hash(txn))
+      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
+    rescue
+      _error in Ecto.NoResultsError ->
+        {:error, "No associated account for gen_gateway transaction"}
     end
   end
 
@@ -319,7 +337,7 @@ defmodule BlockchainAPI.Committer do
       Query.AccountTransaction.create(AccountTransaction.map(account, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated account for coinbase transaction"}
+        {:error, "No associated account for assert location transaction"}
     end
   end
 
