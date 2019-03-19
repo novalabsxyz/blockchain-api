@@ -75,7 +75,6 @@ defmodule BlockchainAPI.Util do
     {lat, lng} = h3_to_lat_lng(location.location)
     Map.merge(LocationTransaction.encode_model(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
   end
-  # when there is no transaction found return an empty map
-  def clean_txn_struct(%{height: _height, time: _time}), do: %{}
-  def clean_txn_struct(map) when map == %{}, do: %{}
+  def clean_txn_struct(%{height: _height, time: _time}), do: nil
+  def clean_txn_struct(map) when map == %{}, do: nil
 end
