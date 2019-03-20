@@ -34,7 +34,9 @@ defmodule BlockchainAPI.Query.Hotspot do
   # Search hotspots with fuzzy str match with Levenshtein distance
 
   def search(query_string, params) do
-    search(query_string, @threshold, params)
+    query_string
+    |> search(@threshold, params)
+    |> format()
   end
 
   defmacro levenshtein(str1, str2, threshold) do
@@ -53,7 +55,7 @@ defmodule BlockchainAPI.Query.Hotspot do
     end
   end
 
-  def search(query_string, threshold, params) do
+  defp search(query_string, threshold, params) do
     query_string = String.downcase(query_string)
     query =
       from(
@@ -66,21 +68,40 @@ defmodule BlockchainAPI.Query.Hotspot do
         levenshtein(hotspot.short_state, ^query_string, ^threshold) or
         levenshtein(hotspot.long_state, ^query_string, ^threshold) or
         levenshtein(hotspot.short_country, ^query_string, ^threshold) or
-        levenshtein(hotspot.long_country, ^query_string, ^threshold),
-        order_by:
-        fragment(
-          "LEAST(?, ?, ?, ?, ?, ?, ?, ?)",
-          levenshtein(hotspot.short_city, ^query_string),
-          levenshtein(hotspot.long_city, ^query_string),
-          levenshtein(hotspot.short_street, ^query_string),
-          levenshtein(hotspot.long_street, ^query_string),
-          levenshtein(hotspot.short_state, ^query_string),
-          levenshtein(hotspot.long_state, ^query_string),
-          levenshtein(hotspot.short_country, ^query_string),
-          levenshtein(hotspot.long_country, ^query_string)
-        )
+        levenshtein(hotspot.long_country, ^query_string, ^threshold) or
+        ilike(hotspot.short_city, ^"%#{query_string}%") or
+        ilike(hotspot.long_city, ^"%#{query_string}%") or
+        ilike(hotspot.short_street, ^"%#{query_string}%") or
+        ilike(hotspot.long_street, ^"%#{query_string}%") or
+        ilike(hotspot.short_state, ^"%#{query_string}%") or
+        ilike(hotspot.long_state, ^"%#{query_string}%") or
+        ilike(hotspot.short_country, ^"%#{query_string}%") or
+        ilike(hotspot.long_country, ^"%#{query_string}%"),
+        select: %{
+          long_city: hotspot.long_city,
+          short_city: hotspot.short_city,
+          short_state: hotspot.short_state,
+          long_state: hotspot.long_state,
+          short_country: hotspot.short_country,
+          long_country: hotspot.long_country
+        }
       )
 
     query |> Repo.paginate(params)
+  end
+
+  defp format(%Scrivener.Page{entries: entries}=page) do
+    city_map = entries |> Enum.group_by(fn(entry) -> entry.long_city end)
+
+    city_counts = :maps.map(fn(_, v) -> length(v) end, city_map)
+
+    data = entries
+           |> Enum.reduce([], fn(entry, acc) ->
+             [Map.merge(entry, %{:count => Map.get(city_counts, entry.long_city, 0)}) | acc]
+           end)
+           |> Enum.uniq()
+           |> Enum.sort_by(&(&1.count), &>=/2)
+
+    %{page | entries: data}
   end
 end
