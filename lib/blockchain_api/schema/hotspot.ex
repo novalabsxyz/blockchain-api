@@ -83,4 +83,21 @@ defmodule BlockchainAPI.Schema.Hotspot do
         error
     end
   end
+
+  def map(:blockchain_txn_gen_location_v1, txn) do
+    loc = :blockchain_txn_gen_gateway_v1.location(txn)
+
+    case Util.reverse_geocode(loc) do
+      {:ok, loc_info_map} ->
+        Map.merge(
+        %{
+          address: :blockchain_txn_gen_gateway_v1.gateway(txn),
+          owner: :blockchain_txn_gen_gateway_v1.owner(txn),
+          location: Util.h3_to_string(loc)
+        }, loc_info_map)
+      error ->
+        # XXX: What if googleapi lookup fails!
+        error
+    end
+  end
 end

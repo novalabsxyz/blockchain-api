@@ -125,7 +125,9 @@ defmodule BlockchainAPI.Committer do
               # So this is an entirely fake transaction
               case :blockchain_txn_gen_gateway_v1.location(txn) do
                 :undefined -> :ok
-                _ -> insert_transaction(:blockchain_txn_gen_location_v1, gateway_entry, txn)
+                _ ->
+                  insert_transaction(:blockchain_txn_gen_location_v1, gateway_entry, txn)
+                  upsert_hotspot(:blockchain_txn_gen_location_v1, gateway_entry, txn)
               end
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
@@ -378,4 +380,29 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
+  defp upsert_hotspot(:blockchain_txn_gen_location_v1, gateway_entry, txn) do
+    try do
+      gateway = gateway_entry.gateway
+      loc = :blockchain_txn_gen_gateway_v1.location(txn)
+      hotspot = Query.Hotspot.get!(gateway)
+
+      case Util.reverse_geocode(loc) do
+        {:ok, loc_info_map} ->
+          Query.Hotspot.update!(hotspot, loc_info_map)
+        error ->
+          #XXX: Don't do anything when you cannot decode via the googleapi
+          error
+      end
+    rescue
+      _error in Ecto.NoResultsError ->
+        # No hotspot entry exists in the hotspot table
+        case Hotspot.map(:blockchain_txn_gen_location_v1, txn) do
+          {:error, _}=error ->
+            #XXX: Don't add it if googleapi failed?
+            error
+          map ->
+            Query.Hotspot.create(map)
+        end
+    end
+  end
 end
