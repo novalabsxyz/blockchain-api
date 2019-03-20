@@ -25,16 +25,12 @@ defmodule BlockchainAPIWeb.HotspotController do
     render(conn, "show.json", hotspot: hotspot)
   end
 
-  def search(conn, %{"term" => term}=params) do
-    page = Query.Hotspot.search(term, params)
+  def search(conn, %{"term" => term}=_params) do
+    results = Query.Hotspot.search(term)
 
     render(conn,
-      "index.json",
-      hotspots: page.entries,
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      "search.json",
+      results: results
     )
   end
 end

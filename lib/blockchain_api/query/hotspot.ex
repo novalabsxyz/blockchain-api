@@ -33,9 +33,9 @@ defmodule BlockchainAPI.Query.Hotspot do
 
   # Search hotspots with fuzzy str match with Levenshtein distance
 
-  def search(query_string, params) do
+  def search(query_string) do
     query_string
-    |> search(@threshold, params)
+    |> search(@threshold)
     |> format()
   end
 
@@ -55,7 +55,7 @@ defmodule BlockchainAPI.Query.Hotspot do
     end
   end
 
-  defp search(query_string, threshold, params) do
+  defp search(query_string, threshold) do
     query_string = String.downcase(query_string)
     query =
       from(
@@ -87,21 +87,19 @@ defmodule BlockchainAPI.Query.Hotspot do
         }
       )
 
-    query |> Repo.paginate(params)
+    query |> Repo.all()
   end
 
-  defp format(%Scrivener.Page{entries: entries}=page) do
+  defp format(entries) do
     city_map = entries |> Enum.group_by(fn(entry) -> entry.long_city end)
 
     city_counts = :maps.map(fn(_, v) -> length(v) end, city_map)
 
-    data = entries
-           |> Enum.reduce([], fn(entry, acc) ->
-             [Map.merge(entry, %{:count => Map.get(city_counts, entry.long_city, 0)}) | acc]
-           end)
-           |> Enum.uniq()
-           |> Enum.sort_by(&(&1.count), &>=/2)
-
-    %{page | entries: data}
+    entries
+    |> Enum.reduce([], fn(entry, acc) ->
+      [Map.merge(entry, %{:count => Map.get(city_counts, entry.long_city, 0)}) | acc]
+    end)
+    |> Enum.uniq()
+    |> Enum.sort_by(&(&1.count), &>=/2)
   end
 end
