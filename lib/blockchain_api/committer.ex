@@ -286,7 +286,7 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-    txn |> LocationTransaction.map() |> Query.LocationTransaction.create()
+    LocationTransaction.map(:blockchain_txn_assert_location_v1, txn) |> Query.LocationTransaction.create()
   end
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height) do
