@@ -52,4 +52,14 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
       location: Util.h3_to_string(:blockchain_txn_assert_location_v1.location(txn))
     }
   end
+
+  def map(:blockchain_txn_gen_location_v1, gateway_entry, txn) do
+    %{
+      owner: gateway_entry.owner,
+      gateway: gateway_entry.gateway,
+      nonce: 0,
+      fee: 0,
+      location: Util.h3_to_string(:blockchain_txn_gen_gateway_v1.location(txn))
+    }
+  end
 end
