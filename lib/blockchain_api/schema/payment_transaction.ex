@@ -50,6 +50,7 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
       amount: :blockchain_txn_payment_v1.amount(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
       fee: :blockchain_txn_payment_v1.fee(txn),
+      hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
 end

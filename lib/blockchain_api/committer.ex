@@ -119,20 +119,11 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-            :blockchain_txn_gen_gateway_v1 ->
-              {:ok, gateway_entry} = insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
-              # It's possible that the gen_gateway transaction may contain a previously asserted location as well
-              # So this is an entirely fake transaction
-              case :blockchain_txn_gen_gateway_v1.location(txn) do
-                :undefined -> :ok
-                _ ->
-                  insert_transaction(:blockchain_txn_gen_location_v1, gateway_entry, txn)
-                  upsert_hotspot(:blockchain_txn_gen_location_v1, gateway_entry, txn)
-              end
+            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
-              upsert_hotspot(txn)
+              upsert_hotspot(:blockchain_txn_assert_location_v1, txn)
             _ ->
               :ok
           end
@@ -260,32 +251,37 @@ defmodule BlockchainAPI.Committer do
   # Insert individual transactions
   #==================================================================
   defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-    Query.CoinbaseTransaction.create(transaction_entry.hash, CoinbaseTransaction.map(txn))
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
+    {:ok, _} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
-    Query.PaymentTransaction.create(transaction_entry.hash, PaymentTransaction.map(txn))
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
+    {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
-    Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(txn))
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
+    {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-    Query.LocationTransaction.create(transaction_entry.hash, LocationTransaction.map(txn))
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
+    {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_assert_location_v1, txn))
   end
 
   defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
-    Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(:genesis, txn))
-  end
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
 
-  defp insert_transaction(:blockchain_txn_gen_location_v1, gateway, txn) do
-    Query.LocationTransaction.create(gateway.hash, LocationTransaction.map(:blockchain_txn_gen_location_v1, gateway, txn))
+    {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(:genesis, txn))
+
+    case :blockchain_txn_gen_gateway_v1.location(txn) do
+      :undefined ->
+        :ok
+      _ ->
+        {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_gen_gateway_v1, txn))
+        upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn)
+    end
   end
 
   #==================================================================
@@ -354,10 +350,10 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp upsert_hotspot(txn) do
+  defp upsert_hotspot(txn_mod, txn) do
     try do
-      gateway = :blockchain_txn_assert_location_v1.gateway(txn)
-      loc = :blockchain_txn_assert_location_v1.location(txn)
+      gateway = txn_mod.gateway(txn)
+      loc = txn_mod.location(txn)
       hotspot = Query.Hotspot.get!(gateway)
 
       case Util.reverse_geocode(loc) do
@@ -370,33 +366,7 @@ defmodule BlockchainAPI.Committer do
     rescue
       _error in Ecto.NoResultsError ->
         # No hotspot entry exists in the hotspot table
-        case Hotspot.map(txn) do
-          {:error, _}=error ->
-            #XXX: Don't add it if googleapi failed?
-            error
-          map ->
-            Query.Hotspot.create(map)
-        end
-    end
-  end
-
-  defp upsert_hotspot(:blockchain_txn_gen_location_v1, gateway_entry, txn) do
-    try do
-      gateway = gateway_entry.gateway
-      loc = :blockchain_txn_gen_gateway_v1.location(txn)
-      hotspot = Query.Hotspot.get!(gateway)
-
-      case Util.reverse_geocode(loc) do
-        {:ok, loc_info_map} ->
-          Query.Hotspot.update!(hotspot, loc_info_map)
-        error ->
-          #XXX: Don't do anything when you cannot decode via the googleapi
-          error
-      end
-    rescue
-      _error in Ecto.NoResultsError ->
-        # No hotspot entry exists in the hotspot table
-        case Hotspot.map(:blockchain_txn_gen_location_v1, txn) do
+        case Hotspot.map(txn_mod, txn) do
           {:error, _}=error ->
             #XXX: Don't add it if googleapi failed?
             error

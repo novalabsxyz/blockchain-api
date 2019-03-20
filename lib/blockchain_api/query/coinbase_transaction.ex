@@ -15,8 +15,8 @@ defmodule BlockchainAPI.Query.CoinbaseTransaction do
     |> Repo.one!
   end
 
-  def create(txn_hash, attrs \\ %{}) do
-    %CoinbaseTransaction{hash: txn_hash}
+  def create(attrs \\ %{}) do
+    %CoinbaseTransaction{}
     |> CoinbaseTransaction.changeset(attrs)
     |> Repo.insert()
   end

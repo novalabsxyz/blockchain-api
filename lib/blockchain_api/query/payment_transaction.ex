@@ -15,8 +15,8 @@ defmodule BlockchainAPI.Query.PaymentTransaction do
     |> Repo.one!
   end
 
-  def create(txn_hash, attrs \\ %{}) do
-    %PaymentTransaction{hash: txn_hash}
+  def create(attrs \\ %{}) do
+    %PaymentTransaction{}
     |> PaymentTransaction.changeset(attrs)
     |> Repo.insert()
   end

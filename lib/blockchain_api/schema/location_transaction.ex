@@ -43,23 +43,14 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
     end
   end
 
-  def map(txn) do
+  def map(txn_mod, txn) do
     %{
-      owner: :blockchain_txn_assert_location_v1.owner(txn),
-      gateway: :blockchain_txn_assert_location_v1.gateway(txn),
-      nonce: :blockchain_txn_assert_location_v1.nonce(txn),
-      fee: :blockchain_txn_assert_location_v1.fee(txn),
-      location: Util.h3_to_string(:blockchain_txn_assert_location_v1.location(txn))
-    }
-  end
-
-  def map(:blockchain_txn_gen_location_v1, gateway_entry, txn) do
-    %{
-      owner: gateway_entry.owner,
-      gateway: gateway_entry.gateway,
-      nonce: 0,
-      fee: 0,
-      location: Util.h3_to_string(:blockchain_txn_gen_gateway_v1.location(txn))
+      owner: txn_mod.owner(txn),
+      gateway: txn_mod.gateway(txn),
+      nonce: txn_mod.nonce(txn),
+      fee: txn_mod.fee(txn),
+      hash: txn_mod.hash(txn),
+      location: Util.h3_to_string(txn_mod.location(txn))
     }
   end
 end
