@@ -18,6 +18,7 @@ defmodule BlockchainAPIWeb.Router do
       resources "/pending_transactions", AccountPendingTransactionController, only: [:index], param: "account_address"
     end
 
+    get "/hotspots/search", HotspotController, :search # This has to be before the resources
     resources "/hotspots", HotspotController, only: [:index, :show], param: "address"
 
     resources "/transactions", TransactionController, only: [:index, :show, :create], param: "hash"
@@ -26,7 +27,6 @@ defmodule BlockchainAPIWeb.Router do
     resources "/payment_transactions", PaymentController, only: [:index, :show], param: "hash"
     resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "hash"
     resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
-
   end
 
   scope "/", BlockchainAPIWeb do
