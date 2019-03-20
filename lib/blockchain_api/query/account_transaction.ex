@@ -11,7 +11,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
-    Schema.LocationTransaction
+    Schema.LocationTransaction,
+    Schema.Hotspot
   }
 
   def create(attrs \\ %{}) do
@@ -63,11 +64,15 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       where: at.account_address == ^address,
       left_join: gt in GatewayTransaction,
       on: at.account_address == gt.owner,
+      left_join: hotspot in Hotspot,
+      on: at.account_address == hotspot.owner,
+      where: gt.gateway == hotspot.address,
+      where: gt.owner == hotspot.owner,
       where: at.txn_hash == gt.hash,
       left_join: lt in LocationTransaction,
       on: gt.gateway == lt.gateway,
-      distinct: gt.gateway,
-      order_by: [desc: gt.id, desc: lt.nonce],
+      distinct: hotspot.address,
+      order_by: [desc: lt.nonce, desc: hotspot.id],
       select: %{
         account_address: at.account_address,
         gateway: gt.gateway,
@@ -77,7 +82,15 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         location: lt.location,
         location_fee: lt.fee,
         location_nonce: lt.nonce,
-        location_hash: lt.hash
+        location_hash: lt.hash,
+        long_city: hotspot.long_city,
+        long_street: hotspot.long_street,
+        long_state: hotspot.long_state,
+        long_country: hotspot.long_country,
+        short_city: hotspot.short_city,
+        short_street: hotspot.short_street,
+        short_state: hotspot.short_state,
+        short_country: hotspot.short_country,
       })
 
     query
