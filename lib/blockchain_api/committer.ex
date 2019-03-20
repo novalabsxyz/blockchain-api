@@ -119,7 +119,14 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
+            :blockchain_txn_gen_gateway_v1 ->
+              {:ok, gateway_entry} = insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
+              # It's possible that the gen_gateway transaction may contain a previously asserted location as well
+              # So this is an entirely fake transaction
+              case :blockchain_txn_gen_gateway_v1.location(txn) do
+                :undefined -> :ok
+                _ -> insert_transaction(:blockchain_txn_gen_location_v1, gateway_entry, txn)
+              end
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -265,14 +272,18 @@ defmodule BlockchainAPI.Committer do
     Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(txn))
   end
 
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
+    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
+    Query.LocationTransaction.create(transaction_entry.hash, LocationTransaction.map(txn))
+  end
+
   defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
     {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
     Query.GatewayTransaction.create(transaction_entry.hash, GatewayTransaction.map(:genesis, txn))
   end
 
-  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-    Query.LocationTransaction.create(transaction_entry.hash, LocationTransaction.map(txn))
+  defp insert_transaction(:blockchain_txn_gen_location_v1, gateway, txn) do
+    Query.LocationTransaction.create(gateway.hash, LocationTransaction.map(:blockchain_txn_gen_location_v1, gateway, txn))
   end
 
   #==================================================================
