@@ -40,7 +40,8 @@ defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   def map(coinbase) do
     %{
       payee: :blockchain_txn_coinbase_v1.payee(coinbase),
-      amount: :blockchain_txn_coinbase_v1.amount(coinbase)
+      amount: :blockchain_txn_coinbase_v1.amount(coinbase),
+      hash: :blockchain_txn_coinbase_v1.hash(coinbase)
     }
   end
 end

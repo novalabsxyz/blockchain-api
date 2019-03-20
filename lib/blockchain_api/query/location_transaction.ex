@@ -15,8 +15,8 @@ defmodule BlockchainAPI.Query.LocationTransaction do
     |> Repo.one!
   end
 
-  def create(txn_hash, attrs \\ %{}) do
-    %LocationTransaction{hash: txn_hash}
+  def create(attrs \\ %{}) do
+    %LocationTransaction{}
     |> LocationTransaction.changeset(attrs)
     |> Repo.insert()
   end

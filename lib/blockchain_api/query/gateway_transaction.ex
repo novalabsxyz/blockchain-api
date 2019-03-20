@@ -37,8 +37,8 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     |> Repo.one!
   end
 
-  def create(txn_hash, attrs \\ %{}) do
-    %GatewayTransaction{hash: txn_hash}
+  def create(attrs \\ %{}) do
+    %GatewayTransaction{}
     |> GatewayTransaction.changeset(attrs)
     |> Repo.insert()
   end

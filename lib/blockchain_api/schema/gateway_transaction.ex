@@ -47,7 +47,8 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
       owner: :blockchain_txn_add_gateway_v1.owner(txn),
       gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
       fee: :blockchain_txn_add_gateway_v1.fee(txn),
-      amount: :blockchain_txn_add_gateway_v1.amount(txn)
+      amount: :blockchain_txn_add_gateway_v1.amount(txn),
+      hash: :blockchain_txn_add_gateway_v1.hash(txn)
     }
   end
 
@@ -55,7 +56,8 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
     %{
       owner: :blockchain_txn_gen_gateway_v1.owner(txn),
       gateway: :blockchain_txn_gen_gateway_v1.gateway(txn),
-      fee: :blockchain_txn_gen_gateway_v1.fee(txn)
+      fee: :blockchain_txn_gen_gateway_v1.fee(txn),
+      hash: :blockchain_txn_gen_gateway_v1.hash(txn)
     }
   end
 end
