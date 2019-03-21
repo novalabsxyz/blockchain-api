@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.Hotspot do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.Hotspot}
+  alias BlockchainAPI.{Repo, Util, Schema.Hotspot}
 
   # Default search levenshtein distance threshold
   @threshold 1
@@ -83,7 +83,8 @@ defmodule BlockchainAPI.Query.Hotspot do
           short_state: hotspot.short_state,
           long_state: hotspot.long_state,
           short_country: hotspot.short_country,
-          long_country: hotspot.long_country
+          long_country: hotspot.long_country,
+          location: hotspot.location
         }
       )
 
@@ -99,7 +100,16 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Enum.reduce([], fn(entry, acc) ->
       [Map.merge(entry, %{:count => Map.get(city_counts, entry.long_city, 0)}) | acc]
     end)
-    |> Enum.uniq()
+    # TODO: The location returned uniquely is pretty much pointless
+    # Ideally we'd want to use h3 and figure out a bounding box depending on the search criteria
+    # And return something in the middle of that city.
+    |> Enum.uniq_by(&(&1.long_city))
+    |> Enum.map(fn(%{location: loc}=entry) ->
+      {lat, lng} = Util.h3_to_lat_lng(loc)
+      entry
+      |> Map.delete(:location)
+      |> Map.merge(%{lat: lat, lng: lng})
+    end)
     |> Enum.sort_by(&(&1.count), &>=/2)
   end
 end
