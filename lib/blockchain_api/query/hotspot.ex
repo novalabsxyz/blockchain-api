@@ -91,9 +91,9 @@ defmodule BlockchainAPI.Query.Hotspot do
   end
 
   defp format(entries) do
-    city_map = entries |> Enum.group_by(fn(entry) -> entry.long_city end)
-
-    city_counts = :maps.map(fn(_, v) -> length(v) end, city_map)
+    city_counts = entries
+                  |> Enum.group_by(fn(entry) -> entry.long_city end)
+                  |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, length(v)) end)
 
     entries
     |> Enum.reduce([], fn(entry, acc) ->
