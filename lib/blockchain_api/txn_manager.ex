@@ -1,7 +1,13 @@
 defmodule BlockchainAPI.TxnManager do
 
   use GenServer
-  alias BlockchainAPI.{Query, Util}
+  alias BlockchainAPI.{
+    Query,
+    Util,
+    Schema.PaymentTransaction,
+    Schema.GatewayTransaction,
+    Schema.LocationTransaction
+  }
   require Logger
   @me __MODULE__
 
