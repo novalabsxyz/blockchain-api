@@ -53,7 +53,10 @@ defmodule BlockchainAPI.TxnManager do
   end
 
   defp submit_txn(:blockchain_txn_payment_v1, txn) do
-    {:ok, pending_txn} = Query.PendingPayment.create(pending_payment_map(txn))
+    {:ok, pending_txn} = txn
+                         |> PaymentTransaction.map()
+                         |> Query.PendingPayment.create()
+
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
@@ -71,7 +74,10 @@ defmodule BlockchainAPI.TxnManager do
       end)
   end
   defp submit_txn(:blockchain_txn_add_gateway_v1, txn) do
-    {:ok, pending_txn} = Query.PendingGateway.create(pending_gateway_map(txn))
+    {:ok, pending_txn} = txn
+                         |> GatewayTransaction.map()
+                         |> Query.PendingGateway.create()
+
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
@@ -89,7 +95,10 @@ defmodule BlockchainAPI.TxnManager do
       end)
   end
   defp submit_txn(:blockchain_txn_assert_location_v1, txn) do
-    {:ok, pending_txn} = Query.PendingLocation.create(pending_location_map(txn))
+    {:ok, pending_txn} = :blockchain_txn_assert_location_v1
+                         |> LocationTransaction.map(txn)
+                         |> Query.PendingLocation.create()
+
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
@@ -109,38 +118,6 @@ defmodule BlockchainAPI.TxnManager do
 
   def deserialize(txn) do
     txn |> Base.decode64! |> :blockchain_txn.deserialize()
-  end
-
-  defp pending_payment_map(txn) do
-    %{
-      hash: :blockchain_txn_payment_v1.hash(txn),
-      amount: :blockchain_txn_payment_v1.amount(txn),
-      fee: :blockchain_txn_payment_v1.fee(txn),
-      nonce: :blockchain_txn_payment_v1.nonce(txn),
-      payer: :blockchain_txn_payment_v1.payer(txn),
-      payee: :blockchain_txn_payment_v1.payee(txn)
-    }
-  end
-
-  defp pending_gateway_map(txn) do
-    %{
-      hash: :blockchain_txn_add_gateway_v1.hash(txn),
-      owner: :blockchain_txn_add_gateway_v1.owner(txn),
-      fee: :blockchain_txn_add_gateway_v1.fee(txn),
-      amount: :blockchain_txn_add_gateway_v1.amount(txn),
-      gateway: :blockchain_txn_add_gateway_v1.gateway(txn)
-    }
-  end
-
-  defp pending_location_map(txn) do
-    %{
-      hash: :blockchain_txn_assert_location_v1.hash(txn),
-      nonce: :blockchain_txn_assert_location_v1.nonce(txn),
-      fee: :blockchain_txn_assert_location_v1.fee(txn),
-      owner: :blockchain_txn_assert_location_v1.owner(txn),
-      location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
-      gateway: :blockchain_txn_assert_location_v1.gateway(txn)
-    }
   end
 
   defp get_pending_transaction(txn0) do
