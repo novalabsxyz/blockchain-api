@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Notifier do
 
   @me __MODULE__
   @url "https://onesignal.com/api/v1/notifications"
+  @bones 100000000
 
   alias BlockchainAPI.Util
 
@@ -67,7 +68,7 @@ defmodule BlockchainAPI.Notifier do
     %{
       :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{amount/100000000} ATOMs!"}
+      :contents => %{:en => "You got #{div(amount, @bones)} ATOMs!"}
     }
   end
 
