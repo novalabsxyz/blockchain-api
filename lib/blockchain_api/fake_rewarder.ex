@@ -2,7 +2,7 @@ defmodule BlockchainAPI.FakeRewarder do
   use GenServer
   require Logger
   @me __MODULE__
-  alias BlockchainAPI.{Query}
+  alias BlockchainAPI.{Query, TxnManager}
   @amount 100
 
   #==================================================================
@@ -41,12 +41,9 @@ defmodule BlockchainAPI.FakeRewarder do
               hotspots
               |> Enum.map(fn(hotspot) ->
                 payer = Query.Account.get!(:blockchain_swarm.pubkey_bin())
-                IO.inspect payer
                 nonce = Query.Account.get_speculative_nonce(payer.address)
-                IO.inspect nonce
-                txn = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, payer.nonce)
-                IO.inspect txn
-                IO.inspect :blockchain_txn.serialize(txn)
+                txn = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, nonce)
+                :ok = TxnManager.submit(:blockchain_txn.serialize(txn))
               end)
           end
 
