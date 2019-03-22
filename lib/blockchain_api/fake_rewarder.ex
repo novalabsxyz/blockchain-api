@@ -27,6 +27,7 @@ defmodule BlockchainAPI.FakeRewarder do
   @impl true
   def handle_cast({:reward, block}, %{:height => height}=state) do
     block_height = :blockchain_block.height(block)
+    {:ok, _, sig_fun} = :blockchain_swarm.keys()
     new_state =
       case block_height >= height + 10 do
         false ->
@@ -43,13 +44,15 @@ defmodule BlockchainAPI.FakeRewarder do
                 payer = Query.Account.get!(:blockchain_swarm.pubkey_bin())
                 nonce = Query.Account.get_speculative_nonce(payer.address)
                 submission = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, nonce+1)
+                             |> :blockchain_txn.sign(sig_fun)
                              |> :blockchain_txn.serialize()
                              |> Base.encode64()
                              |> TxnManager.submit()
 
                 case submission do
                   :submitted -> :ok
-                  _ -> # IDK?
+                  _ ->
+                    # TODO: Retry?
                     :ok
                 end
 
