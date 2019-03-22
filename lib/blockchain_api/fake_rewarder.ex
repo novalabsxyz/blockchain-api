@@ -3,7 +3,7 @@ defmodule BlockchainAPI.FakeRewarder do
   require Logger
   @me __MODULE__
   alias BlockchainAPI.{Query, TxnManager}
-  @amount 100
+  @amount 10000000000
 
   #==================================================================
   # API
@@ -42,8 +42,10 @@ defmodule BlockchainAPI.FakeRewarder do
               |> Enum.map(fn(hotspot) ->
                 payer = Query.Account.get!(:blockchain_swarm.pubkey_bin())
                 nonce = Query.Account.get_speculative_nonce(payer.address)
-                txn = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, nonce)
-                :ok = TxnManager.submit(:blockchain_txn.serialize(txn))
+                :ok = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, nonce)
+                      |> :blockchain_txn.serialize()
+                      |> Base.encode64()
+                      |> TxnManager.submit()
               end)
           end
 
