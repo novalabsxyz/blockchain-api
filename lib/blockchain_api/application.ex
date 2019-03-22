@@ -42,6 +42,7 @@ defmodule BlockchainAPI.Application do
       {BlockchainAPI.Watcher, watcher_worker_opts},
       {BlockchainAPI.TxnManager, []},
       {BlockchainAPI.Notifier, []},
+      {BlockchainAPI.FakeRewarder, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

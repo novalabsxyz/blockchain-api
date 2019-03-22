@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{Query, Committer, Notifier}
+  alias BlockchainAPI.{Query, Committer, Notifier, FakeRewarder}
 
   @me __MODULE__
   require Logger
@@ -82,7 +82,8 @@ defmodule BlockchainAPI.Watcher do
     case flag do
       false ->
         Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
-        Notifier.notify(block)
+        :ok = Notifier.notify(block)
+        :ok = FakeRewarder.reward(block)
       true -> :ok
     end
 
