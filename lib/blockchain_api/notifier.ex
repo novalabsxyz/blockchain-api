@@ -36,16 +36,11 @@ defmodule BlockchainAPI.Notifier do
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
-
-              payee = :blockchain_txn_payment_v1.payee(txn)
-              amount = :blockchain_txn_payment_v1.amount(txn)
-
-              payee
-              |> Util.bin_to_string()
-              |> payload(amount)
+              txn
+              |> payment_data()
+              |> payload()
               |> encode()
               |> post()
-
             _ -> :ok
           end
         end)
@@ -64,7 +59,7 @@ defmodule BlockchainAPI.Notifier do
     ]
   end
 
-  defp payload(address, amount) do
+  defp payload(%{payee: address, amount: amount}=data) do
     atoms =
       case rem(amount, @bones) == 0 do
         true -> div(amount, @bones)
@@ -74,7 +69,8 @@ defmodule BlockchainAPI.Notifier do
     %{
       :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{atoms} ATOMs!"}
+      :contents => %{:en => "You got #{atoms} ATOMs!"},
+      :data => data
     }
   end
 
@@ -85,5 +81,14 @@ defmodule BlockchainAPI.Notifier do
 
   defp post(payload) do
     HTTPoison.post(@url, payload, headers())
+  end
+
+  defp payment_data(txn) do
+    %{
+      payee: Util.bin_to_string(:blockchain_txn_payment_v1.payee(txn)),
+      amount: :blockchain_txn_payment_v1.amount(txn),
+      hash: Util.bin_to_string(:blockchain_txn_payment_v1.hash(txn)),
+      type: "receivedPayment"
+    }
   end
 end
