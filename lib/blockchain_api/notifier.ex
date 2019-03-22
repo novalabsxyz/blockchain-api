@@ -65,10 +65,16 @@ defmodule BlockchainAPI.Notifier do
   end
 
   defp payload(address, amount) do
+    atoms =
+      case rem(amount, @bones) == 0 do
+        true -> div(amount, @bones)
+        false -> amount/@bones
+      end
+
     %{
       :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{div(amount, @bones)} ATOMs!"}
+      :contents => %{:en => "You got #{atoms} ATOMs!"}
     }
   end
 
