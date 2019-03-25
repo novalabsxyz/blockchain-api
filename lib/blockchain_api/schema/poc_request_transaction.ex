@@ -2,12 +2,12 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.POCRequestTransaction}
-  @fields [:gateway, :hash, :signature, :fee, :onion]
+  @fields [:challenger, :hash, :signature, :fee, :onion]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "poc_request_transactions" do
-    field :gateway, :binary, null: false
+    field :challenger, :binary, null: false
     field :hash, :binary, null: false
     field :signature, :binary, null: false
     field :fee, :integer, null: false
@@ -22,14 +22,14 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:hash)
-    |> foreign_key_constraint(:gateway)
+    |> foreign_key_constraint(:challenger)
   end
 
   def encode_model(poc_request) do
     %{
       Map.take(poc_request, @fields) |
       hash: Util.bin_to_string(poc_request.hash),
-      gateway: Util.bin_to_string(poc_request.gateway),
+      challenger: Util.bin_to_string(poc_request.challenger),
       signature: Util.bin_to_string(poc_request.signature),
       onion: Util.bin_to_string(poc_request.onion)
     }
@@ -47,10 +47,10 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     IO.inspect txn
 
     %{
-      gateway: :blockchain_txn_poc_request_v1.gateway(txn),
+      challenger: :blockchain_txn_poc_request_v1.challenger(txn),
       fee: :blockchain_txn_poc_request_v1.fee(txn),
       signature: :blockchain_txn_poc_request_v1.signature(txn),
-      onion: :blockchain_txn_poc_request_v1.onion(txn),
+      onion: :blockchain_txn_poc_request_v1.onion_key_hash(txn),
       hash: :blockchain_txn_poc_request_v1.hash(txn)
     }
   end

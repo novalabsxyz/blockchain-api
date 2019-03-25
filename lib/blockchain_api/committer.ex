@@ -120,6 +120,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
+            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
