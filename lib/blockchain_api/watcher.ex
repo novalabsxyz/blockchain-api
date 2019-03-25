@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{Query, Committer}
+  alias BlockchainAPI.{Query, Committer, Notifier}
 
   @me __MODULE__
   require Logger
@@ -74,10 +74,18 @@ defmodule BlockchainAPI.Watcher do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %{chain: chain}) when chain != nil do
+  def handle_info({:blockchain_event, {:add_block, hash, flag}}, state = %{chain: chain}) when chain != nil do
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain)
+
+    case flag do
+      false ->
+        Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
+        Notifier.notify(block)
+      true -> :ok
+    end
+
     {:noreply, state}
   end
 

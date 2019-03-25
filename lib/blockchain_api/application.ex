@@ -41,6 +41,7 @@ defmodule BlockchainAPI.Application do
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
       {BlockchainAPI.Watcher, watcher_worker_opts},
       {BlockchainAPI.TxnManager, []},
+      {BlockchainAPI.Notifier, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
