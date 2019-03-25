@@ -43,7 +43,7 @@ defmodule BlockchainAPI.FakeRewarder do
               |> Enum.map(fn(hotspot) ->
                 payer = Query.Account.get!(:blockchain_swarm.pubkey_bin())
                 nonce = Query.Account.get_speculative_nonce(payer.address)
-                submission = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, @amount, payer.fee, nonce+1)
+                submission = :blockchain_txn_payment_v1.new(payer.address, hotspot.owner, Enum.random(1..@amount), payer.fee, nonce+1)
                              |> :blockchain_txn.sign(sig_fun)
                              |> :blockchain_txn.serialize()
                              |> Base.encode64()
