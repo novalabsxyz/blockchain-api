@@ -81,7 +81,6 @@ defmodule BlockchainAPI.Watcher do
 
     case flag do
       false ->
-        Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
         :ok = Notifier.notify(block)
         :ok = FakeRewarder.reward(block)
       true -> :ok

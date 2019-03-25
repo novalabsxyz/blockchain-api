@@ -29,8 +29,9 @@ defmodule BlockchainAPI.FakeRewarder do
     block_height = :blockchain_block.height(block)
     {:ok, _, sig_fun} = :blockchain_swarm.keys()
     new_state =
-      case block_height >= height + 10 do
+      case block_height > height + 30 do
         false ->
+          Logger.warn("Waiting for the next 30th block, no reward")
           state
         true ->
 

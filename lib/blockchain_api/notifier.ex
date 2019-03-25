@@ -33,6 +33,7 @@ defmodule BlockchainAPI.Notifier do
       [] ->
         :ok
       txns ->
+        Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
