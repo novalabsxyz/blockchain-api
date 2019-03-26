@@ -12,7 +12,10 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.Hotspot
+    Schema.Hotspot,
+    Schema.PendingPayment,
+    Schema.PendingGateway,
+    Schema.PendingLocation
   }
 
   def create(attrs \\ %{}) do
@@ -37,11 +40,23 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
+      full_join: pp in PendingPayment,
+      on: pp.payee == ^address and pp.hash != at.txn_hash,
+      full_join: pp1 in PendingPayment,
+      on: pp1.payer == ^address and pp1.hash != at.txn_hash,
+      full_join: pg in PendingGateway,
+      on: pg.owner == ^address and pg.hash != at.txn_hash,
+      full_join: pl in PendingLocation,
+      on: pl.owner == ^address and pl.hash != at.txn_hash,
       order_by: [
         desc: block.height,
         desc: transaction.id,
         desc: payment_transaction.nonce,
-        desc: location_transaction.nonce
+        desc: location_transaction.nonce,
+        desc: pp.id,
+        desc: pp1.id,
+        desc: pg.id,
+        desc: pl.id
       ],
       select: %{
         time: block.time,
@@ -49,7 +64,11 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         coinbase: coinbase_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
-        location: location_transaction
+        location: location_transaction,
+        payee_pending: pp,
+        payer_pending: pp1,
+        location_pending: pl,
+        gateway_pending: pg
       }
     )
 

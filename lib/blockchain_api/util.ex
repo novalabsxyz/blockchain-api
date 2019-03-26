@@ -4,7 +4,10 @@ defmodule BlockchainAPI.Util do
     PaymentTransaction,
     CoinbaseTransaction,
     LocationTransaction,
-    GatewayTransaction
+    GatewayTransaction,
+    PendingPayment,
+    PendingGateway,
+    PendingLocation
   }
 
   def bin_to_string(nil), do: nil
@@ -62,6 +65,18 @@ defmodule BlockchainAPI.Util do
     end
   end
 
+  def clean_txn_struct(%{gateway_pending: gateway, height: height, time: time}) when is_map(gateway) do
+    Map.merge(PendingGateway.encode_model(gateway), %{type: "gateway", height: height, time: time})
+  end
+  def clean_txn_struct(%{location_pending: location, height: height, time: time}) when is_map(location) do
+    Map.merge(PendingLocation.encode_model(location), %{type: "location", height: height, time: time})
+  end
+  def clean_txn_struct(%{payer_pending: payment, height: height, time: time}) when is_map(payment) do
+    Map.merge(PendingPayment.encode_model(payment), %{type: "payment", height: height, time: time})
+  end
+  def clean_txn_struct(%{payee_pending: payment, height: height, time: time}) when is_map(payment) do
+    Map.merge(PendingPayment.encode_model(payment), %{type: "payment", height: height, time: time})
+  end
   def clean_txn_struct(%{payment: payment, height: height, time: time}) when is_map(payment) do
     Map.merge(PaymentTransaction.encode_model(payment), %{type: "payment", height: height, time: time})
   end
