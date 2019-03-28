@@ -12,8 +12,7 @@ defmodule BlockchainAPI.Committer do
     Schema.CoinbaseTransaction,
     Schema.AccountTransaction,
     Schema.AccountBalance,
-    Schema.Hotspot,
-    Util
+    Schema.Hotspot
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -352,16 +351,13 @@ defmodule BlockchainAPI.Committer do
 
   defp upsert_hotspot(txn_mod, txn) do
     try do
-      gateway = txn_mod.gateway(txn)
-      loc = txn_mod.location(txn)
-      hotspot = Query.Hotspot.get!(gateway)
-
-      case Util.reverse_geocode(loc) do
-        {:ok, loc_info_map} ->
-          Query.Hotspot.update!(hotspot, loc_info_map)
-        error ->
-          #XXX: Don't do anything when you cannot decode via the googleapi
+      hotspot = txn |> txn_mod.gateway() |> Query.Hotspot.get!()
+      case Hotspot.map(txn_mod, txn) do
+        {:error, _}=error ->
+          #XXX: Don't update if googleapi failed?
           error
+        map ->
+          Query.Hotspot.update!(hotspot, map)
       end
     rescue
       _error in Ecto.NoResultsError ->
