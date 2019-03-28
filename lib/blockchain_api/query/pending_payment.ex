@@ -21,4 +21,25 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> PendingPayment.changeset(attrs)
     |> Repo.update!()
   end
+
+  def get_by_address(address) do
+    query = from(
+      pp in PendingPayment,
+      where: pp.payee == ^address or pp.payer == ^address,
+      select: pp
+    )
+
+    query
+    |> Repo.all()
+    |> format()
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp format(entries) do
+    entries
+    |> Enum.map(fn(t) -> Map.merge(t, %{type: "payment"}) end)
+  end
+
 end
