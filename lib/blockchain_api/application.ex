@@ -7,9 +7,20 @@ defmodule BlockchainAPI.Application do
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
-    %{:secret => privkey, :public => pubkey} = :libp2p_crypto.generate_keys(:ecc_compact)
-    sig_fun = :libp2p_crypto.mk_sig_fun(privkey)
     base_dir = ~c(data)
+
+    swarm_key = to_charlist(:filename.join([base_dir, "blockchain_api", "swarm_key"]))
+    :ok = :filelib.ensure_dir(swarm_key)
+    {pubkey, _ecdh_fun, sig_fun} =
+      case :libp2p_crypto.load_keys(swarm_key) do
+        {:ok, %{:secret => priv_key, :public => pub_key}} ->
+          {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
+        {:error, :enoent} ->
+          key_map = %{:secret => priv_key, :public => pub_key} = :libp2p_crypto.generate_keys(:ecc_compact)
+          :ok = :libp2p_crypto.save_keys(key_map, swarm_key)
+          {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
+      end
+
     seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
     seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
     seed_addresses = dns_to_addresses(seed_node_dns)
@@ -42,6 +53,7 @@ defmodule BlockchainAPI.Application do
       {BlockchainAPI.Watcher, watcher_worker_opts},
       {BlockchainAPI.TxnManager, []},
       {BlockchainAPI.Notifier, []},
+      {BlockchainAPI.FakeRewarder, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

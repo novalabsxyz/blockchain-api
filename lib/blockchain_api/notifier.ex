@@ -1,5 +1,6 @@
 defmodule BlockchainAPI.Notifier do
   use GenServer
+  require Logger
 
   @me __MODULE__
   @url "https://onesignal.com/api/v1/notifications"
@@ -22,25 +23,31 @@ defmodule BlockchainAPI.Notifier do
   # Callbacks
   #==================================================================
   @impl true
-  def init(state) do
-    {:ok, state}
+  def init(_state) do
+    {:ok, %{rewarder: :blockchain_swarm.pubkey_bin()}}
   end
 
   @impl true
-  def handle_cast({:notify, block}, state) do
-
+  def handle_cast({:notify, block}, %{rewarder: rewarder}=state) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
       txns ->
+        Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
-              txn
-              |> payment_data()
-              |> payload()
-              |> encode()
-              |> post()
+              case :blockchain_txn_payment_v1.payer(txn) == rewarder do
+                false ->
+                  txn
+                  |> payment_data()
+                  |> payload()
+                  |> encode()
+                  |> post()
+                true ->
+                  # Don't notify when the payer is the rewarder to reduce spam
+                  :ok
+              end
             _ -> :ok
           end
         end)
