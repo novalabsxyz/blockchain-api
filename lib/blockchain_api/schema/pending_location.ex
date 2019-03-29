@@ -7,13 +7,13 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "pending_locations" do
+    field :fee, :integer, null: false
+    field :gateway, :binary, null: false
+    field :location, :string, null: false
+    field :nonce, :integer, null: false, default: 0
+    field :owner, :binary, null: false
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
-    field :nonce, :integer, null: false, default: 0
-    field :fee, :integer, null: false
-    field :location, :string, null: false
-    field :gateway, :binary, null: false
-    field :owner, :binary, null: false
 
     timestamps()
   end

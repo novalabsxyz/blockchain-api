@@ -7,9 +7,10 @@ defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "coinbase_transactions" do
+    field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
     field :amount, :integer, null: false
     field :payee, :binary, null: false
-    field :hash, :binary, null: false
 
     timestamps()
   end
@@ -17,8 +18,8 @@ defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   @doc false
   def changeset(coinbase, attrs) do
     coinbase
-    |> cast(attrs, [:hash, :amount, :payee, :hash])
-    |> validate_required([:hash, :amount, :payee, :hash])
+    |> cast(attrs, [:hash, :amount, :payee, :hash, :status])
+    |> validate_required([:hash, :amount, :payee, :hash, :status])
     |> foreign_key_constraint(:hash)
   end
 

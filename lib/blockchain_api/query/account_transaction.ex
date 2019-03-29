@@ -12,7 +12,12 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.Hotspot
+    Schema.Hotspot,
+    Schema.Account,
+    Schema.PendingLocation,
+    Schema.PendingGateway,
+    Schema.PendingPayment,
+    Schema.PendingCoinbase
   }
 
   def create(attrs \\ %{}) do
@@ -21,8 +26,31 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Repo.insert()
   end
 
-  def get(address, params) do
-    query = from(
+  def get_pending(address) do
+    from(
+      a in Account,
+      where: a.address == ^address,
+      left_join: pg in PendingGateway,
+      on: pg.owner == a.address,
+      left_join: pp in PendingPayment,
+      on: pp.payer == a.address or pp.payee == a.address,
+      left_join: pl in PendingLocation,
+      on: pl.owner == a.address,
+      left_join: cb in PendingCoinbase,
+      on: a.address == cb.payee,
+      select: %{
+        time: fragment("SELECT MAX(time) FROM blocks"),
+        height: fragment("SELECT MAX(block_height) FROM transactions"),
+        coinbase: cb,
+        payment: pp,
+        gateway: pg,
+        location: pl
+      }
+    )
+  end
+
+  def get_cleared(address) do
+    from(
       at in AccountTransaction,
       where: at.account_address == ^address,
       left_join: transaction in Transaction,
@@ -37,12 +65,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
-      order_by: [
-        desc: block.height,
-        desc: transaction.id,
-        desc: payment_transaction.nonce,
-        desc: location_transaction.nonce
-      ],
       select: %{
         time: block.time,
         height: transaction.block_height,
@@ -52,9 +74,16 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         location: location_transaction
       }
     )
+  end
 
-    query
-    |> Repo.paginate(params)
+  def get(address, params) do
+
+    pending = get_pending(address)
+    cleared = get_cleared(address)
+
+    pending
+    |> Ecto.Query.union(^cleared)
+    |> Repo.all()
     |> clean_account_transactions()
   end
 

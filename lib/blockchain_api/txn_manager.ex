@@ -6,7 +6,8 @@ defmodule BlockchainAPI.TxnManager do
     Util,
     Schema.PaymentTransaction,
     Schema.GatewayTransaction,
-    Schema.LocationTransaction
+    Schema.LocationTransaction,
+    Schema.CoinbaseTransaction
   }
   require Logger
   @me __MODULE__
@@ -121,6 +122,27 @@ defmodule BlockchainAPI.TxnManager do
         end
       end)
   end
+  defp submit_txn(:blockchain_txn_coinbase_v1, txn) do
+    {:ok, pending_txn} = txn
+                         |> CoinbaseTransaction.map()
+                         |> Query.PendingCoinbase.create()
+
+    :ok = :blockchain_worker.submit_txn(
+      txn,
+      fn(res) ->
+        case res do
+          :ok ->
+            pending_txn.hash
+            |> Query.PendingCoinbase.get!()
+            |> Query.PendingCoinbase.update!(%{status: "done"})
+          {:error, _reason} ->
+            Logger.error("Failed to submit coinbase: #{Util.bin_to_string(pending_txn.hash)}")
+            pending_txn.hash
+            |> Query.PendingCoinbase.get!()
+            |> Query.PendingCoinbase.update!(%{status: "error"})
+        end
+      end)
+  end
 
   def deserialize(txn) do
     txn |> Base.decode64! |> :blockchain_txn.deserialize()
@@ -139,5 +161,8 @@ defmodule BlockchainAPI.TxnManager do
   end
   defp get_pending_transaction(:blockchain_txn_assert_location_v1, hash) do
     Query.PendingLocation.get!(hash)
+  end
+  defp get_pending_transaction(:blockchain_txn_coinbase_v1, hash) do
+    Query.PendingCoinbase.get!(hash)
   end
 end

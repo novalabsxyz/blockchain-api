@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
     create table(:pending_locations) do
       add :hash, :binary, null: false
       add :status, :string, null: false, default: "pending"
-      add :location, :string, null: false
+      add :location, :binary, null: false
       add :fee, :bigint, null: false, default: 0
       add :nonce, :bigint, null: false
       add :gateway, :binary, null: false

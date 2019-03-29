@@ -13,6 +13,7 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
     field :payee, :binary, null: false
     field :payer, :binary, null: false
     field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
 
     timestamps()
   end
@@ -20,8 +21,8 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:hash, :amount, :payee, :payer, :fee, :nonce])
-    |> validate_required([:hash, :amount, :payee, :payer, :fee, :nonce])
+    |> cast(attrs, [:hash, :amount, :payee, :payer, :fee, :nonce, :status])
+    |> validate_required([:hash, :amount, :payee, :payer, :fee, :nonce, :status])
     |> foreign_key_constraint(:hash)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
   end

@@ -7,9 +7,10 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "gateway_transactions" do
+    field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
-    field :hash, :binary, null: false
     field :fee, :integer, null: false, default: 0
     field :amount, :integer, null: false, default: 0
 
@@ -19,8 +20,8 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
   @doc false
   def changeset(gateway, attrs) do
     gateway
-    |> cast(attrs, [:hash, :owner, :gateway, :fee, :amount])
-    |> validate_required([:hash, :owner, :gateway, :fee, :amount])
+    |> cast(attrs, [:hash, :owner, :gateway, :fee, :amount, :status])
+    |> validate_required([:hash, :owner, :gateway, :fee, :amount, :status])
     |> foreign_key_constraint(:hash)
     |> unique_constraint(:gateway)
   end
