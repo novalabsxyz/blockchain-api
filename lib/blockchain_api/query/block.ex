@@ -17,6 +17,12 @@ defmodule BlockchainAPI.Query.Block do
     |> Repo.all()
     |> encode()
   end
+  def list(%{"limit" => limit}=_params) do
+    list_query()
+    |> limit(^limit)
+    |> Repo.all()
+    |> encode()
+  end
   def list(%{}) do
     list_query()
     |> Repo.all()
