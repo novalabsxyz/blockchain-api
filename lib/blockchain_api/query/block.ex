@@ -19,7 +19,9 @@ defmodule BlockchainAPI.Query.Block do
         txns: count(txn.id)
       })
 
-    query |> Repo.paginate(params) |> encode()
+    query
+    |> Repo.all()
+    |> encode()
   end
 
   def get!(height) do
@@ -57,15 +59,13 @@ defmodule BlockchainAPI.Query.Block do
   # Helper functions
   #==================================================================
   defp encode(nil), do: nil
-  defp encode(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn %{hash: hash}=block ->
-             %{block | hash: Util.bin_to_string(hash)}
-           end)
-
-    %{page | entries: data}
-  end
   defp encode(%{hash: hash}=block) do
     %{block | hash: Util.bin_to_string(hash)}
+  end
+  defp encode(entries) when is_list(entries) do
+    entries
+    |> Enum.map(fn %{hash: hash}=block ->
+      %{block | hash: Util.bin_to_string(hash)}
+    end)
   end
 end

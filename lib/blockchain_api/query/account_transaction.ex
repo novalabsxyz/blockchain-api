@@ -123,32 +123,28 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       })
 
     query
-    |> Repo.paginate(params)
+    |> Repo.all()
     |> clean_account_gateways()
   end
 
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
-           |> Enum.reverse
-
-    %{page | entries: data}
+  defp clean_account_transactions(entries) do
+    entries
+    |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+    |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
+    |> Enum.reverse
   end
 
-  defp clean_account_gateways(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map ->
-             {lat, lng} = Util.h3_to_lat_lng(map.location)
-             map
-             |> encoded_account_gateway_map()
-             |> Map.merge(%{lat: lat, lng: lng})
-           end)
-
-    %{page | entries: data}
+  defp clean_account_gateways(entries) do
+    entries
+    |> Enum.map(fn map ->
+      {lat, lng} = Util.h3_to_lat_lng(map.location)
+      map
+      |> encoded_account_gateway_map()
+      |> Map.merge(%{lat: lat, lng: lng})
+    end)
   end
 
   defp encoded_account_gateway_map(map) do

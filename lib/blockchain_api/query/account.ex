@@ -29,9 +29,10 @@ defmodule BlockchainAPI.Query.Account do
     |> Repo.update!()
   end
 
-  def list(params) do
+  def list(_params) do
     Account
-    |> Repo.paginate(params)
+    |> order_by([a], [desc: a.id])
+    |> Repo.all()
   end
 
   def list_all() do

@@ -4,9 +4,10 @@ defmodule BlockchainAPI.Query.PaymentTransaction do
 
   alias BlockchainAPI.{Repo, Schema.PaymentTransaction}
 
-  def list(params) do
+  def list(_params) do
     PaymentTransaction
-    |> Repo.paginate(params)
+    |> order_by([pt], [desc: pt.id])
+    |> Repo.all()
   end
 
   def get!(hash) do

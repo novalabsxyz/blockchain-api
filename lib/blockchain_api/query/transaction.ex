@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.LocationTransaction
   }
 
-  def list(params) do
+  def list(_params) do
     query = from(
       transaction in Transaction,
       left_join: block in Block,
@@ -35,8 +35,8 @@ defmodule BlockchainAPI.Query.Transaction do
       ])
 
     query
-    |> Repo.paginate(params)
-    |> clean_transaction_page()
+    |> Repo.all()
+    |> format_transactions()
 
   end
 
@@ -70,8 +70,8 @@ defmodule BlockchainAPI.Query.Transaction do
       })
 
     query
-    |> Repo.paginate(params)
-    |> clean_block_transaction_page()
+    |> Repo.all()
+    |> format_blocks()
   end
 
   def type(hash) do
@@ -95,18 +95,17 @@ defmodule BlockchainAPI.Query.Transaction do
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
-    clean_entries = entries |> List.flatten |> Enum.reject(&is_nil/1)
-    %{page | entries: clean_entries}
+  defp format_transactions(entries) do
+    entries
+    |> List.flatten
+    |> Enum.reject(&is_nil/1)
   end
 
-  defp clean_block_transaction_page(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
-           |> Enum.reject(&is_nil/1)
-           |> Enum.reverse
-
-    %{page | entries: data}
+  defp format_blocks(entries) do
+    entries
+    |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+    |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reverse
   end
 end

@@ -4,9 +4,10 @@ defmodule BlockchainAPI.Query.LocationTransaction do
 
   alias BlockchainAPI.{Repo, Schema.LocationTransaction}
 
-  def list(params) do
+  def list(_params) do
     LocationTransaction
-    |> Repo.paginate(params)
+    |> order_by([lt], desc: [lt.id])
+    |> Repo.all()
   end
 
   def get!(hash) do

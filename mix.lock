@@ -55,8 +55,6 @@
   "rand_compat": {:hex, :rand_compat, "0.0.3", "011646bc1f0b0c432fe101b816f25b9bbb74a085713cee1dafd2d62e9415ead3", [:rebar3], [], "hexpm"},
   "relcast": {:git, "https://github.com/helium/relcast.git", "68e2ad0cd55a36ea9e466c26540f4510f625211e", [branch: "master"]},
   "rocksdb": {:hex, :rocksdb, "1.0.0", "887399657f50cbdb2c680051b0cdc9435baf96bd1193ca3c868a7217670567e5", [:rebar3], [], "hexpm"},
-  "scrivener": {:hex, :scrivener, "2.5.0", "e1f78c62b6806d91cc9c4778deef1ea4e80aa9fadfce2c16831afe0468cc8a2c", [:mix], [], "hexpm"},
-  "scrivener_ecto": {:hex, :scrivener_ecto, "2.0.0", "e6ee5cc49b44e6115029185f07ffddd7e78475aa40394e98219800fed18f8e42", [:mix], [{:ecto, "~> 3.0", [hex: :ecto, repo: "hexpm", optional: false]}, {:scrivener, "~> 2.4", [hex: :scrivener, repo: "hexpm", optional: false]}], "hexpm"},
   "small_ints": {:hex, :small_ints, "0.1.0", "82a824c8794a2ddc73cb5cd00ead11331db296521ad16a619c13d668572b868a", [:rebar3], [], "hexpm"},
   "splicer": {:git, "https://github.com/helium/erlang-splicer.git", "3a2efb988162fd6ab400ad4183ddc4eac6e6b6e4", [branch: "master"]},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},

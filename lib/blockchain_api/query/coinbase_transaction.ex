@@ -6,7 +6,8 @@ defmodule BlockchainAPI.Query.CoinbaseTransaction do
 
   def list(params) do
     CoinbaseTransaction
-    |> Repo.paginate(params)
+    |> order_by([ct], [desc: ct.id])
+    |> Repo.all()
   end
 
   def get!(hash) do

@@ -29,7 +29,6 @@ defmodule BlockchainAPI.MixProject do
         :wx,
         :inets,
         :xmerl,
-        :scrivener_ecto,
         :timex,
         :httpoison
       ],
@@ -58,7 +57,6 @@ defmodule BlockchainAPI.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:ranch, "~> 1.7.1", override: true},
-      {:scrivener_ecto, "~> 2.0"},
       {:httpoison, "~> 1.4"},
       {:number, "~> 1.0"},
 
