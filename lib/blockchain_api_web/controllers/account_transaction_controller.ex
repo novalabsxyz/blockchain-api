@@ -24,9 +24,19 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     total_txns = pending_txns ++ account_txns
 
+    txns =
+      case total_txns do
+        [] ->
+          # NOTE: This account does not have any transactions ever?
+          # Try getting just the pending payment transactions for it?
+          bin_address
+          |> Query.PendingPayment.get_by_address()
+        t -> t
+      end
+
     render(conn,
       "index.json",
-      account_transactions: total_txns,
+      account_transactions: txns,
       page_number: page.page_number,
       page_size: page.page_size,
       total_pages: page.total_pages,
