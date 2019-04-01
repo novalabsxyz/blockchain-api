@@ -26,33 +26,18 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Repo.insert()
   end
 
-  def get_pending(address) do
-    from(
-      a in Account,
-      where: a.address == ^address,
-      left_join: pg in PendingGateway,
-      on: pg.owner == a.address,
-      left_join: pp in PendingPayment,
-      on: pp.payer == a.address or pp.payee == a.address,
-      left_join: pl in PendingLocation,
-      on: pl.owner == a.address,
-      left_join: cb in PendingCoinbase,
-      on: a.address == cb.payee,
-      select: %{
-        time: fragment("SELECT MAX(time) FROM blocks"),
-        height: fragment("SELECT MAX(block_height) FROM transactions"),
-        coinbase: cb,
-        payment: pp,
-        gateway: pg,
-        location: pl
-      }
-    )
-  end
-
-  def get_cleared(address) do
-    from(
+  def get(address, _params) do
+    query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
+      left_join: pending_coinbase in PendingCoinbase,
+      on: at.txn_hash == pending_coinbase.hash and pending_coinbase.status == "pending",
+      left_join: pending_payment in PendingPayment,
+      on: at.txn_hash == pending_payment.hash and pending_payment.status == "pending",
+      left_join: pending_gateway in PendingGateway,
+      on: at.txn_hash == pending_gateway.hash and pending_gateway.status == "pending",
+      left_join: pending_location in PendingLocation,
+      on: at.txn_hash == pending_location.hash and pending_location.status == "pending",
       left_join: transaction in Transaction,
       on: at.txn_hash == transaction.hash,
       left_join: block in Block,
@@ -65,24 +50,24 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
+      # order_by: [desc: at.id, desc: at.inserted_at, desc: block.time],
+      distinct: [desc: at.id, desc: at.txn_hash, desc: block.time],
       select: %{
+        id: at.id,
         time: block.time,
         height: transaction.block_height,
         coinbase: coinbase_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
-        location: location_transaction
-      }
-    )
-  end
+        location: location_transaction,
+        pending_coinbase: pending_coinbase,
+        pending_payment: pending_payment,
+        pending_gateway: pending_gateway,
+        pending_location: pending_location
+      })
 
-  def get(address, params) do
-
-    pending = get_pending(address)
-    cleared = get_cleared(address)
-
-    pending
-    |> Ecto.Query.union(^cleared)
+    query
+    |> IO.inspect()
     |> Repo.all()
     |> clean_account_transactions()
   end
@@ -134,7 +119,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     entries
     |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
     |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
-    |> Enum.reverse
   end
 
   defp clean_account_gateways(entries) do

@@ -7,7 +7,8 @@ defmodule BlockchainAPI.TxnManager do
     Schema.PaymentTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.CoinbaseTransaction
+    Schema.CoinbaseTransaction,
+    Schema.AccountTransaction
   }
   require Logger
   @me __MODULE__
@@ -64,6 +65,14 @@ defmodule BlockchainAPI.TxnManager do
                          |> PaymentTransaction.map()
                          |> Query.PendingPayment.create()
 
+    {:ok, _pending_account_txn} = :blockchain_txn_payment_v1
+                                 |> AccountTransaction.map_pending(:payer, txn)
+                                 |> Query.AccountTransaction.create()
+
+    {:ok, _pending_account_txn} = :blockchain_txn_payment_v1
+                                 |> AccountTransaction.map_pending(:payee, txn)
+                                 |> Query.AccountTransaction.create()
+
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
@@ -84,6 +93,10 @@ defmodule BlockchainAPI.TxnManager do
     {:ok, pending_txn} = txn
                          |> GatewayTransaction.map()
                          |> Query.PendingGateway.create()
+
+    {:ok, _pending_account_txn} = :blockchain_txn_add_gateway_v1
+                                 |> AccountTransaction.map_pending(txn)
+                                 |> Query.AccountTransaction.create()
 
     :ok = :blockchain_worker.submit_txn(
       txn,
@@ -106,6 +119,10 @@ defmodule BlockchainAPI.TxnManager do
                          |> LocationTransaction.map(txn)
                          |> Query.PendingLocation.create()
 
+    {:ok, _pending_account_txn} = :blockchain_txn_assert_location_v1
+                                 |> AccountTransaction.map_pending(txn)
+                                 |> Query.AccountTransaction.create()
+
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
@@ -126,6 +143,10 @@ defmodule BlockchainAPI.TxnManager do
     {:ok, pending_txn} = txn
                          |> CoinbaseTransaction.map()
                          |> Query.PendingCoinbase.create()
+
+    {:ok, _pending_account_txn} = :blockchain_txn_coinbase_v1
+                                 |> AccountTransaction.map_pending(txn)
+                                 |> Query.AccountTransaction.create()
 
     :ok = :blockchain_worker.submit_txn(
       txn,
