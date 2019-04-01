@@ -3,14 +3,15 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTransactionTable do
 
   def change do
     create table(:account_transactions) do
-      add :account_address, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
-      add :txn_hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
+      add :account_address, :binary, null: false
+      add :txn_hash, :binary, null: false
       add :txn_type, :string, null: false
+      add :txn_status, :string, null: false
 
       timestamps()
     end
 
-    create unique_index(:account_transactions, [:account_address, :txn_hash], name: :unique_account_txn)
+    create unique_index(:account_transactions, [:account_address, :txn_hash, :txn_status], name: :unique_account_txn)
 
   end
 end

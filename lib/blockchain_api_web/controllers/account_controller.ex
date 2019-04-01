@@ -11,7 +11,7 @@ defmodule BlockchainAPIWeb.AccountController do
 
     render(conn,
       "index.json",
-      accounts: accounts,
+      accounts: accounts
     )
   end
 

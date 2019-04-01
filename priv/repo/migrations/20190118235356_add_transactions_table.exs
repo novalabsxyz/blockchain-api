@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
     create table(:transactions) do
       add :hash, :binary, null: false
       add :type, :string, null: false
+      add :status, :string, null: false, default: "cleared"
 
       add :block_height, references(:blocks, on_delete: :nothing, column: :height), null: false
 

@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Schema.Transaction do
     field :type, :string, null: false
     field :block_height, :integer, null: false
     field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
 
     timestamps()
   end
@@ -17,8 +18,8 @@ defmodule BlockchainAPI.Schema.Transaction do
   @doc false
   def changeset(transaction, attrs) do
     transaction
-    |> cast(attrs, [:hash, :type, :block_height])
-    |> validate_required([:hash, :type])
+    |> cast(attrs, [:hash, :type, :block_height, :status])
+    |> validate_required([:hash, :type, :status])
     |> unique_constraint(:hash)
     |> foreign_key_constraint(:block_height)
   end
@@ -39,23 +40,23 @@ defmodule BlockchainAPI.Schema.Transaction do
   end
 
   def map(:blockchain_txn_coinbase_v1, txn) do
-    %{type: "coinbase", hash: :blockchain_txn_coinbase_v1.hash(txn)}
+    %{type: "coinbase", status: "cleared", hash: :blockchain_txn_coinbase_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_payment_v1, txn) do
-    %{type: "payment", hash: :blockchain_txn_payment_v1.hash(txn)}
+    %{type: "payment", status: "cleared", hash: :blockchain_txn_payment_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_add_gateway_v1, txn) do
-    %{type: "gateway", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
+    %{type: "gateway", status: "cleared", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_assert_location_v1, txn) do
-    %{type: "location", hash: :blockchain_txn_assert_location_v1.hash(txn)}
+    %{type: "location", status: "cleared", hash: :blockchain_txn_assert_location_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_gen_gateway_v1, txn) do
-    %{type: "gateway", hash: :blockchain_txn_gen_gateway_v1.hash(txn)}
+    %{type: "gateway", status: "cleared", hash: :blockchain_txn_gen_gateway_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_poc_request_v1, txn) do

@@ -2,13 +2,14 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.AccountTransaction}
-  @fields [:id, :account_address, :txn_hash, :txn_type]
+  @fields [:id, :account_address, :txn_hash, :txn_type, :txn_status]
 
   @derive {Jason.Encoder, only: @fields}
   schema "account_transactions" do
     field :account_address, :binary, null: false
     field :txn_hash, :binary, null: false
     field :txn_type, :string, null: false
+    field :txn_status, :string, null: false
 
     timestamps()
   end
@@ -16,10 +17,8 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
   @doc false
   def changeset(account_transaction, attrs) do
     account_transaction
-    |> cast(attrs, [:account_address, :txn_hash, :txn_type])
-    |> validate_required([:account_address, :txn_hash, :txn_type])
-    |> foreign_key_constraint(:hash)
-    |> foreign_key_constraint(:address)
+    |> cast(attrs, [:account_address, :txn_hash, :txn_type, :txn_status])
+    |> validate_required([:account_address, :txn_hash, :txn_type, :txn_status])
     |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
   end
 
@@ -38,11 +37,53 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     end
   end
 
-  def map(account, txn) do
+  def map_cleared(:blockchain_txn_coinbase_v1, txn) do
     %{
-      account_address: account.address,
-      txn_hash: txn.hash,
-      txn_type: txn.type
+      account_address: :blockchain_txn_coinbase_v1.payee(txn),
+      txn_type: "coinbase",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_coinbase_v1.hash(txn)
+    }
+  end
+  def map_cleared(:blockchain_txn_add_gateway_v1, txn) do
+    %{
+      account_address: :blockchain_txn_add_gateway_v1.owner(txn),
+      txn_type: "gateway",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_add_gateway_v1.hash(txn)
+    }
+  end
+  def map_cleared(:blockchain_txn_assert_location_v1, txn) do
+    %{
+      account_address: :blockchain_txn_assert_location_v1.owner(txn),
+      txn_type: "location",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_assert_location_v1.hash(txn)
+    }
+  end
+  def map_cleared(:blockchain_txn_gen_gateway_v1, txn) do
+    %{
+      account_address: :blockchain_txn_gen_gateway_v1.owner(txn),
+      txn_type: "gateway",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_gen_gateway_v1.hash(txn)
+    }
+  end
+
+  def map_cleared(:blockchain_txn_payment_v1, :payee, txn) do
+    %{
+      account_address: :blockchain_txn_payment_v1.payee(txn),
+      txn_type: "payment",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_payment_v1.hash(txn)
+    }
+  end
+  def map_cleared(:blockchain_txn_payment_v1, :payer, txn) do
+    %{
+      account_address: :blockchain_txn_payment_v1.payer(txn),
+      txn_type: "payment",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
 end
