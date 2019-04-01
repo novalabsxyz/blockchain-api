@@ -45,9 +45,9 @@ defmodule BlockchainAPIWeb.AccountController do
             fee: fee,
             balance: 0,
             history: %{
-              day: [],
-              week: [],
-              month: []
+              day: Enum.map(1..24, fn(_) -> 0 end),
+              week: Enum.map(1..22, fn(_) -> 0 end),
+              month: Enum.map(1..31, fn(_) -> 0 end)
             },
             id: nil,
             name: nil,
