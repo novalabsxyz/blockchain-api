@@ -28,12 +28,16 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   end
 
   def encode_model(location) do
+    {lat, lng} = Util.h3_to_lat_lng(location.location)
+
     location
     |> Map.take(@fields)
     |> Map.merge(%{
       owner: Util.bin_to_string(location.owner),
       hash: Util.bin_to_string(location.hash),
       gateway: Util.bin_to_string(location.gateway),
+      lat: lat,
+      lng: lng,
       type: "location"
     })
   end
