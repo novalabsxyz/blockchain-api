@@ -111,16 +111,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_assert_location_v1.hash(txn)
     }
   end
-
-  def map_pending(:blockchain_txn_payment_v1, :payee, txn) do
-    %{
-      account_address: :blockchain_txn_payment_v1.payee(txn),
-      txn_type: "payment",
-      txn_status: "pending",
-      txn_hash: :blockchain_txn_payment_v1.hash(txn)
-    }
-  end
-  def map_pending(:blockchain_txn_payment_v1, :payer, txn) do
+  def map_pending(:blockchain_txn_payment_v1, txn) do
     %{
       account_address: :blockchain_txn_payment_v1.payer(txn),
       txn_type: "payment",
