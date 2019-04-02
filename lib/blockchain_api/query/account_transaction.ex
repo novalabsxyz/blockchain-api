@@ -34,7 +34,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> filter_before(before, limit)
     |> Repo.all()
     |> format()
-    |> IO.inspect()
   end
   def list(address, %{"before" => before}=_params) do
     address
@@ -42,7 +41,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> filter_before(before, @default_limit)
     |> Repo.all()
     |> format()
-    |> IO.inspect()
   end
   def list(address, %{"limit" => limit}=_params) do
     address
@@ -50,14 +48,12 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> limit(^limit)
     |> Repo.all()
     |> format()
-    |> IO.inspect()
   end
   def list(address, %{}) do
     address
     |> list_query()
     |> Repo.all()
     |> format()
-    |> IO.inspect()
   end
 
   def get_pending_txn!(txn_hash) do
