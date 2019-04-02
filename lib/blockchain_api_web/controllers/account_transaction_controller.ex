@@ -10,7 +10,7 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     bin_address = address |> Util.string_to_bin()
 
-    account_txns = bin_address |> Query.AccountTransaction.get(params)
+    account_txns = bin_address |> Query.AccountTransaction.list(params)
 
     txns =
       case account_txns do
