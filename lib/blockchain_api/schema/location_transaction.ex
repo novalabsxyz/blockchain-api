@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.LocationTransaction}
-  @fields [:id, :hash, :fee, :gateway, :location, :nonce, :owner]
+  @fields [:id, :hash, :fee, :gateway, :location, :nonce, :owner, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -28,12 +28,14 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   end
 
   def encode_model(location) do
-    %{
-      Map.take(location, @fields) |
+    location
+    |> Map.take(@fields)
+    |> Map.merge(%{
       owner: Util.bin_to_string(location.owner),
       hash: Util.bin_to_string(location.hash),
-      gateway: Util.bin_to_string(location.gateway)
-    }
+      gateway: Util.bin_to_string(location.gateway),
+      type: "location"
+    })
   end
 
   defimpl Jason.Encoder, for: LocationTransaction do

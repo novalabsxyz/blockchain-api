@@ -28,11 +28,14 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   end
 
   def encode_model(pending_location) do
-    %{Map.take(pending_location, @fields) |
+    pending_location
+    |> Map.take(@fields)
+    |> Map.merge(%{
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
-      hash: Util.bin_to_string(pending_location.hash)
-    }
+      hash: Util.bin_to_string(pending_location.hash),
+      type: "location"
+    })
   end
 
   defimpl Jason.Encoder, for: PendingLocation do

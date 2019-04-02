@@ -32,7 +32,8 @@ defmodule BlockchainAPI.Schema.PendingPayment do
       Map.take(pending_payment, @fields) |
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
-      hash: Util.bin_to_string(pending_payment.hash)
+      hash: Util.bin_to_string(pending_payment.hash),
+      type: "payment"
     }
   end
 

@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.CoinbaseTransaction}
-  @fields [:id, :hash, :amount, :payee]
+  @fields [:id, :hash, :amount, :payee, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -24,10 +24,13 @@ defmodule BlockchainAPI.Schema.CoinbaseTransaction do
   end
 
   def encode_model(coinbase) do
-    %{Map.take(coinbase, @fields) |
+    coinbase
+    |> Map.take(@fields)
+    |> Map.merge(%{
       payee: Util.bin_to_string(coinbase.payee),
-      hash: Util.bin_to_string(coinbase.hash)
-    }
+      hash: Util.bin_to_string(coinbase.hash),
+      type: "coinbase"
+    })
   end
 
   defimpl Jason.Encoder, for: CoinbaseTransaction do

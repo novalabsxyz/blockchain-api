@@ -24,10 +24,13 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
   end
 
   def encode_model(pending_coinbase) do
-    %{Map.take(pending_coinbase, @fields) |
+    pending_coinbase
+    |> Map.take(@fields)
+    |> Map.merge(%{
       hash: Util.bin_to_string(pending_coinbase.hash),
-      payee: Util.bin_to_string(pending_coinbase.payee)
-    }
+      payee: Util.bin_to_string(pending_coinbase.payee),
+      type: "coinbase"
+    })
   end
 
   defimpl Jason.Encoder, for: PendingCoinbase do

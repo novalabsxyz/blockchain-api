@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.GatewayTransaction}
-  @fields [:id, :hash, :gateway, :owner, :fee, :amount]
+  @fields [:id, :hash, :gateway, :owner, :fee, :amount, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -27,12 +27,14 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
   end
 
   def encode_model(gateway) do
-    %{
-      Map.take(gateway, @fields) |
+    gateway
+    |> Map.take(@fields)
+    |> Map.merge(%{
       owner: Util.bin_to_string(gateway.owner),
       hash: Util.bin_to_string(gateway.hash),
-      gateway: Util.bin_to_string(gateway.gateway)
-    }
+      gateway: Util.bin_to_string(gateway.gateway),
+      type: "gateway"
+    })
   end
 
   defimpl Jason.Encoder, for: GatewayTransaction do
