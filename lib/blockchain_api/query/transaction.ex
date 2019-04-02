@@ -92,6 +92,89 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Repo.insert()
   end
 
+  def get_payment!(txn_hash) do
+    query = from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: payment_transaction in PaymentTransaction,
+      on: transaction.hash == payment_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: payment_transaction.payee,
+        payer: payment_transaction.payer,
+        nonce: payment_transaction.nonce,
+        amount: payment_transaction.amount,
+        fee: payment_transaction.fee,
+        hash: payment_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_coinbase!(txn_hash) do
+    query = from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: coinbase_transaction in CoinbaseTransaction,
+      on: transaction.hash == coinbase_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: coinbase_transaction.payee,
+        amount: coinbase_transaction.amount,
+        hash: coinbase_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_gateway!(txn_hash) do
+    query = from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: gateway_transaction in GatewayTransaction,
+      on: transaction.hash == gateway_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        hash: gateway_transaction.hash,
+        gateway: gateway_transaction.gateway,
+        owner: gateway_transaction.owner,
+        fee: gateway_transaction.fee,
+        amount: gateway_transaction.amount,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_location!(txn_hash) do
+    query = from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: location_transaction in LocationTransaction,
+      on: transaction.hash == location_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        hash: location_transaction.hash,
+        gateway: location_transaction.gateway,
+        owner: location_transaction.owner,
+        fee: location_transaction.fee,
+        location: location_transaction.location,
+      }
+    )
+    |> Repo.one!()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
