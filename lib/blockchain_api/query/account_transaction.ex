@@ -155,13 +155,13 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   defp list_pending(address) do
-    three_hours_ago = Timex.to_naive_datetime(Timex.shift(Timex.now(), hours: -3))
+    thirty_mins_ago = Timex.to_naive_datetime(Timex.shift(Timex.now(), minutes: -30))
 
     from(
       at in AccountTransaction,
       where: at.account_address == ^address,
       where: at.txn_status == "pending",
-      where: at.inserted_at >= ^three_hours_ago
+      where: at.inserted_at >= ^thirty_mins_ago
     )
   end
 
