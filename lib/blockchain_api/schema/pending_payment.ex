@@ -28,13 +28,14 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   end
 
   def encode_model(pending_payment) do
-    %{
-      Map.take(pending_payment, @fields) |
+    pending_payment
+    |> Map.take(@fields)
+    |> Map.merge(%{
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
       hash: Util.bin_to_string(pending_payment.hash),
       type: "payment"
-    }
+    })
   end
 
   defimpl Jason.Encoder, for: PendingPayment do
