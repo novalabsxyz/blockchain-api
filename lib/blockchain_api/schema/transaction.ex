@@ -57,4 +57,8 @@ defmodule BlockchainAPI.Schema.Transaction do
   def map(:blockchain_txn_gen_gateway_v1, txn) do
     %{type: "gateway", hash: :blockchain_txn_gen_gateway_v1.hash(txn)}
   end
+
+  def map(:blockchain_txn_poc_request_v1, txn) do
+    %{type: "poc_request", hash: :blockchain_txn_poc_request_v1.hash(txn)}
+  end
 end
