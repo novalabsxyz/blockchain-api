@@ -11,6 +11,7 @@ defmodule BlockchainAPI.Committer do
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
     Schema.POCRequestTransaction,
+    Schema.POCReceiptsTransaction,
     Schema.AccountTransaction,
     Schema.AccountBalance,
     Schema.Hotspot
@@ -121,6 +122,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
             :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height)
+            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -288,6 +290,11 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
     txn |> POCRequestTransaction.map() |> Query.POCRequestTransaction.create()
+  end
+
+  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
+    txn |> POCReceiptsTransaction.map() |> Query.POCReceiptsTransaction.create()
   end
 
   #==================================================================

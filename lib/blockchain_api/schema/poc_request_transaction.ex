@@ -44,8 +44,6 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
   end
 
   def map(txn) do
-    IO.inspect txn
-
     %{
       challenger: :blockchain_txn_poc_request_v1.challenger(txn),
       fee: :blockchain_txn_poc_request_v1.fee(txn),
