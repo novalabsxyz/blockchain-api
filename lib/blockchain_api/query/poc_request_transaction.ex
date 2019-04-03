@@ -4,9 +4,9 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   alias BlockchainAPI.{Repo, Schema.POCRequestTransaction}
 
-  def list(params) do
+  def list(_params) do
     POCRequestTransaction
-    |> Repo.paginate(params)
+    |> Repo.all()
   end
 
   def get!(hash) do
