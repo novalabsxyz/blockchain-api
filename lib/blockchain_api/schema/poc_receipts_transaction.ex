@@ -14,25 +14,25 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     field :fee, :integer, null: false
     field :onion, :binary, null: false
 
-    embeds_one :path, Path do
+    embeds_one :path, Path, primary_key: false do
 
-      embeds_many :path_elements, PathElements do
+      embeds_many :path_elements, PathElements, primary_key: false do
         field :challengee, :binary, null: false
 
-        embeds_one :receipt, Receipt do
+        embeds_one :receipt, Receipt, primary_key: false do
           field :gateway, :binary, null: false
           field :timestamp, :integer, null: false
           field :signal, :integer, null: false
           field :data, :binary, null: false
           field :signature, :binary, null: false
 
-          embeds_one :origin, Origin do
+          embeds_one :origin, Origin, primary_key: false do
             field :p2p, :integer
             field :radio, :integer
           end
         end
 
-        embeds_many :witnesses, Witnesses do
+        embeds_many :witnesses, Witnesses, primary_key: false do
           field :gateway, :binary, null: false
           field :timestamp, :integer, null: false
           field :signal, :integer, null: false
