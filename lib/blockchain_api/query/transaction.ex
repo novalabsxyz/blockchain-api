@@ -40,7 +40,7 @@ defmodule BlockchainAPI.Query.Transaction do
 
   end
 
-  def at_height(block_height, params) do
+  def at_height(block_height, _params) do
     query = from(
       block in Block,
       where: block.height == ^block_height,
@@ -93,7 +93,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_payment!(txn_hash) do
-    query = from(
+    from(
       transaction in Transaction,
       where: transaction.hash == ^txn_hash,
       left_join: block in Block,
@@ -115,7 +115,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_coinbase!(txn_hash) do
-    query = from(
+    from(
       transaction in Transaction,
       where: transaction.hash == ^txn_hash,
       left_join: block in Block,
@@ -134,7 +134,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_gateway!(txn_hash) do
-    query = from(
+    from(
       transaction in Transaction,
       where: transaction.hash == ^txn_hash,
       left_join: block in Block,
@@ -155,7 +155,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_location!(txn_hash) do
-    query = from(
+    from(
       transaction in Transaction,
       where: transaction.hash == ^txn_hash,
       left_join: block in Block,

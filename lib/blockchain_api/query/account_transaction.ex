@@ -7,19 +7,12 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Repo,
     Util,
     Query,
-    Schema.Block,
     Schema.AccountTransaction,
-    Schema.Transaction,
     Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.Hotspot,
-    Schema.Account,
-    Schema.PendingLocation,
-    Schema.PendingGateway,
-    Schema.PendingPayment,
-    Schema.PendingCoinbase
+    Schema.Hotspot
   }
 
   def create(attrs \\ %{}) do
@@ -75,7 +68,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Repo.delete!()
   end
 
-  def get_gateways(address, params \\ %{}) do
+  def get_gateways(address, _params \\ %{}) do
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
