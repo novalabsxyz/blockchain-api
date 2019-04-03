@@ -33,7 +33,8 @@ config :blockchain_api, BlockchainAPI.Repo,
   password: "postgres",
   database: "blockchain_api_prod",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 10,
+  timeout: 30000
 
 # ## SSL Support
 #
