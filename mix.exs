@@ -60,6 +60,7 @@ defmodule BlockchainAPI.MixProject do
       {:ranch, "~> 1.7.1", override: true},
       {:scrivener_ecto, "~> 2.0"},
       {:httpoison, "~> 1.4"},
+      {:number, "~> 1.0"},
 
       # blockchain requirements
       {:distillery, "~> 2.0"},

@@ -69,8 +69,10 @@ defmodule BlockchainAPI.Notifier do
   defp payload(%{payee: address, amount: amount}=data) do
     atoms =
       case rem(amount, @bones) == 0 do
-        true -> div(amount, @bones)
-        false -> amount/@bones
+        true ->
+          Number.Delimit.number_to_delimited(div(amount, @bones), precision: 0)
+        false ->
+          Number.Delimit.number_to_delimited(amount/@bones)
       end
 
     %{
