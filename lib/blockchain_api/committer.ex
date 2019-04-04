@@ -11,10 +11,13 @@ defmodule BlockchainAPI.Committer do
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
     Schema.POCRequestTransaction,
-    Schema.POCReceiptsTransaction,
     Schema.AccountTransaction,
     Schema.AccountBalance,
-    Schema.Hotspot
+    Schema.Hotspot,
+    Schema.POCReceiptsTransaction,
+    Schema.POCPathElement,
+    Schema.POCReceipt,
+    Schema.POCWitness
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -294,11 +297,34 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
+    {:ok, poc_receipt_txn_entry} = txn |> POCReceiptsTransaction.map() |> Query.POCReceiptsTransaction.create()
+
     txn
-    |> IO.inspect()
-    |> POCReceiptsTransaction.map()
-    |> IO.inspect()
-    |> Query.POCReceiptsTransaction.create()
+    |> :blockchain_txn_poc_receipts_v1.path()
+    |> Enum.map(
+      fn(element) when element != :undefined ->
+
+        {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, element)
+                                    |> Query.POCPathElement.create()
+
+        case :blockchain_poc_path_element_v1.receipt(element) do
+          :undefined -> :ok
+          receipt ->
+            {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, receipt)
+                                  |> Query.POCReceipt.create()
+
+        end
+
+        element
+        |> :blockchain_poc_path_element_v1.witnesses()
+        |> Enum.map(
+          fn(witness) when witness != :undefined ->
+            {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, witness)
+                                  |> Query.POCWitness.create()
+          end
+        )
+      end
+    )
   end
 
   #==================================================================
