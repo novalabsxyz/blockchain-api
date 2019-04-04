@@ -294,7 +294,11 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
-    txn |> POCReceiptsTransaction.map() |> Query.POCReceiptsTransaction.create()
+    txn
+    |> IO.inspect()
+    |> POCReceiptsTransaction.map()
+    |> IO.inspect()
+    |> Query.POCReceiptsTransaction.create()
   end
 
   #==================================================================
