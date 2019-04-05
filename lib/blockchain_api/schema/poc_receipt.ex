@@ -6,6 +6,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
   @fields [
     :poc_path_elements_id,
     :gateway,
+    :location,
     :timestamp,
     :signal,
     :data,
@@ -17,6 +18,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
   schema "poc_receipts" do
     field :poc_path_elements_id, :integer, null: false
     field :gateway, :binary, null: false
+    field :location, :string, null: false
     field :timestamp, :integer, null: false
     field :signal, :integer, null: false
     field :data, :binary, null: false
@@ -34,22 +36,24 @@ defmodule BlockchainAPI.Schema.POCReceipt do
   end
 
   def encode_model(poc_receipt) do
+    {lat, lng} = Util.h3_to_lat_lng(poc_receipt.location)
+
     @fields
     |> Map.take(poc_receipt)
     |> Map.merge(%{
       gateway: Util.bin_to_string(poc_receipt.gateway),
       signature: Util.bin_to_string(poc_receipt.signature),
-      data: Base.encode64(poc_receipt.data)
+      data: Base.encode64(poc_receipt.data),
+      lat: lat,
+      lng: lng
     })
   end
 
-  def map(id, poc_receipt) do
-
-    IO.inspect poc_receipt
-
+  def map(id, rx_loc, poc_receipt) do
     %{
       poc_path_elements_id: id,
       gateway: :blockchain_poc_receipt_v1.gateway(poc_receipt),
+      location: Util.h3_to_string(rx_loc),
       timestamp: :blockchain_poc_receipt_v1.timestamp(poc_receipt),
       signal: :blockchain_poc_receipt_v1.signal(poc_receipt),
       data: :blockchain_poc_receipt_v1.data(poc_receipt),

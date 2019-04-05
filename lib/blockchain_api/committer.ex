@@ -39,7 +39,7 @@ defmodule BlockchainAPI.Committer do
                                 |> Block.map()
                                 |> Query.Block.create()
         add_accounts(block, chain)
-        add_transactions(block)
+        add_transactions(block, chain)
         add_account_transactions(block)
         # NOTE: move this elsewhere...
         BlockChannel.broadcast_change(inserted_block)
@@ -112,7 +112,7 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all transactions
   #==================================================================
-  defp add_transactions(block) do
+  defp add_transactions(block, chain) do
     height = :blockchain_block.height(block)
     case :blockchain_block.transactions(block) do
       [] ->
@@ -125,7 +125,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
             :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height)
-            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height)
+            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -295,35 +295,75 @@ defmodule BlockchainAPI.Committer do
     txn |> POCRequestTransaction.map() |> Query.POCRequestTransaction.create()
   end
 
-  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height) do
+  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain) do
+
+    challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
+    ledger = :blockchain.ledger(chain)
+    {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
+    last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
+    {:ok, block} = :blockchain.get_block(last_challenge, chain)
+    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(block), chain)
+    {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, old_ledger)
+    challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
+
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
-    {:ok, poc_receipt_txn_entry} = txn |> POCReceiptsTransaction.map() |> Query.POCReceiptsTransaction.create()
+
+    {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(challenger_loc, txn) |> Query.POCReceiptsTransaction.create()
 
     txn
     |> :blockchain_txn_poc_receipts_v1.path()
     |> Enum.map(
       fn(element) when element != :undefined ->
 
-        {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, element)
-                                    |> Query.POCPathElement.create()
+        res = element
+              |> :blockchain_poc_path_element_v1.challengee()
+              |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
 
-        case :blockchain_poc_path_element_v1.receipt(element) do
-          :undefined -> :ok
-          receipt ->
-            {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, receipt)
-                                  |> Query.POCReceipt.create()
+        case res do
+          {:error, _} -> :ok
 
+          {:ok, challengee_info} ->
+            challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
+
+            {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, challengee_loc, element)
+                                        |> Query.POCPathElement.create()
+
+            case :blockchain_poc_path_element_v1.receipt(element) do
+              :undefined -> :ok
+              receipt ->
+                {:ok, rx_info} = receipt
+                                 |> :blockchain_poc_receipt_v1.gateway()
+                                 |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
+
+                rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
+
+                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, receipt)
+                                      |> Query.POCReceipt.create()
+
+            end
+
+            element
+            |> :blockchain_poc_path_element_v1.witnesses()
+            |> Enum.map(
+              fn(witness) when witness != :undefined ->
+
+                res = witness
+                      |> :blockchain_poc_witness_v1.gateway()
+                      |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
+
+                case res do
+                  {:error, _} -> :ok
+                  {:ok, wx_info} ->
+                    wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
+
+                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, witness)
+                                          |> Query.POCWitness.create()
+                end
+              end
+            )
+        end
         end
 
-        element
-        |> :blockchain_poc_path_element_v1.witnesses()
-        |> Enum.map(
-          fn(witness) when witness != :undefined ->
-            {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, witness)
-                                  |> Query.POCWitness.create()
-          end
-        )
-      end
     )
   end
 

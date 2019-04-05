@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocWitnessTable do
       add :signal, :integer, null: false
       add :packet_hash, :binary, null: false
       add :signature, :binary, null: false
+      add :location, :string, null: false
 
       timestamps()
     end
