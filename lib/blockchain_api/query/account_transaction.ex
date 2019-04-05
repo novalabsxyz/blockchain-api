@@ -1,13 +1,13 @@
 defmodule BlockchainAPI.Query.AccountTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
+  @default_limit 100
 
   alias BlockchainAPI.{
     Repo,
     Util,
-    Schema.Block,
+    Query,
     Schema.AccountTransaction,
-    Schema.Transaction,
     Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
@@ -21,44 +21,54 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Repo.insert()
   end
 
-  def get(address, params) do
-    query = from(
-      at in AccountTransaction,
-      where: at.account_address == ^address,
-      left_join: transaction in Transaction,
-      on: at.txn_hash == transaction.hash,
-      left_join: block in Block,
-      on: transaction.block_height == block.height,
-      left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.hash,
-      left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.hash,
-      left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.hash,
-      left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.hash,
-      order_by: [
-        desc: block.height,
-        desc: transaction.id,
-        desc: payment_transaction.nonce,
-        desc: location_transaction.nonce
-      ],
-      select: %{
-        time: block.time,
-        height: transaction.block_height,
-        coinbase: coinbase_transaction,
-        payment: payment_transaction,
-        gateway: gateway_transaction,
-        location: location_transaction
-      }
-    )
-
-    query
-    |> Repo.paginate(params)
-    |> clean_account_transactions()
+  def list(address, %{"before" => before, "limit" => limit}=_params) do
+    address
+    |> list_query()
+    |> filter_before(before, limit)
+    |> Repo.all()
+    |> format()
+  end
+  def list(address, %{"before" => before}=_params) do
+    address
+    |> list_query()
+    |> filter_before(before, @default_limit)
+    |> Repo.all()
+    |> format()
+  end
+  def list(address, %{"limit" => limit}=_params) do
+    address
+    |> list_query()
+    |> limit(^limit)
+    |> Repo.all()
+    |> format()
+  end
+  def list(address, %{}) do
+    address
+    |> list_query()
+    |> Repo.all()
+    |> format()
   end
 
-  def get_gateways(address, params \\ %{}) do
+  def get_pending_txn!(txn_hash) do
+    AccountTransaction
+    |> where([at], at.txn_hash == ^txn_hash)
+    |> where([at], at.txn_status == "pending")
+    |> Repo.one!
+  end
+
+  def update_pending!(pending, attrs \\ %{}) do
+    pending
+    |> AccountTransaction.changeset(attrs)
+    |> Repo.update!()
+  end
+
+  def delete_pending!(pending, attrs \\ %{}) do
+    pending
+    |> AccountTransaction.changeset(attrs)
+    |> Repo.delete!()
+  end
+
+  def get_gateways(address, _params \\ %{}) do
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
@@ -94,32 +104,21 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       })
 
     query
-    |> Repo.paginate(params)
+    |> Repo.all()
     |> clean_account_gateways()
   end
 
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_account_transactions(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
-           |> Enum.reverse
-
-    %{page | entries: data}
-  end
-
-  defp clean_account_gateways(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map ->
-             {lat, lng} = Util.h3_to_lat_lng(map.location)
-             map
-             |> encoded_account_gateway_map()
-             |> Map.merge(%{lat: lat, lng: lng})
-           end)
-
-    %{page | entries: data}
+  defp clean_account_gateways(entries) do
+    entries
+    |> Enum.map(fn map ->
+      {lat, lng} = Util.h3_to_lat_lng(map.location)
+      map
+      |> encoded_account_gateway_map()
+      |> Map.merge(%{lat: lat, lng: lng})
+    end)
   end
 
   defp encoded_account_gateway_map(map) do
@@ -130,5 +129,82 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       location_hash: Util.bin_to_string(map.location_hash),
       owner: Util.bin_to_string(map.owner)
     }
+  end
+
+  defp list_query(address) do
+    pending = list_pending(address)
+    cleared = list_cleared(address)
+
+    query = Ecto.Query.union(pending, ^cleared)
+
+    from(
+      q in subquery(query),
+      order_by: [desc: q.id]
+    )
+  end
+
+  defp list_pending(address) do
+    thirty_mins_ago = Timex.to_naive_datetime(Timex.shift(Timex.now(), minutes: -30))
+
+    from(
+      at in AccountTransaction,
+      where: at.account_address == ^address,
+      where: at.txn_status == "pending",
+      where: at.inserted_at >= ^thirty_mins_ago
+    )
+  end
+
+  defp list_cleared(address) do
+    from(
+      at in AccountTransaction,
+      where: at.account_address == ^address,
+      where: at.txn_status == "cleared"
+    )
+  end
+
+  defp filter_before(query, before, limit) do
+    query
+    |> where([at], at.inserted_at < ^before)
+    |> limit(^limit)
+  end
+
+  defp format(entries) do
+    entries
+    |> Enum.map(
+      fn(entry) ->
+        case entry.txn_status do
+          "cleared" ->
+            case entry.txn_type do
+              "payment" ->
+                entry.txn_hash
+                |> Query.Transaction.get_payment!()
+                |> PaymentTransaction.encode_model()
+              "coinbase" ->
+                entry.txn_hash
+                |> Query.Transaction.get_coinbase!()
+                |> CoinbaseTransaction.encode_model()
+              "gateway" ->
+                entry.txn_hash
+                |> Query.Transaction.get_gateway!()
+                |> GatewayTransaction.encode_model()
+              "location" ->
+                entry.txn_hash
+                |> Query.Transaction.get_location!()
+                |> LocationTransaction.encode_model()
+            end
+          "pending" ->
+            case entry.txn_type do
+              "payment" ->
+                Query.PendingPayment.get!(entry.txn_hash)
+              "coinbase" ->
+                Query.PendingCoinbase.get!(entry.txn_hash)
+              "gateway" ->
+                Query.PendingGateway.get!(entry.txn_hash)
+              "location" ->
+                Query.PendingLocation.get!(entry.txn_hash)
+            end
+        end
+      end
+    )
   end
 end

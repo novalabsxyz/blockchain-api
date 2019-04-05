@@ -2,13 +2,9 @@ defmodule BlockchainAPIWeb.LocationView do
   use BlockchainAPIWeb, :view
   alias BlockchainAPIWeb.LocationView
 
-  def render("index.json", page) do
+  def render("index.json", data) do
     %{
-      data: render_many(page.location_transactions, LocationView, "location.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      data: render_many(data.location_transactions, LocationView, "location.json"),
     }
   end
 

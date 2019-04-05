@@ -6,15 +6,11 @@ defmodule BlockchainAPIWeb.BlockController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.Block.list(params)
+    blocks = Query.Block.list(params)
 
     render(conn,
       "index.json",
-      blocks: page.entries,
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      blocks: blocks
     )
   end
 

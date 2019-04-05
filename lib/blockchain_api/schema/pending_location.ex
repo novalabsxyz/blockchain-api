@@ -7,13 +7,13 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "pending_locations" do
+    field :fee, :integer, null: false
+    field :gateway, :binary, null: false
+    field :location, :string, null: false
+    field :nonce, :integer, null: false, default: 0
+    field :owner, :binary, null: false
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
-    field :nonce, :integer, null: false, default: 0
-    field :fee, :integer, null: false
-    field :location, :string, null: false
-    field :gateway, :binary, null: false
-    field :owner, :binary, null: false
 
     timestamps()
   end
@@ -28,11 +28,14 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   end
 
   def encode_model(pending_location) do
-    %{Map.take(pending_location, @fields) |
+    pending_location
+    |> Map.take(@fields)
+    |> Map.merge(%{
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
-      hash: Util.bin_to_string(pending_location.hash)
-    }
+      hash: Util.bin_to_string(pending_location.hash),
+      type: "location"
+    })
   end
 
   defimpl Jason.Encoder, for: PendingLocation do

@@ -2,13 +2,9 @@ defmodule BlockchainAPIWeb.AccountGatewayView do
   use BlockchainAPIWeb, :view
   alias BlockchainAPIWeb.AccountGatewayView
 
-  def render("index.json", page) do
+  def render("index.json", data) do
     %{
-      data: render_many(page.account_gateways, AccountGatewayView, "account_gateway.json"),
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      data: render_many(data.account_gateways, AccountGatewayView, "account_gateway.json"),
     }
   end
 

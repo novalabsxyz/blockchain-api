@@ -4,9 +4,10 @@ defmodule BlockchainAPI.Query.CoinbaseTransaction do
 
   alias BlockchainAPI.{Repo, Schema.CoinbaseTransaction}
 
-  def list(params) do
+  def list(_params) do
     CoinbaseTransaction
-    |> Repo.paginate(params)
+    |> order_by([ct], [desc: ct.id])
+    |> Repo.all()
   end
 
   def get!(hash) do

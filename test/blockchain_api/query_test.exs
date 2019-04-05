@@ -8,7 +8,6 @@ defmodule BlockchainAPI.QueryTest do
   @block_invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}
   @transaction_valid_attrs %{hash: "some hash", type: "some type"}
   @transaction_invalid_attrs %{hash: nil, type: nil}
-  @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
 

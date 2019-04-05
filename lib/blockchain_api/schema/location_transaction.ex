@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.LocationTransaction}
-  @fields [:id, :hash, :fee, :gateway, :location, :nonce, :owner]
+  @fields [:id, :hash, :fee, :gateway, :location, :nonce, :owner, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -13,6 +13,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
     field :nonce, :integer, null: false, default: 0
     field :owner, :binary, null: false
     field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
 
     timestamps()
   end
@@ -20,19 +21,25 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   @doc false
   def changeset(location, attrs) do
     location
-    |> cast(attrs, [:hash, :gateway, :owner, :location, :nonce, :fee])
-    |> validate_required([:hash, :gateway, :owner, :location, :nonce, :fee])
+    |> cast(attrs, [:hash, :gateway, :owner, :location, :nonce, :fee, :status])
+    |> validate_required([:hash, :gateway, :owner, :location, :nonce, :fee, :status])
     |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:gateway)
   end
 
   def encode_model(location) do
-    %{
-      Map.take(location, @fields) |
+    {lat, lng} = Util.h3_to_lat_lng(location.location)
+
+    location
+    |> Map.take(@fields)
+    |> Map.merge(%{
       owner: Util.bin_to_string(location.owner),
       hash: Util.bin_to_string(location.hash),
-      gateway: Util.bin_to_string(location.gateway)
-    }
+      gateway: Util.bin_to_string(location.gateway),
+      lat: lat,
+      lng: lng,
+      type: "location"
+    })
   end
 
   defimpl Jason.Encoder, for: LocationTransaction do

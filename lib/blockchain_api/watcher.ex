@@ -81,8 +81,9 @@ defmodule BlockchainAPI.Watcher do
 
     case flag do
       false ->
-        :ok = Notifier.notify(block)
-        :ok = FakeRewarder.reward(block)
+        # :ok = Notifier.notify(block)
+        # :ok = FakeRewarder.reward(block)
+        :ok
       true -> :ok
     end
 

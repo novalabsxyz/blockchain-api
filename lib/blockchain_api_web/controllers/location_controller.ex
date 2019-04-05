@@ -6,15 +6,11 @@ defmodule BlockchainAPIWeb.LocationController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.LocationTransaction.list(params)
+    txns = Query.LocationTransaction.list(params)
 
     render(conn,
       "index.json",
-      location_transactions: page.entries,
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      location_transactions: txns
     )
   end
 

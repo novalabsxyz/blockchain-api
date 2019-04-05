@@ -7,10 +7,10 @@ defmodule BlockchainAPI.Query.Hotspot do
   # Default search levenshtein distance threshold
   @threshold 1
 
-  def list(params) do
+  def list(_params) do
     Hotspot
     |> order_by([h], [desc: h.id])
-    |> Repo.paginate(params)
+    |> Repo.all()
   end
 
   def get!(address) do

@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.PaymentTransaction}
-  @fields [:id, :hash, :amount, :fee, :nonce, :payee, :payer]
+  @fields [:id, :hash, :amount, :fee, :nonce, :payee, :payer, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -13,6 +13,7 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
     field :payee, :binary, null: false
     field :payer, :binary, null: false
     field :hash, :binary, null: false
+    field :status, :string, null: false, default: "cleared"
 
     timestamps()
   end
@@ -20,19 +21,21 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:hash, :amount, :payee, :payer, :fee, :nonce])
-    |> validate_required([:hash, :amount, :payee, :payer, :fee, :nonce])
+    |> cast(attrs, [:hash, :amount, :payee, :payer, :fee, :nonce, :status])
+    |> validate_required([:hash, :amount, :payee, :payer, :fee, :nonce, :status])
     |> foreign_key_constraint(:hash)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
   end
 
   def encode_model(payment) do
-    %{
-      Map.take(payment, @fields) |
+    payment
+    |> Map.take(@fields)
+    |> Map.merge(%{
       payer: Util.bin_to_string(payment.payer),
       payee: Util.bin_to_string(payment.payee),
-      hash: Util.bin_to_string(payment.hash)
-    }
+      hash: Util.bin_to_string(payment.hash),
+      type: "payment"
+    })
   end
 
   defimpl Jason.Encoder, for: PaymentTransaction do

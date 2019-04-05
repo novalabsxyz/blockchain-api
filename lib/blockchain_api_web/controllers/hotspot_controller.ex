@@ -6,15 +6,11 @@ defmodule BlockchainAPIWeb.HotspotController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.Hotspot.list(params)
+    hotspots = Query.Hotspot.list(params)
 
     render(conn,
       "index.json",
-      hotspots: page.entries,
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      hotspots: hotspots
     )
   end
 

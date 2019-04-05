@@ -6,15 +6,11 @@ defmodule BlockchainAPIWeb.CoinbaseController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    page = Query.CoinbaseTransaction.list(params)
+    txns = Query.CoinbaseTransaction.list(params)
 
     render(conn,
       "index.json",
-      coinbase_transactions: page.entries,
-      page_number: page.page_number,
-      page_size: page.page_size,
-      total_pages: page.total_pages,
-      total_entries: page.total_entries
+      coinbase_transactions: txns
     )
   end
 

@@ -2,7 +2,6 @@ defmodule BlockchainAPI.BlockTest do
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.Query
-  @default_params %{page: 1, page_size: 10}
 
   describe "blocks" do
     alias BlockchainAPI.Schema.Block

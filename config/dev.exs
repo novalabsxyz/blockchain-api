@@ -55,7 +55,8 @@ config :blockchain_api, BlockchainAPI.Repo,
   password: "postgres",
   database: "blockchain_api_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 10,
+  timeout: 30000
 
 config :blockchain,
   seed_nodes: [],

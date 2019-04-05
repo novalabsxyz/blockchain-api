@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     Schema.LocationTransaction
   }
 
-  def list(params) do
+  def list(_params) do
     query = from(
       g in GatewayTransaction,
       left_join: l in LocationTransaction,
@@ -27,7 +27,7 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     )
 
     query
-    |> Repo.paginate(params)
+    |> Repo.all()
     |> clean_gateways()
   end
 
@@ -46,16 +46,14 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_gateways(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map ->
-             {lat, lng} = Util.h3_to_lat_lng(map.location)
-             map
-             |> encoded_gateway_map()
-             |> Map.merge(%{lat: lat, lng: lng})
-           end)
-
-    %{page | entries: data}
+  defp clean_gateways(entries) do
+    entries
+    |> Enum.map(fn map ->
+      {lat, lng} = Util.h3_to_lat_lng(map.location)
+      map
+      |> encoded_gateway_map()
+      |> Map.merge(%{lat: lat, lng: lng})
+    end)
   end
 
   defp encoded_gateway_map(map) do

@@ -295,65 +295,63 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   defp insert_account_transaction(:blockchain_txn_coinbase_v1, txn) do
     try do
-      account = Query.Account.get!(:blockchain_txn_coinbase_v1.payee(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_coinbase_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
+      _pending_account_txn = :blockchain_txn_coinbase_v1.hash(txn)
+                             |> Query.AccountTransaction.get_pending_txn!()
+                             |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_coinbase_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated account for coinbase transaction"}
+        # nothing to do
+        :ok
     end
+
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_coinbase_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_payment_v1, txn) do
     try do
-      account = Query.Account.get!(:blockchain_txn_payment_v1.payee(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_payment_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
+      _pending_account_txn = :blockchain_txn_payment_v1.hash(txn)
+                             |> Query.AccountTransaction.get_pending_txn!()
+                             |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_payment_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated payee account for payment transaction"}
+        # nothing to do
+        :ok
     end
-    try do
-      account = Query.Account.get!(:blockchain_txn_payment_v1.payer(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_payment_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
-    rescue
-      _error in Ecto.NoResultsError ->
-        {:error, "No associated payer account for payment transaction"}
-    end
+
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_payment_v1, :payee, txn))
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_payment_v1, :payer, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_add_gateway_v1, txn) do
     try do
-      account = Query.Account.get!(:blockchain_txn_add_gateway_v1.owner(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_add_gateway_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
+      _pending_account_txn = :blockchain_txn_add_gateway_v1.hash(txn)
+                             |> Query.AccountTransaction.get_pending_txn!()
+                             |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_add_gateway_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated account for gateway transaction"}
+        # nothing to do
+        :ok
     end
+
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_add_gateway_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn) do
-    try do
-      account = Query.Account.get!(:blockchain_txn_gen_gateway_v1.owner(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_gen_gateway_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
-    rescue
-      _error in Ecto.NoResultsError ->
-        {:error, "No associated account for gen_gateway transaction"}
-    end
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_gen_gateway_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
     try do
-      account = Query.Account.get!(:blockchain_txn_assert_location_v1.owner(txn))
-      txn = Query.Transaction.get!(:blockchain_txn_assert_location_v1.hash(txn))
-      Query.AccountTransaction.create(AccountTransaction.map(account, txn))
+      _pending_account_txn = :blockchain_txn_assert_location_v1.hash(txn)
+                             |> Query.AccountTransaction.get_pending_txn!()
+                             |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_assert_location_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
-        {:error, "No associated account for assert location transaction"}
+        # nothing to do
+        :ok
     end
+
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
 
   defp upsert_hotspot(txn_mod, txn) do

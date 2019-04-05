@@ -7,13 +7,13 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "pending_payments" do
+    field :amount, :integer, null: false
+    field :fee, :integer, null: false
+    field :nonce, :integer, null: false, default: 0
+    field :payee, :binary, null: false
+    field :payer, :binary, null: false
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
-    field :nonce, :integer, null: false, default: 0
-    field :payer, :binary, null: false
-    field :payee, :binary, null: false
-    field :fee, :integer, null: false
-    field :amount, :integer, null: false
 
     timestamps()
   end
@@ -28,12 +28,14 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   end
 
   def encode_model(pending_payment) do
-    %{
-      Map.take(pending_payment, @fields) |
+    pending_payment
+    |> Map.take(@fields)
+    |> Map.merge(%{
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
-      hash: Util.bin_to_string(pending_payment.hash)
-    }
+      hash: Util.bin_to_string(pending_payment.hash),
+      type: "payment"
+    })
   end
 
   defimpl Jason.Encoder, for: PendingPayment do

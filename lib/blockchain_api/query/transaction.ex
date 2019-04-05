@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.LocationTransaction
   }
 
-  def list(params) do
+  def list(_params) do
     query = from(
       transaction in Transaction,
       left_join: block in Block,
@@ -35,12 +35,12 @@ defmodule BlockchainAPI.Query.Transaction do
       ])
 
     query
-    |> Repo.paginate(params)
-    |> clean_transaction_page()
+    |> Repo.all()
+    |> format_transactions()
 
   end
 
-  def at_height(block_height, params) do
+  def at_height(block_height, _params) do
     query = from(
       block in Block,
       where: block.height == ^block_height,
@@ -70,8 +70,8 @@ defmodule BlockchainAPI.Query.Transaction do
       })
 
     query
-    |> Repo.paginate(params)
-    |> clean_block_transaction_page()
+    |> Repo.all()
+    |> format_blocks()
   end
 
   def type(hash) do
@@ -92,21 +92,103 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Repo.insert()
   end
 
+  def get_payment!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: payment_transaction in PaymentTransaction,
+      on: transaction.hash == payment_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: payment_transaction.payee,
+        payer: payment_transaction.payer,
+        nonce: payment_transaction.nonce,
+        amount: payment_transaction.amount,
+        fee: payment_transaction.fee,
+        hash: payment_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_coinbase!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: coinbase_transaction in CoinbaseTransaction,
+      on: transaction.hash == coinbase_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: coinbase_transaction.payee,
+        amount: coinbase_transaction.amount,
+        hash: coinbase_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_gateway!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: gateway_transaction in GatewayTransaction,
+      on: transaction.hash == gateway_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        hash: gateway_transaction.hash,
+        gateway: gateway_transaction.gateway,
+        owner: gateway_transaction.owner,
+        fee: gateway_transaction.fee,
+        amount: gateway_transaction.amount,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_location!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: location_transaction in LocationTransaction,
+      on: transaction.hash == location_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        hash: location_transaction.hash,
+        gateway: location_transaction.gateway,
+        owner: location_transaction.owner,
+        fee: location_transaction.fee,
+        location: location_transaction.location,
+      }
+    )
+    |> Repo.one!()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
-  defp clean_transaction_page(%Scrivener.Page{entries: entries}=page) do
-    clean_entries = entries |> List.flatten |> Enum.reject(&is_nil/1)
-    %{page | entries: clean_entries}
+  defp format_transactions(entries) do
+    entries
+    |> List.flatten
+    |> Enum.reject(&is_nil/1)
   end
 
-  defp clean_block_transaction_page(%Scrivener.Page{entries: entries}=page) do
-    data = entries
-           |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
-           |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
-           |> Enum.reject(&is_nil/1)
-           |> Enum.reverse
-
-    %{page | entries: data}
+  defp format_blocks(entries) do
+    entries
+    |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+    |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reverse
   end
 end
