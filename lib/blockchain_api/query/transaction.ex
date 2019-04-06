@@ -10,7 +10,8 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
-    Schema.LocationTransaction
+    Schema.LocationTransaction,
+    Schema.POCRequestTransaction
   }
 
   def list(_params) do
@@ -54,6 +55,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == gateway_transaction.hash,
       left_join: location_transaction in LocationTransaction,
       on: transaction.hash == location_transaction.hash,
+      left_join: poc_request_transaction in POCRequestTransaction,
+      on: transaction.hash == poc_request_transaction.hash,
       order_by: [
         desc: block.height,
         desc: transaction.id,
@@ -66,7 +69,8 @@ defmodule BlockchainAPI.Query.Transaction do
         coinbase: coinbase_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
-        location: location_transaction
+        location: location_transaction,
+        poc_request: poc_request_transaction
       })
 
     query

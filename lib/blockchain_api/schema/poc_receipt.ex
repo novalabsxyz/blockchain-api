@@ -38,8 +38,8 @@ defmodule BlockchainAPI.Schema.POCReceipt do
   def encode_model(poc_receipt) do
     {lat, lng} = Util.h3_to_lat_lng(poc_receipt.location)
 
-    @fields
-    |> Map.take(poc_receipt)
+    poc_receipt
+    |> Map.take(@fields)
     |> Map.merge(%{
       gateway: Util.bin_to_string(poc_receipt.gateway),
       signature: Util.bin_to_string(poc_receipt.signature),

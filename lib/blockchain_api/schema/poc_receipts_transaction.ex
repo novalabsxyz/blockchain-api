@@ -30,8 +30,8 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
   def encode_model(poc_receipts) do
     {lat, lng} = Util.h3_to_lat_lng(poc_receipts.challenger_loc)
 
-    @fields
-    |> Map.take(poc_receipts)
+    poc_receipts
+    |> Map.take(@fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(poc_receipts.transaction_hash),
       challenger: Util.bin_to_string(poc_receipts.challenger),

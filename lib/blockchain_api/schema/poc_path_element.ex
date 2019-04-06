@@ -29,8 +29,9 @@ defmodule BlockchainAPI.Schema.POCPathElement do
           {lat, lng} = Util.h3_to_lat_lng(poc_path_element.challengee_loc)
           {Util.bin_to_string(c), {lat, lng}}
       end
-    @fields
-    |> Map.take(poc_path_element)
+
+    poc_path_element
+    |> Map.take(@fields)
     |> Map.merge(%{
       poc_receipts_transaction_hash: Util.bin_to_string(poc_path_element.poc_receipts_transaction_hash),
       challengee: challengee,
