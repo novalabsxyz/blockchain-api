@@ -33,7 +33,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     poc_receipts
     |> Map.take(@fields)
     |> Map.merge(%{
-      hash: Util.bin_to_string(poc_receipts.transaction_hash),
+      hash: Util.bin_to_string(poc_receipts.hash),
       challenger: Util.bin_to_string(poc_receipts.challenger),
       challenger_lat: lat,
       challenger_lng: lng,

@@ -7,7 +7,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     GatewayView,
     LocationView,
     CoinbaseView,
-    POCRequestView
+    POCRequestView,
+    POCReceiptsView
   }
   require Logger
 
@@ -60,6 +61,11 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(POCRequestView)
         |> render("show.json", poc_request: poc_request)
+      "poc_receipts" ->
+        poc_receipts = Query.POCReceiptsTransaction.get!(bin_hash)
+        conn
+        |> put_view(POCReceiptsView)
+        |> render("show.json", poc_receipts: poc_receipts)
       _ ->
         :error
     end
