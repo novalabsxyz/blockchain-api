@@ -36,8 +36,8 @@ defmodule BlockchainAPI.Schema.POCWitness do
   def encode_model(poc_witness) do
     {lat, lng} = Util.h3_to_lat_lng(poc_witness.location)
 
-    @fields
-    |> Map.take(poc_witness)
+    poc_witness
+    |> Map.take(@fields)
     |> Map.merge(%{
       gateway: Util.bin_to_string(poc_witness.gateway),
       signature: Util.bin_to_string(poc_witness.signature),

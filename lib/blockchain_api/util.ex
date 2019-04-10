@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Util do
     CoinbaseTransaction,
     LocationTransaction,
     GatewayTransaction,
+    POCRequestTransaction,
     PendingLocation,
     PendingGateway,
     PendingCoinbase,
@@ -91,6 +92,9 @@ defmodule BlockchainAPI.Util do
   def clean_txn_struct(%{location: location, height: height, time: time}) when is_map(location) do
     {lat, lng} = h3_to_lat_lng(location.location)
     Map.merge(LocationTransaction.encode_model(location), %{type: "location", lat: lat, lng: lng, height: height, time: time})
+  end
+  def clean_txn_struct(%{poc_request: poc_request, height: height, time: time}) when is_map(poc_request) do
+    Map.merge(POCRequestTransaction.encode_model(poc_request), %{type: "poc_request", height: height, time: time})
   end
   def clean_txn_struct(%{height: _height, time: _time}), do: nil
   def clean_txn_struct(map) when map == %{}, do: nil

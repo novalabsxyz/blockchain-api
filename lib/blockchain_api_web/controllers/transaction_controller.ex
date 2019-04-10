@@ -2,6 +2,13 @@ defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
+  alias BlockchainAPIWeb.{
+    PaymentView,
+    GatewayView,
+    LocationView,
+    CoinbaseView,
+    POCRequestView
+  }
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -31,23 +38,28 @@ defmodule BlockchainAPIWeb.TransactionController do
       "payment" ->
         payment = Query.PaymentTransaction.get!(bin_hash)
         conn
-        |> put_view(BlockchainAPIWeb.PaymentView)
+        |> put_view(PaymentView)
         |> render("show.json", payment: payment)
       "gateway" ->
         gateway = Query.GatewayTransaction.get!(bin_hash)
         conn
-        |> put_view(BlockchainAPIWeb.GatewayView)
+        |> put_view(GatewayView)
         |> render("show.json", gateway: gateway)
       "coinbase" ->
         coinbase = Query.CoinbaseTransaction.get!(bin_hash)
         conn
-        |> put_view(BlockchainAPIWeb.CoinbaseView)
+        |> put_view(CoinbaseView)
         |> render("show.json", coinbase: coinbase)
       "location" ->
         location = Query.LocationTransaction.get!(bin_hash)
         conn
-        |> put_view(BlockchainAPIWeb.LocationView)
+        |> put_view(LocationView)
         |> render("show.json", location: location)
+      "poc_request" ->
+        poc_request = Query.POCRequestTransaction.get!(bin_hash)
+        conn
+        |> put_view(POCRequestView)
+        |> render("show.json", poc_request: poc_request)
       _ ->
         :error
     end

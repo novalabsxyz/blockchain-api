@@ -34,6 +34,20 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> format()
   end
 
+  def get_payee_pending(address) do
+    fifteen_mins_ago = Timex.to_naive_datetime(Timex.shift(Timex.now(), minutes: -15))
+
+    from(
+      pp in PendingPayment,
+      where: pp.payee == ^address,
+      where: pp.status == "pending",
+      where: pp.inserted_at >= ^fifteen_mins_ago,
+      select: pp
+    )
+    |> Repo.all()
+    |> format()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================

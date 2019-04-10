@@ -124,7 +124,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
-            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height)
+            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height, chain)
             :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
@@ -290,9 +290,18 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height) do
+  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height, chain) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
-    txn |> POCRequestTransaction.map() |> Query.POCRequestTransaction.create()
+
+    ledger = :blockchain.ledger(chain)
+    {:ok, challenger_info} = txn
+                             |> :blockchain_txn_poc_request_v1.challenger()
+                             |> :blockchain_ledger_v1.find_gateway_info(ledger)
+
+    {:ok, _poc_request_entry} = challenger_info
+                                |> :blockchain_ledger_gateway_v1.location()
+                                |> POCRequestTransaction.map(txn)
+                                |> Query.POCRequestTransaction.create()
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain) do
