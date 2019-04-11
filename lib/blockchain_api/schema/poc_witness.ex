@@ -15,6 +15,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     :signal,
     :packet_hash,
     :signature,
+    :primary
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -26,6 +27,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     field :signal, :integer, null: false
     field :packet_hash, :binary, null: false
     field :signature, :binary, null: false
+    field :primary, :boolean, null: false
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -53,7 +55,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     })
   end
 
-  def map(id, wx_loc, poc_witness) do
+  def map(id, wx_loc, is_primary, poc_witness) do
     %{
       poc_path_elements_id: id,
       gateway: :blockchain_poc_witness_v1.gateway(poc_witness),
@@ -62,6 +64,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
       signal: :blockchain_poc_witness_v1.signal(poc_witness),
       packet_hash: :blockchain_poc_witness_v1.packet_hash(poc_witness),
       signature: :blockchain_poc_witness_v1.signature(poc_witness),
+      primary: is_primary
     }
   end
 

@@ -125,7 +125,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
             :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height, chain)
-            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain)
+            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain, block)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -304,14 +304,21 @@ defmodule BlockchainAPI.Committer do
                                 |> Query.POCRequestTransaction.create()
   end
 
-  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain) do
+  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain, block) do
 
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
+    secret = :blockchain_txn_poc_receipts_v1.secret(txn)
+    block_hash = :blockchain_block.hash_block(block)
+    entropy = <<secret :: binary, block_hash :: binary, challenger :: binary>>
+
     ledger = :blockchain.ledger(chain)
     {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
-    {:ok, block} = :blockchain.get_block(last_challenge, chain)
-    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(block), chain)
+    {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
+
+    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(challenge_block), chain)
+    {target, _gateway} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
+
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, old_ledger)
     challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
 
@@ -340,13 +347,13 @@ defmodule BlockchainAPI.Committer do
             case :blockchain_poc_path_element_v1.receipt(element) do
               :undefined -> :ok
               receipt ->
-                {:ok, rx_info} = receipt
-                                 |> :blockchain_poc_receipt_v1.gateway()
-                                 |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
-
+                rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
+                {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
                 rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
 
-                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, receipt)
+                is_primary = rx_gateway == target
+
+                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, is_primary, receipt)
                                       |> Query.POCReceipt.create()
 
             end
@@ -356,16 +363,17 @@ defmodule BlockchainAPI.Committer do
             |> Enum.map(
               fn(witness) when witness != :undefined ->
 
-                res = witness
-                      |> :blockchain_poc_witness_v1.gateway()
-                      |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
+                witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
 
-                case res do
-                  {:error, _} -> :ok
+                case :blockchain_ledger_v1.find_gateway_info(witness_gateway, old_ledger) do
+                  {:error, _} ->
+                    :ok
                   {:ok, wx_info} ->
                     wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
 
-                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, witness)
+                    is_primary = witness_gateway == target
+
+                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, is_primary, witness)
                                           |> Query.POCWitness.create()
                 end
               end

@@ -15,7 +15,8 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     :signal,
     :data,
     :signature,
-    :origin
+    :origin,
+    :primary
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -28,6 +29,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     field :data, :binary, null: false
     field :signature, :binary, null: false
     field :origin, :string, null: false
+    field :primary, :boolean, null: false
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -55,7 +57,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     })
   end
 
-  def map(id, rx_loc, poc_receipt) do
+  def map(id, rx_loc, is_primary, poc_receipt) do
     %{
       poc_path_elements_id: id,
       gateway: :blockchain_poc_receipt_v1.gateway(poc_receipt),
@@ -64,7 +66,8 @@ defmodule BlockchainAPI.Schema.POCReceipt do
       signal: :blockchain_poc_receipt_v1.signal(poc_receipt),
       data: :blockchain_poc_receipt_v1.data(poc_receipt),
       signature: :blockchain_poc_receipt_v1.signature(poc_receipt),
-      origin: to_string(:blockchain_poc_receipt_v1.origin(poc_receipt))
+      origin: to_string(:blockchain_poc_receipt_v1.origin(poc_receipt)),
+      primary: is_primary
     }
   end
 

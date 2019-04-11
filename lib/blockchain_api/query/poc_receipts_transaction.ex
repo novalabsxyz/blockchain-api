@@ -95,7 +95,9 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           lng: lng,
           signal: receipt.signal,
           signature: Util.bin_to_string(receipt.signature),
-          origin: receipt.origin
+          origin: receipt.origin,
+          time: receipt.timestamp,
+          primary: receipt.primary
         }
       end)
   end
@@ -111,7 +113,9 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           lat: lat,
           lng: lng,
           signal: witness.signal,
-          signature: Util.bin_to_string(witness.signature)
+          signature: Util.bin_to_string(witness.signature),
+          time: witness.timestamp,
+          primary: witness.primary
         }
       end)
   end
