@@ -27,6 +27,7 @@ defmodule BlockchainAPIWeb.Router do
     resources "/payment_transactions", PaymentController, only: [:index, :show], param: "hash"
     resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "hash"
     resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
+    resources "/challenges", ChallengeController, only: [:index], param: "hash"
   end
 
   scope "/", BlockchainAPIWeb do

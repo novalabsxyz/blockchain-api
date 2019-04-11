@@ -1,7 +1,11 @@
 defmodule BlockchainAPI.Schema.POCReceipt do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.POCReceipt}
+  alias BlockchainAPI.{
+    Util,
+    Schema.POCReceipt,
+    Schema.POCPathElement
+  }
 
   @fields [
     :poc_path_elements_id,
@@ -24,6 +28,8 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     field :data, :binary, null: false
     field :signature, :binary, null: false
     field :origin, :string, null: false
+
+    belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
     timestamps()
   end

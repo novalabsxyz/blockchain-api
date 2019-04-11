@@ -1,7 +1,11 @@
 defmodule BlockchainAPI.Schema.POCWitness do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.POCWitness}
+  alias BlockchainAPI.{
+    Util,
+    Schema.POCWitness,
+    Schema.POCPathElement
+  }
 
   @fields [
     :poc_path_elements_id,
@@ -22,6 +26,8 @@ defmodule BlockchainAPI.Schema.POCWitness do
     field :signal, :integer, null: false
     field :packet_hash, :binary, null: false
     field :signature, :binary, null: false
+
+    belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
     timestamps()
   end
