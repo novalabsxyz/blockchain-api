@@ -4,14 +4,23 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
   alias BlockchainAPI.{
     Util,
     Schema.POCReceiptsTransaction,
-    Schema.POCPathElement
+    Schema.POCPathElement,
+    Schema.POCRequestTransaction
   }
 
-  @fields [:challenger, :challenger_loc, :hash, :signature, :fee, :onion]
+  @fields [
+    :poc_request_transactions_id,
+    :challenger,
+    :challenger_loc,
+    :hash,
+    :signature,
+    :fee,
+    :onion]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "poc_receipts_transactions" do
+    field :poc_request_transactions_id, :integer, null: false
     field :challenger, :binary, null: false
     field :challenger_loc, :string, null: false
     field :hash, :binary, null: false
@@ -20,6 +29,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     field :onion, :binary, null: false
 
     has_many :poc_path_elements, POCPathElement, foreign_key: :poc_receipts_transactions_hash, references: :hash
+    belongs_to :poc_request_transactions, POCRequestTransaction, define_field: false, foreign_key: :id
 
     timestamps()
   end
@@ -31,6 +41,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     |> validate_required(@fields)
     |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:challenger)
+    |> foreign_key_constraint(:poc_request_transactions_id)
   end
 
   def encode_model(poc_receipts) do
@@ -56,8 +67,9 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     end
   end
 
-  def map(challenger_loc, txn) do
+  def map(poc_request_id, challenger_loc, txn) do
     %{
+      poc_request_transactions_id: poc_request_id,
       challenger_loc: Util.h3_to_string(challenger_loc),
       challenger: :blockchain_txn_poc_receipts_v1.challenger(txn),
       fee: :blockchain_txn_poc_receipts_v1.fee(txn),

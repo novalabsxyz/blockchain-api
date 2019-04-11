@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocReceiptsTransactionTable do
 
   def change do
     create table(:poc_receipts_transactions) do
+      add :poc_request_transactions_id, references(:poc_request_transactions, on_delete: :nothing, column: :id, type: :bigint), null: false
       add :signature, :binary, null: false
       add :fee, :bigint, null: false
       add :onion, :binary, null: false

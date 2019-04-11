@@ -308,6 +308,7 @@ defmodule BlockchainAPI.Committer do
 
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
+    onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
     block_hash = :blockchain_block.hash_block(block)
     entropy = <<secret :: binary, block_hash :: binary, challenger :: binary>>
 
@@ -324,7 +325,10 @@ defmodule BlockchainAPI.Committer do
 
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
 
-    {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(challenger_loc, txn) |> Query.POCReceiptsTransaction.create()
+    poc_request = Query.POCRequestTransaction.get_by_onion(onion)
+
+    {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(poc_request.id, challenger_loc, txn)
+                                   |> Query.POCReceiptsTransaction.create()
 
     txn
     |> :blockchain_txn_poc_receipts_v1.path()
