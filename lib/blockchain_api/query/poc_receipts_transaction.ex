@@ -16,10 +16,13 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
 
   def challenges(_params) do
     path_query = from(path in POCPathElement, preload: [:poc_receipt, :poc_witness])
-    receipt_query = from(rx in POCReceiptsTransaction, preload: [poc_path_elements: ^path_query])
+    receipt_query = from(
+      rx in POCReceiptsTransaction,
+      preload: [poc_path_elements: ^path_query],
+      order_by: [desc: rx.id]
+    )
     receipt_query
     |> Repo.all()
-    |> IO.inspect()
     |> format_challenges()
   end
 
@@ -42,10 +45,16 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
 
   defp encode_entry(entry) do
 
-    path_elements = encode_path_elements(entry.poc_path_elements)
-    success = Enum.all?(path_elements, fn(element) -> element.result == "success" end)
+    path_elements = entry.poc_path_elements
+                    |> encode_path_elements()
+                    #NOTE: The path always seems to end up in reverse order
+                    |> Enum.reverse()
+
+    success = path_elements
+              |> Enum.all?(fn(element) -> element.result == "success" end)
 
     %{
+      id: entry.id,
       challenger: Util.bin_to_string(entry.challenger),
       hash: Util.bin_to_string(entry.hash),
       onion: Util.bin_to_string(entry.onion),
