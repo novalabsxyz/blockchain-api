@@ -41,12 +41,17 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp encode_entry(entry) do
+
+    path_elements = encode_path_elements(entry.poc_path_elements)
+    success = Enum.all?(path_elements, fn(element) -> element.result == "success" end)
+
     %{
       challenger: Util.bin_to_string(entry.challenger),
       hash: Util.bin_to_string(entry.hash),
       onion: Util.bin_to_string(entry.onion),
       signature: Util.bin_to_string(entry.signature),
-      pathElements: encode_path_elements(entry.poc_path_elements)
+      pathElements: path_elements,
+      success: success
     }
   end
 
