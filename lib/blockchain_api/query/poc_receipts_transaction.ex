@@ -32,6 +32,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.one!
   end
 
+  def completed(_params) do
+    from(poc_receipts_txn in POCReceiptsTransaction, select: count(poc_receipts_txn.id))
+    |> Repo.one!
+  end
+
   def create(attrs \\ %{}) do
     %POCReceiptsTransaction{}
     |> POCReceiptsTransaction.changeset(attrs)
