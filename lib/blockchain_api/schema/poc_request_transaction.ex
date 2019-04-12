@@ -1,7 +1,11 @@
 defmodule BlockchainAPI.Schema.POCRequestTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.POCRequestTransaction}
+  alias BlockchainAPI.{Util,
+    Schema.POCRequestTransaction,
+    Schema.POCReceiptsTransaction
+  }
+
   @fields [:challenger, :location, :hash, :signature, :fee, :onion]
 
   @derive {Phoenix.Param, key: :hash}
@@ -13,6 +17,8 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     field :signature, :binary, null: false
     field :fee, :integer, null: false
     field :onion, :binary, null: false
+
+    has_one :poc_receipts_transactions, POCReceiptsTransaction, foreign_key: :poc_request_transactions_id, references: :id
 
     timestamps()
   end
