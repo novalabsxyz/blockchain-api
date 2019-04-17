@@ -298,9 +298,10 @@ defmodule BlockchainAPI.Committer do
                              |> :blockchain_txn_poc_request_v1.challenger()
                              |> :blockchain_ledger_v1.find_gateway_info(ledger)
 
-    {:ok, _poc_request_entry} = challenger_info
-                                |> :blockchain_ledger_gateway_v1.location()
-                                |> POCRequestTransaction.map(txn)
+    challenger_loc = challenger_info |> :blockchain_ledger_gateway_v1.location()
+    challenger_owner = challenger_info |> :blockchain_ledger_gateway_v1.owner_address()
+
+    {:ok, _poc_request_entry} = POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
                                 |> Query.POCRequestTransaction.create()
   end
 
