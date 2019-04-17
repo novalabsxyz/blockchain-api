@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     Schema.POCReceiptsTransaction
   }
 
-  @fields [:challenger, :location, :hash, :signature, :fee, :onion]
+  @fields [:challenger, :owner, :location, :hash, :signature, :fee, :onion]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -17,6 +17,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     field :signature, :binary, null: false
     field :fee, :integer, null: false
     field :onion, :binary, null: false
+    field :owner, :binary, null: false
 
     has_one :poc_receipts_transactions, POCReceiptsTransaction, foreign_key: :poc_request_transactions_id, references: :id
 
@@ -42,6 +43,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
       challenger: Util.bin_to_string(poc_request.challenger),
       signature: Util.bin_to_string(poc_request.signature),
       onion: Util.bin_to_string(poc_request.onion),
+      owner: Util.bin_to_string(poc_request.owner),
       lat: lat,
       lng: lng
     })
@@ -55,7 +57,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     end
   end
 
-  def map(challenger_loc, txn) do
+  def map(challenger_loc, challenger_owner, txn) do
     %{
       challenger: :blockchain_txn_poc_request_v1.challenger(txn),
       fee: :blockchain_txn_poc_request_v1.fee(txn),
@@ -63,6 +65,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
       onion: :blockchain_txn_poc_request_v1.onion_key_hash(txn),
       hash: :blockchain_txn_poc_request_v1.hash(txn),
       location: Util.h3_to_string(challenger_loc),
+      owner: challenger_owner
     }
   end
 end
