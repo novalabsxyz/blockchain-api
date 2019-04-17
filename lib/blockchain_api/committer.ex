@@ -17,7 +17,12 @@ defmodule BlockchainAPI.Committer do
     Schema.POCReceiptsTransaction,
     Schema.POCPathElement,
     Schema.POCReceipt,
-    Schema.POCWitness
+    Schema.POCWitness,
+    Schema.PendingTransaction,
+    Schema.PendingLocation,
+    Schema.PendingPayment,
+    Schema.PendingGateway,
+    Schema.PendingCoinbase,
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -394,9 +399,18 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   defp insert_account_transaction(:blockchain_txn_coinbase_v1, txn) do
     try do
-      _pending_account_txn = :blockchain_txn_coinbase_v1.hash(txn)
+      hash = :blockchain_txn_coinbase_v1.hash(txn)
+
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_coinbase_v1, txn))
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
+
+      _pending_coinbase_txn = hash
+                              |> Query.PendingCoinbase.get!()
+                              |> Query.PendingCoinbase.delete!(PendingCoinbase.map(hash, txn))
     rescue
       _error in Ecto.NoResultsError ->
         # nothing to do
@@ -408,9 +422,21 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_payment_v1, txn) do
     try do
-      _pending_account_txn = :blockchain_txn_payment_v1.hash(txn)
+
+      hash = :blockchain_txn_payment_v1.hash(txn)
+
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_payment_v1, txn))
+
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
+
+      _pending_payment_txn = hash
+                              |> Query.PendingPayment.get!()
+                              |> Query.PendingPayment.delete!(PendingPayment.map(hash, txn))
+
     rescue
       _error in Ecto.NoResultsError ->
         # nothing to do
@@ -423,9 +449,21 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_add_gateway_v1, txn) do
     try do
-      _pending_account_txn = :blockchain_txn_add_gateway_v1.hash(txn)
+
+      hash = :blockchain_txn_add_gateway_v1.hash(txn)
+
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_add_gateway_v1, txn))
+
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
+
+      _pending_gateway_txn = hash
+                              |> Query.PendingGateway.get!()
+                              |> Query.PendingGateway.delete!(PendingGateway.map(hash, txn))
+
     rescue
       _error in Ecto.NoResultsError ->
         # nothing to do
@@ -441,9 +479,21 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
     try do
-      _pending_account_txn = :blockchain_txn_assert_location_v1.hash(txn)
+
+      hash = :blockchain_txn_assert_location_v1.hash(txn)
+
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_assert_location_v1, txn))
+
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
+
+      _pending_gateway_txn = hash
+                              |> Query.PendingLocation.get!()
+                              |> Query.PendingLocation.delete!(PendingLocation.map(hash, txn))
+
     rescue
       _error in Ecto.NoResultsError ->
         # nothing to do

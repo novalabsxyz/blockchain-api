@@ -21,4 +21,10 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> PendingGateway.changeset(attrs)
     |> Repo.update!()
   end
+
+  def delete!(pg, attrs \\ %{}) do
+    pg
+    |> PendingGateway.changeset(attrs)
+    |> Repo.delete!()
+  end
 end

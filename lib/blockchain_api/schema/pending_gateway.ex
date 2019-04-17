@@ -1,18 +1,30 @@
 defmodule BlockchainAPI.Schema.PendingGateway do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.PendingGateway}
-  @fields [:id, :hash, :status, :owner, :gateway, :fee, :amount]
+  alias BlockchainAPI.{Util,
+    Schema.PendingGateway,
+    Schema.PendingTransaction
+  }
 
-  @derive {Phoenix.Param, key: :hash}
+  @fields [
+    :id,
+    :pending_transactions_hash,
+    :status,
+    :owner,
+    :gateway,
+    :fee,
+    :amount]
+
   @derive {Jason.Encoder, only: @fields}
   schema "pending_gateways" do
-    field :hash, :binary, null: false
+    field :pending_transactions_hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
     field :amount, :integer, null: false, default: 0
+
+    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
 
     timestamps()
   end
@@ -20,9 +32,10 @@ defmodule BlockchainAPI.Schema.PendingGateway do
   @doc false
   def changeset(pending_gateway, attrs) do
     pending_gateway
-    |> cast(attrs, [:hash, :status, :gateway, :owner, :fee, :amount])
-    |> validate_required([:hash, :status, :gateway, :owner, :fee, :amount])
+    |> cast(attrs, [:status, :gateway, :owner, :fee, :amount])
+    |> validate_required([:status, :gateway, :owner, :fee, :amount])
     |> foreign_key_constraint(:owner)
+    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)
   end
 
@@ -32,7 +45,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_gateway.owner),
       gateway: Util.bin_to_string(pending_gateway.gateway),
-      hash: Util.bin_to_string(pending_gateway.hash),
+      pending_transactions_hash: Util.bin_to_string(pending_gateway.pending_transactions_hash),
       type: "gateway"
     })
   end
@@ -43,5 +56,16 @@ defmodule BlockchainAPI.Schema.PendingGateway do
       |> PendingGateway.encode_model()
       |> Jason.Encode.map(opts)
     end
+  end
+
+  def map(hash, txn) do
+    %{
+      pending_transactions_hash: hash,
+      status: "pending",
+      owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
+      fee: :blockchain_txn_add_gateway_v1.fee(txn),
+      amount: :blockchain_txn_add_gateway_v1.amount(txn),
+    }
   end
 end

@@ -22,6 +22,12 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> Repo.update!()
   end
 
+  def delete!(pp, attrs \\ %{}) do
+    pp
+    |> PendingPayment.changeset(attrs)
+    |> Repo.delete!()
+  end
+
   def get_by_address(address) do
     query = from(
       pp in PendingPayment,

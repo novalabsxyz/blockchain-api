@@ -4,11 +4,12 @@ defmodule BlockchainAPI.TxnManager do
   alias BlockchainAPI.{
     Query,
     Util,
-    Schema.PaymentTransaction,
-    Schema.GatewayTransaction,
-    Schema.LocationTransaction,
-    Schema.CoinbaseTransaction,
-    Schema.AccountTransaction
+    Schema.PendingPayment,
+    Schema.PendingGateway,
+    Schema.PendingLocation,
+    Schema.PendingCoinbase,
+    Schema.AccountTransaction,
+    Schema.PendingTransaction
   }
   require Logger
   @me __MODULE__
@@ -35,7 +36,10 @@ defmodule BlockchainAPI.TxnManager do
   @impl true
   def handle_call({:submit, txn}, _from, state) do
     try do
-      pending_txn = get_pending_transaction(txn)
+      pending_txn = txn
+                    |> deserialize()
+                    |> :blockchain_txn.hash()
+                    |> Query.PendingTransaction.get!()
 
       case pending_txn.status do
         "done" ->
@@ -61,9 +65,12 @@ defmodule BlockchainAPI.TxnManager do
   end
 
   defp submit_txn(:blockchain_txn_payment_v1, txn) do
-    {:ok, pending_txn} = txn
-                         |> PaymentTransaction.map()
-                         |> Query.PendingPayment.create()
+
+    {:ok, pending_txn} = PendingTransaction.map(:blockchain_txn_payment_v1, txn)
+                         |> Query.PendingTransaction.create()
+
+    {:ok, _pending_payment} = PendingPayment.map(pending_txn.hash, txn)
+                             |> Query.PendingPayment.create()
 
     {:ok, _pending_account_txn} = :blockchain_txn_payment_v1
                                  |> AccountTransaction.map_pending(txn)
@@ -74,21 +81,18 @@ defmodule BlockchainAPI.TxnManager do
       fn(res) ->
         case res do
           :ok ->
-            pending_txn.hash
-            |> Query.PendingPayment.get!()
-            |> Query.PendingPayment.update!(%{status: "done"})
-          {:error, _reason} ->
-            Logger.error("Failed to submit payment: #{Util.bin_to_string(pending_txn.hash)}")
-            pending_txn.hash
-            |> Query.PendingPayment.get!()
-            |> Query.PendingPayment.update!(%{status: "error"})
+            Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+          {:error, reason} ->
+            Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
       end)
   end
   defp submit_txn(:blockchain_txn_add_gateway_v1, txn) do
-    {:ok, pending_txn} = txn
-                         |> GatewayTransaction.map()
-                         |> Query.PendingGateway.create()
+    {:ok, pending_txn} = PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn)
+                         |> Query.PendingTransaction.create()
+
+    {:ok, _pending_gateway} = PendingGateway.map(pending_txn.hash, txn)
+                              |> Query.PendingGateway.create()
 
     {:ok, _pending_account_txn} = :blockchain_txn_add_gateway_v1
                                  |> AccountTransaction.map_pending(txn)
@@ -99,46 +103,42 @@ defmodule BlockchainAPI.TxnManager do
       fn(res) ->
         case res do
           :ok ->
-            pending_txn.hash
-            |> Query.PendingGateway.get!()
-            |> Query.PendingGateway.update!(%{status: "done"})
-          {:error, _reason} ->
-            Logger.error("Failed to submit gateway: #{Util.bin_to_string(pending_txn.hash)}")
-            pending_txn.hash
-            |> Query.PendingGateway.get!()
-            |> Query.PendingGateway.update!(%{status: "error"})
+            Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+          {:error, reason} ->
+            Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
       end)
   end
   defp submit_txn(:blockchain_txn_assert_location_v1, txn) do
-    {:ok, pending_txn} = :blockchain_txn_assert_location_v1
-                         |> LocationTransaction.map(txn)
-                         |> Query.PendingLocation.create()
+    {:ok, pending_txn} = PendingTransaction.map(:blockchain_txn_assert_location_v1, txn)
+                         |> Query.PendingTransaction.create()
+
+    {:ok, _pending_location} = PendingLocation.map(pending_txn.hash, txn)
+                               |> Query.PendingLocation.create()
 
     {:ok, _pending_account_txn} = :blockchain_txn_assert_location_v1
                                  |> AccountTransaction.map_pending(txn)
                                  |> Query.AccountTransaction.create()
+
 
     :ok = :blockchain_worker.submit_txn(
       txn,
       fn(res) ->
         case res do
           :ok ->
-            pending_txn.hash
-            |> Query.PendingLocation.get!()
-            |> Query.PendingLocation.update!(%{status: "done"})
-          {:error, _reason} ->
-            Logger.error("Failed to submit location: #{Util.bin_to_string(pending_txn.hash)}")
-            pending_txn.hash
-            |> Query.PendingLocation.get!()
-            |> Query.PendingLocation.update!(%{status: "error"})
+            Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+          {:error, reason} ->
+            Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
       end)
   end
   defp submit_txn(:blockchain_txn_coinbase_v1, txn) do
-    {:ok, pending_txn} = txn
-                         |> CoinbaseTransaction.map()
-                         |> Query.PendingCoinbase.create()
+
+    {:ok, pending_txn} = PendingTransaction.map(:blockchain_txn_coinbase_v1, txn)
+                         |> Query.PendingTransaction.create()
+
+    {:ok, _pending_coinbase} = PendingCoinbase.map(pending_txn.hash, txn)
+                               |> Query.PendingCoinbase.create()
 
     {:ok, _pending_account_txn} = :blockchain_txn_coinbase_v1
                                  |> AccountTransaction.map_pending(txn)
@@ -149,37 +149,14 @@ defmodule BlockchainAPI.TxnManager do
       fn(res) ->
         case res do
           :ok ->
-            pending_txn.hash
-            |> Query.PendingCoinbase.get!()
-            |> Query.PendingCoinbase.update!(%{status: "done"})
-          {:error, _reason} ->
-            Logger.error("Failed to submit coinbase: #{Util.bin_to_string(pending_txn.hash)}")
-            pending_txn.hash
-            |> Query.PendingCoinbase.get!()
-            |> Query.PendingCoinbase.update!(%{status: "error"})
+            Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+          {:error, reason} ->
+            Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
       end)
   end
 
   def deserialize(txn) do
     txn |> Base.decode64! |> :blockchain_txn.deserialize()
-  end
-
-  defp get_pending_transaction(txn0) do
-    txn = txn0 |> deserialize()
-    get_pending_transaction(:blockchain_txn.type(txn), :blockchain_txn.hash(txn))
-  end
-
-  defp get_pending_transaction(:blockchain_txn_payment_v1, hash) do
-    Query.PendingPayment.get!(hash)
-  end
-  defp get_pending_transaction(:blockchain_txn_add_gateway_v1, hash) do
-    Query.PendingGateway.get!(hash)
-  end
-  defp get_pending_transaction(:blockchain_txn_assert_location_v1, hash) do
-    Query.PendingLocation.get!(hash)
-  end
-  defp get_pending_transaction(:blockchain_txn_coinbase_v1, hash) do
-    Query.PendingCoinbase.get!(hash)
   end
 end

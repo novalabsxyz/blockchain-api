@@ -6,7 +6,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingCoinbaseTable do
       add :amount, :bigint, null: false
       add :payee, :binary, null: false
       add :status, :string, null: false, default: "pending"
-      add :hash, :binary, null: false
+
+      add :hash, references(:pending_transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
 
       timestamps()
     end

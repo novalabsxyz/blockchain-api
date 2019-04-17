@@ -21,4 +21,10 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
     |> PendingCoinbase.changeset(attrs)
     |> Repo.update!()
   end
+
+  def delete!(pc, attrs \\ %{}) do
+    pc
+    |> PendingCoinbase.changeset(attrs)
+    |> Repo.delete!()
+  end
 end

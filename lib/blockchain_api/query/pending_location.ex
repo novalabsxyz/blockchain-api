@@ -21,4 +21,10 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> PendingLocation.changeset(attrs)
     |> Repo.update!()
   end
+
+  def delete!(pl, attrs \\ %{}) do
+    pl
+    |> PendingLocation.changeset(attrs)
+    |> Repo.delete!()
+  end
 end
