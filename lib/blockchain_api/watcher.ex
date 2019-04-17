@@ -70,7 +70,6 @@ defmodule BlockchainAPI.Watcher do
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain)
-
     {:noreply, state}
   end
 
