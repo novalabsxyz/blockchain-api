@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
 
   def get!(hash) do
     PendingGateway
-    |> where([pg], pg.hash == ^hash)
+    |> where([pg], pg.pending_transactions_hash == ^hash)
     |> Repo.one!
   end
 
@@ -20,11 +20,5 @@ defmodule BlockchainAPI.Query.PendingGateway do
     pg
     |> PendingGateway.changeset(attrs)
     |> Repo.update!()
-  end
-
-  def delete!(pg, attrs \\ %{}) do
-    pg
-    |> PendingGateway.changeset(attrs)
-    |> Repo.delete!()
   end
 end

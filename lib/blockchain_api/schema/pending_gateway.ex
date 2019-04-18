@@ -7,7 +7,6 @@ defmodule BlockchainAPI.Schema.PendingGateway do
   }
 
   @fields [
-    :id,
     :pending_transactions_hash,
     :status,
     :owner,
@@ -32,8 +31,8 @@ defmodule BlockchainAPI.Schema.PendingGateway do
   @doc false
   def changeset(pending_gateway, attrs) do
     pending_gateway
-    |> cast(attrs, [:status, :gateway, :owner, :fee, :amount])
-    |> validate_required([:status, :gateway, :owner, :fee, :amount])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
     |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)

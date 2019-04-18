@@ -7,15 +7,13 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   }
 
   @fields [
-    :id,
     :pending_transactions_hash,
     :status,
     :payer,
     :payee,
     :nonce,
     :fee,
-    :amount,
-    :type]
+    :amount]
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_payments" do
@@ -35,8 +33,8 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   @doc false
   def changeset(pending_payment, attrs) do
     pending_payment
-    |> cast(attrs, [:status, :payer, :payee, :nonce, :fee, :amount])
-    |> validate_required([:status, :payer, :payee, :nonce, :fee, :amount])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
     |> foreign_key_constraint(:payer)
     |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)

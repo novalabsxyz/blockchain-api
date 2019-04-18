@@ -85,6 +85,15 @@ defmodule BlockchainAPI.TxnManager do
           {:error, reason} ->
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
+        try do
+          _pending_txn = pending_txn.hash
+                         |> Query.PendingTransaction.get!()
+                         |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
+        rescue
+          _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+        end
       end)
   end
   defp submit_txn(:blockchain_txn_add_gateway_v1, txn) do
@@ -106,6 +115,15 @@ defmodule BlockchainAPI.TxnManager do
             Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
           {:error, reason} ->
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+        end
+        try do
+          _pending_txn = pending_txn.hash
+                         |> Query.PendingTransaction.get!()
+                         |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
+        rescue
+          _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
         end
       end)
   end
@@ -130,6 +148,15 @@ defmodule BlockchainAPI.TxnManager do
           {:error, reason} ->
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
+        try do
+          _pending_txn = pending_txn.hash
+                         |> Query.PendingTransaction.get!()
+                         |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
+        rescue
+          _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+        end
       end)
   end
   defp submit_txn(:blockchain_txn_coinbase_v1, txn) do
@@ -152,6 +179,15 @@ defmodule BlockchainAPI.TxnManager do
             Logger.info("Res: ok, Txn: #{Util.bin_to_string(pending_txn.hash)}")
           {:error, reason} ->
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
+        end
+        try do
+          _pending_txn = pending_txn.hash
+                         |> Query.PendingTransaction.get!()
+                         |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
+        rescue
+          _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
         end
       end)
   end

@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
 
   def get!(hash) do
     PendingLocation
-    |> where([pl], pl.hash == ^hash)
+    |> where([pl], pl.pending_transactions_hash == ^hash)
     |> Repo.one!
   end
 
@@ -20,11 +20,5 @@ defmodule BlockchainAPI.Query.PendingLocation do
     pl
     |> PendingLocation.changeset(attrs)
     |> Repo.update!()
-  end
-
-  def delete!(pl, attrs \\ %{}) do
-    pl
-    |> PendingLocation.changeset(attrs)
-    |> Repo.delete!()
   end
 end

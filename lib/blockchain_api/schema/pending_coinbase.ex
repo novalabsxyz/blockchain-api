@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     Schema.PendingTransaction
   }
 
-  @fields [:id, :payee, :pending_transactions_hash, :status, :amount]
+  @fields [:payee, :pending_transactions_hash, :status, :amount]
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_coinbases" do
@@ -24,8 +24,8 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
   @doc false
   def changeset(pending_coinbase, attrs) do
     pending_coinbase
-    |> cast(attrs, [:status, :amount, :payee])
-    |> validate_required([:status, :amount, :payee])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
     |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_coinbase, name: :unique_pending_coinbase)
   end

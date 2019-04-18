@@ -7,7 +7,6 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   }
 
   @fields [
-    :id,
     :pending_transactions_hash,
     :status,
     :nonce,
@@ -34,8 +33,8 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   @doc false
   def changeset(pending_location, attrs) do
     pending_location
-    |> cast(attrs, [:status, :nonce, :fee, :location, :gateway, :owner])
-    |> validate_required([:status, :nonce, :fee, :location, :gateway, :owner])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
     |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_location, name: :unique_pending_location)

@@ -8,7 +8,8 @@ defmodule BlockchainAPI.Schema.PendingTransaction do
     Schema.PendingGateway,
     Schema.PendingLocation
   }
-  @fields [:id, :hash, :type, :status]
+
+  @fields [:hash, :type, :status]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -27,8 +28,8 @@ defmodule BlockchainAPI.Schema.PendingTransaction do
   @doc false
   def changeset(pending_transaction, attrs) do
     pending_transaction
-    |> cast(attrs, [:hash, :type, :status])
-    |> validate_required([:hash, :type, :status])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
     |> unique_constraint(:hash)
   end
 
