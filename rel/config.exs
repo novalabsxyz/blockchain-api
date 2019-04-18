@@ -63,6 +63,6 @@ release :blockchain_api do
   set applications: [
     :runtime_tools
   ]
-  set pre_start_hook: "rel/hooks/pre_start.sh"
+  set pre_start_hooks: "rel/hooks"
 end
 
