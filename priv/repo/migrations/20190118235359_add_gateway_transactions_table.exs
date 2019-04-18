@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:gateway_transactions) do
       add :owner, :binary, null: false
       add :gateway, :binary, null: false
@@ -15,6 +15,10 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
 
     create unique_index(:gateway_transactions, [:hash], name: :unique_gateway_hash)
     create unique_index(:gateway_transactions, [:gateway], name: :unique_gateway)
-
   end
+
+  def down do
+    drop table(:gateway_transactions)
+  end
+
 end

@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:pending_gateways) do
       add :hash, :binary, null: false
       add :status, :string, null: false, default: "pending"
@@ -16,4 +16,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
 
     create unique_index(:pending_gateways, [:owner, :hash, :status], name: :unique_pending_gateway)
   end
+
+  def down do
+    drop table(:pending_gateways)
+  end
+
 end

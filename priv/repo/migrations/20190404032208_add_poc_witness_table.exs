@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPocWitnessTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:poc_witnesses) do
       add :poc_path_elements_id, references(:poc_path_elements, on_delete: :nothing, column: :id, type: :bigint), null: false
       add :gateway, :binary, null: false
@@ -14,6 +14,10 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocWitnessTable do
 
       timestamps()
     end
-
   end
+
+  def down do
+    drop table(:poc_witnesses)
+  end
+
 end

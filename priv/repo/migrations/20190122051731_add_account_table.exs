@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddAccountTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:accounts) do
       add :address, :binary, null: false
       add :name, :string
@@ -14,4 +14,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTable do
 
     create unique_index(:accounts, [:address], name: :unique_account_address)
   end
+
+  def down do
+    drop table(:accounts)
+  end
+
 end

@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:payment_transactions) do
       add :amount, :bigint, null: false
       add :payee, :binary, null: false
@@ -15,6 +15,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddPaymentTransactionsTable do
     end
 
     create unique_index(:payment_transactions, [:hash], name: :unique_payment_hash)
+  end
 
+  def down do
+    drop table(:payment_transactions)
   end
 end

@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:pending_payments) do
       add :hash, :binary, null: false
       add :status, :string, null: false, default: "pending"
@@ -16,6 +16,10 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
     end
 
     create unique_index(:pending_payments, [:payer, :hash, :status], name: :unique_pending_payment)
-
   end
+
+  def down do
+    drop table(:pending_payments)
+  end
+
 end

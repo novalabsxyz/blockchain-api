@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
   @start_apps [
     :postgrex,
     :ecto,
+    :ecto_sql,
     :blockchain
   ]
 
@@ -18,8 +19,6 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
 
   defp boot() do
     IO.puts "Booting pre hook..."
-    # Load app without starting it
-    :ok = Application.load(@otp_app)
     # Ensure postgrex and ecto applications started
     Enum.each(@start_apps, &Application.ensure_all_started/1)
   end
