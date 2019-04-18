@@ -409,6 +409,9 @@ defmodule BlockchainAPI.Committer do
                      |> Query.PendingTransaction.get!()
                      |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
     rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
       _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
@@ -432,6 +435,9 @@ defmodule BlockchainAPI.Committer do
                      |> Query.PendingTransaction.get!()
                      |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
     rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
       _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
@@ -456,6 +462,9 @@ defmodule BlockchainAPI.Committer do
                      |> Query.PendingTransaction.get!()
                      |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
     rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
       _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
@@ -483,6 +492,9 @@ defmodule BlockchainAPI.Committer do
                      |> Query.PendingTransaction.get!()
                      |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
     rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
       _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
