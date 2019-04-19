@@ -45,6 +45,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
       owner: Util.bin_to_string(pending_gateway.owner),
       gateway: Util.bin_to_string(pending_gateway.gateway),
       pending_transactions_hash: Util.bin_to_string(pending_gateway.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_gateway.pending_transactions_hash),
       type: "gateway"
     })
   end

@@ -32,7 +32,7 @@ defmodule BlockchainAPI.FakeRewarder do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, %{:reward_height => reward_height, :chain => chain}=state) do
+  def handle_info({:blockchain_event, {:add_block, hash, false}}, %{:reward_height => reward_height, :chain => chain}=state) do
     {:ok, block} = :blockchain.get_block(hash, chain)
     block_height = :blockchain_block.height(block)
 
@@ -48,6 +48,11 @@ defmodule BlockchainAPI.FakeRewarder do
       false ->
         {:noreply, state}
     end
+  end
+
+  @impl true
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 
   def reward_hotspots(%{:payer => payer, :sigfun => sigfun}) do

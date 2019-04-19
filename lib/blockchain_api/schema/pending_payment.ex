@@ -47,6 +47,7 @@ defmodule BlockchainAPI.Schema.PendingPayment do
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
       pending_transactions_hash: Util.bin_to_string(pending_payment.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_payment.pending_transactions_hash),
       type: "payment"
     })
   end
