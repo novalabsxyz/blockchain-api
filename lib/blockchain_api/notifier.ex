@@ -24,11 +24,20 @@ defmodule BlockchainAPI.Notifier do
   #==================================================================
   @impl true
   def init(_state) do
-    {:ok, %{rewarder: :blockchain_swarm.pubkey_bin()}}
+    :ok = :blockchain_event.add_handler(self())
+    chain = :blockchain_worker.blockchain()
+    {:ok, %{chain: chain, rewarder: :blockchain_swarm.pubkey_bin()}}
   end
 
   @impl true
-  def handle_cast({:notify, block}, %{rewarder: rewarder}=state) do
+  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, _genesis_hash}}}, state) do
+    chain = :blockchain_worker.blockchain()
+    {:noreply, Map.put(state, :chain, chain)}
+  end
+
+  @impl true
+  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, %{:rewarder => rewarder, :chain => chain}=state) do
+    {:ok, block} = :blockchain.get_block(hash, chain)
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
