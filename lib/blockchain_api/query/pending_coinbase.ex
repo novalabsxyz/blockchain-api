@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
 
   def get!(hash) do
     PendingCoinbase
-    |> where([pc], pc.hash == ^hash)
+    |> where([pc], pc.pending_transactions_hash == ^hash)
     |> Repo.one!
   end
 

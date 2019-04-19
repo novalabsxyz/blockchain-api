@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
 
   def get!(hash) do
     PendingGateway
-    |> where([pg], pg.hash == ^hash)
+    |> where([pg], pg.pending_transactions_hash == ^hash)
     |> Repo.one!
   end
 

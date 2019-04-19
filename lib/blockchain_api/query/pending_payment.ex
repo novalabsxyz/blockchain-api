@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.PendingPayment do
 
   def get!(hash) do
     PendingPayment
-    |> where([pp], pp.hash == ^hash)
+    |> where([pp], pp.pending_transactions_hash == ^hash)
     |> Repo.one!
   end
 
@@ -35,13 +35,10 @@ defmodule BlockchainAPI.Query.PendingPayment do
   end
 
   def get_payee_pending(address) do
-    fifteen_mins_ago = Timex.to_naive_datetime(Timex.shift(Timex.now(), minutes: -15))
-
     from(
       pp in PendingPayment,
       where: pp.payee == ^address,
       where: pp.status == "pending",
-      where: pp.inserted_at >= ^fifteen_mins_ago,
       select: pp
     )
     |> Repo.all()

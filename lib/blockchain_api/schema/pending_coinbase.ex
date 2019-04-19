@@ -1,16 +1,22 @@
 defmodule BlockchainAPI.Schema.PendingCoinbase do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.PendingCoinbase}
-  @fields [:id, :payee, :hash, :status, :amount]
 
-  @derive {Phoenix.Param, key: :hash}
+  alias BlockchainAPI.{Util,
+    Schema.PendingCoinbase,
+    Schema.PendingTransaction
+  }
+
+  @fields [:payee, :pending_transactions_hash, :status, :amount]
+
   @derive {Jason.Encoder, only: @fields}
   schema "pending_coinbases" do
-    field :hash, :binary, null: false
+    field :pending_transactions_hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :amount, :integer, null: false, default: 0
     field :payee, :binary, null: false
+
+    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
 
     timestamps()
   end
@@ -18,8 +24,9 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
   @doc false
   def changeset(pending_coinbase, attrs) do
     pending_coinbase
-    |> cast(attrs, [:hash, :status, :amount, :payee])
-    |> validate_required([:hash, :status, :amount, :payee])
+    |> cast(attrs, @fields)
+    |> validate_required(@fields)
+    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_coinbase, name: :unique_pending_coinbase)
   end
 
@@ -27,7 +34,7 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     pending_coinbase
     |> Map.take(@fields)
     |> Map.merge(%{
-      hash: Util.bin_to_string(pending_coinbase.hash),
+      pending_transactions_hash: Util.bin_to_string(pending_coinbase.pending_transactions_hash),
       payee: Util.bin_to_string(pending_coinbase.payee),
       type: "coinbase"
     })
@@ -40,4 +47,14 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
       |> Jason.Encode.map(opts)
     end
   end
+
+  def map(hash, txn) do
+    %{
+      pending_transactions_hash: hash,
+      amount: :blockchain_txn_coinbase_v1.amount(txn),
+      status: "pending",
+      payee: :blockchain_txn_coinbase_v1.payee(txn),
+    }
+  end
+
 end

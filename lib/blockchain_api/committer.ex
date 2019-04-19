@@ -17,7 +17,8 @@ defmodule BlockchainAPI.Committer do
     Schema.POCReceiptsTransaction,
     Schema.POCPathElement,
     Schema.POCReceipt,
-    Schema.POCWitness
+    Schema.POCWitness,
+    Schema.PendingTransaction
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -393,8 +394,9 @@ defmodule BlockchainAPI.Committer do
   # Insert account transactions
   #==================================================================
   defp insert_account_transaction(:blockchain_txn_coinbase_v1, txn) do
+    hash = :blockchain_txn_coinbase_v1.hash(txn)
     try do
-      _pending_account_txn = :blockchain_txn_coinbase_v1.hash(txn)
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_coinbase_v1, txn))
     rescue
@@ -402,13 +404,25 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
     end
-
+    try do
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
+    rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
+      _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+    end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_coinbase_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_payment_v1, txn) do
+    hash = :blockchain_txn_payment_v1.hash(txn)
     try do
-      _pending_account_txn = :blockchain_txn_payment_v1.hash(txn)
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_payment_v1, txn))
     rescue
@@ -416,14 +430,26 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
     end
-
+    try do
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
+    rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
+      _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+    end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_payment_v1, :payee, txn))
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_payment_v1, :payer, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_add_gateway_v1, txn) do
+    hash = :blockchain_txn_add_gateway_v1.hash(txn)
     try do
-      _pending_account_txn = :blockchain_txn_add_gateway_v1.hash(txn)
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_add_gateway_v1, txn))
     rescue
@@ -431,7 +457,18 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
     end
-
+    try do
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
+    rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
+      _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+    end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_add_gateway_v1, txn))
   end
 
@@ -440,8 +477,9 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
+    hash = :blockchain_txn_assert_location_v1.hash(txn)
     try do
-      _pending_account_txn = :blockchain_txn_assert_location_v1.hash(txn)
+      _pending_account_txn = hash
                              |> Query.AccountTransaction.get_pending_txn!()
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_assert_location_v1, txn))
     rescue
@@ -449,7 +487,18 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
     end
-
+    try do
+      _pending_txn = hash
+                     |> Query.PendingTransaction.get!()
+                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
+    rescue
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
+      _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+    end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
 
