@@ -11,65 +11,47 @@ deps:
 	mix deps.get
 
 compile:
-	NO_ESCRIPT=1 $(MIX) compile
+	$(MIX) compile
 
 clean:
 	$(MIX) clean
 
-test:
-	NO_ESCRIPT=1 PORT=4002 MIX_ENV=test $(MIX) test --trace
-
-reset-prod-db:
-	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod $(MIX) ecto.reset
-
-reset-dev-db:
-	NO_ESCRIPT=1 PORT=4000 MIX_ENV=dev $(MIX) ecto.reset
-
-reset-test-db:
-	NO_ESCRIPT=1 PORT=4002 MIX_ENV=test $(MIX) ecto.reset
-
-prod-interactive:
-	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod iex -S mix phx.server
-
-dev-console:
-	NO_ESCRIPT=1 PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api console
-
-prod-start:
-	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api start
-
-prod-foreground:
-	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api foreground
-
-prod-console:
-	NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api console
+# Dev targets
+devrelease:
+	MIX_ENV=dev $(MIX) do release.clean, release --env=dev
 
 dev-start:
-	NO_ESCRIPT=1 MIX_ENV=dev iex -S mix phx.server
+	PORT=4000 MIX_ENV=dev iex -S mix phx.server
 
+dev-console:
+	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api console
+
+reset-dev-db:
+	PORT=4000 MIX_ENV=dev $(MIX) ecto.reset
+
+# Prod targets
 release:
-	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release
+	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release --env=prod
 
-devrelease:
-	NO_ESCRIPT=1 MIX_ENV=dev $(MIX) do release.clean, release
+reset-prod-db:
+	PORT=4001 MIX_ENV=prod $(MIX) ecto.reset
 
-deployable: release
-	@rm -rf latest
-	@mkdir latest
-	@cd _build/prod/rel && tar -czf blockchain_api-$(NODE_OS).tgz blockchain_api
-	@mv _build/prod/rel/blockchain_api-$(NODE_OS).tgz latest/
+prod-interactive:
+	PORT=4001 MIX_ENV=prod iex -S mix phx.server
 
-docker-build:
-	docker build -t blockchain_api .
-	docker create -p 4001:4001 -v /root/.helium --name=blockchain_api blockchain_api
+prod-start:
+	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api start
 
-docker-start:
-	docker start blockchain_api
+prod-foreground:
+	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api foreground
 
-docker-stop:
-	docker stop blockchain_api
+prod-console:
+	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api console
 
-docker-genesis-onboard:
-	docker exec -it blockchain_api sh -c "/bin/blockchain_api genesis onboard"
+# Test targets
+test:
+	PORT=4002 MIX_ENV=test $(MIX) test --trace
 
-docker-shell:
-	docker exec -it blockchain_api sh
+reset-test-db:
+	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
+

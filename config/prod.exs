@@ -23,17 +23,10 @@ config :blockchain_api, env: Mix.env()
 # Do not print debug messages in production
 config :logger, level: :debug
 
-config :blockchain,
-  seed_nodes: ['/ip4/34.222.64.221/tcp/2154', '/ip4/34.208.255.251/tcp/2154'],
-  seed_node_dns: 'seed.helium.foundation'
-
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "blockchain_api_prod",
-  hostname: "localhost",
-  pool_size: 10,
+  url: System.get_env("DATABASE_URL"),
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   timeout: 60000
 
 # ## SSL Support

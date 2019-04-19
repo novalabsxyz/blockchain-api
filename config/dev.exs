@@ -9,7 +9,7 @@ use Mix.Config
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
-  code_reloader: true,
+  server: true,
   check_origin: false,
   watchers: []
 
@@ -58,6 +58,4 @@ config :blockchain_api, BlockchainAPI.Repo,
   pool_size: 10,
   timeout: 60000
 
-config :blockchain,
-  seed_nodes: [],
-  seed_node_dns: ''
+import_config "dev.secret.exs"

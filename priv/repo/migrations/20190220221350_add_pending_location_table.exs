@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:pending_locations) do
       add :hash, :binary, null: false
       add :status, :string, null: false, default: "pending"
@@ -16,6 +16,10 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
     end
 
     create unique_index(:pending_locations, [:owner, :gateway, :hash, :status], name: :unique_pending_location)
-
   end
+
+  def down do
+    drop table(:pending_locations)
+  end
+
 end
