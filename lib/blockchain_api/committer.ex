@@ -219,8 +219,20 @@ defmodule BlockchainAPI.Committer do
   defp upsert_account(:blockchain_txn_payment_v1, txn, ledger) do
     payee = :blockchain_txn_payment_v1.payee(txn)
     payer = :blockchain_txn_payment_v1.payer(txn)
-    {:ok, payee_entry} = :blockchain_ledger_v1.find_entry(payee, ledger)
+    amount = :blockchain_txn_payment_v1.amount(txn)
+
+    # NOTE: It's possible that this is a brand new payee and hasn't appeared
+    # on the ledger yet, we create a dummy entry for it to make the DB happy
+    payee_entry =
+      case :blockchain_ledger_v1.find_entry(payee, ledger) do
+        {:ok, p} ->
+          p
+        {:error, :not_found} ->
+          :blockchain_ledger_entry_v1.new(0, amount)
+      end
+
     {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
+
     try do
       payer_account = Query.Account.get!(payer)
       payer_map =

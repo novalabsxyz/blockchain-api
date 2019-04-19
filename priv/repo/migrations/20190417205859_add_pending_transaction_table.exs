@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPendingTransactionTable do
   use Ecto.Migration
 
-  def change do
+  def up do
     create table(:pending_transactions) do
       add :hash, :binary, null: false
       add :type, :string, null: false
@@ -12,4 +12,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingTransactionTable do
 
     create unique_index(:pending_transactions, [:hash], name: :unique_pending_txn_hash)
   end
+
+  def down do
+    drop table(:pending_transactions)
+  end
+
 end

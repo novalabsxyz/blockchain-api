@@ -47,6 +47,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
       pending_transactions_hash: Util.bin_to_string(pending_location.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_location.pending_transactions_hash),
       type: "location"
     })
   end

@@ -72,7 +72,6 @@ defmodule BlockchainAPIWeb.TransactionController do
   end
 
   def create(conn, %{"txn" => txn}) do
-
     case BlockchainAPI.TxnManager.submit(txn) do
       :submitted ->
         conn |> send_resp(200, "Submitted")

@@ -35,6 +35,7 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     |> Map.take(@fields)
     |> Map.merge(%{
       pending_transactions_hash: Util.bin_to_string(pending_coinbase.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_coinbase.pending_transactions_hash),
       payee: Util.bin_to_string(pending_coinbase.payee),
       type: "coinbase"
     })

@@ -10,8 +10,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTransactionTable do
 
       timestamps()
     end
-
-    create unique_index(:account_transactions, [:account_address, :txn_hash, :txn_status], name: :unique_account_txn)
   end
 
   def down do
