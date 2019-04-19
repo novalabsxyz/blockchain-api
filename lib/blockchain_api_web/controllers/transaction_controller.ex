@@ -73,6 +73,13 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   def create(conn, %{"txn" => txn}) do
 
+    txn
+    |> IO.inspect()
+    |> Base.decode64!()
+    |> IO.inspect()
+    |> :blockchain_txn.deserialize()
+    |> IO.inspect
+
     case BlockchainAPI.TxnManager.submit(txn) do
       :submitted ->
         conn |> send_resp(200, "Submitted")
