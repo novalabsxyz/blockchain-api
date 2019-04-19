@@ -21,7 +21,10 @@ devrelease:
 	MIX_ENV=dev $(MIX) do release.clean, release --env=dev
 
 dev-start:
-	PORT=4000 MIX_ENV=dev iex -S mix phx.server
+	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api start
+
+dev-foreground:
+	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api foreground
 
 dev-console:
 	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api console
