@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{Query, Committer, Notifier, FakeRewarder}
+  alias BlockchainAPI.{Query, Committer}
 
   @me __MODULE__
   require Logger
@@ -32,19 +32,11 @@ defmodule BlockchainAPI.Watcher do
         :test ->
           %{chain: nil}
         :dev ->
-          %{chain: nil}
+          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
+          load_chain(genesis_file)
         :prod ->
-          genesis_file = Path.join(:code.priv_dir(:blockchain_api), "genesis")
-          case File.read(genesis_file) do
-            {:ok, genesis_block} ->
-              :ok = genesis_block
-                    |> :blockchain_block.deserialize()
-                    |> :blockchain_worker.integrate_genesis_block()
-              chain = :blockchain_worker.blockchain()
-              %{chain: chain}
-            {:error, _reason} ->
-              %{chain: nil}
-          end
+          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod" , "genesis"])
+          load_chain(genesis_file)
       end
 
     {:ok, state}
@@ -74,18 +66,10 @@ defmodule BlockchainAPI.Watcher do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, flag}}, state = %{chain: chain}) when chain != nil do
+  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %{chain: chain}) when chain != nil do
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain)
-
-    case flag do
-      false ->
-        # :ok = Notifier.notify(block)
-        # :ok = FakeRewarder.reward(block)
-        :ok
-      true -> :ok
-    end
 
     {:noreply, state}
   end
@@ -120,6 +104,19 @@ defmodule BlockchainAPI.Watcher do
                 :ok
             end
         end
+    end
+  end
+
+  defp load_chain(genesis_file) do
+    case File.read(genesis_file) do
+      {:ok, genesis_block} ->
+        :ok = genesis_block
+              |> :blockchain_block.deserialize()
+              |> :blockchain_worker.integrate_genesis_block()
+        chain = :blockchain_worker.blockchain()
+        %{chain: chain}
+      {:error, _reason} ->
+        %{chain: nil}
     end
   end
 end

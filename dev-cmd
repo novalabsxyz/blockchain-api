@@ -19,4 +19,4 @@ while getopts e: o; do
 done
 shift "$((OPTIND - 1))"
 
-_build/prod/rel/blockchain_api/bin/blockchain_api $@
+_build/dev/rel/blockchain_api/bin/blockchain_api $@

@@ -49,6 +49,9 @@ config :logger, :debug_log,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# This is required for making cuttlefish and cli happy
+System.put_env("NO_ESCRIPT", "1")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
