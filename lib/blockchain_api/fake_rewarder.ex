@@ -3,8 +3,8 @@ defmodule BlockchainAPI.FakeRewarder do
   require Logger
   @me __MODULE__
   alias BlockchainAPI.{Query, TxnManager}
-  @amount 100000000
-  @interval 3
+  @amount 10000000
+  @interval 30
 
   #==================================================================
   # API
