@@ -415,6 +415,9 @@ defmodule BlockchainAPI.Committer do
       _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
+      _error in Ecto.StaleEntryError ->
+        # nothing to do
+        :ok
     end
     try do
       _pending_txn = hash
@@ -439,6 +442,9 @@ defmodule BlockchainAPI.Committer do
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_payment_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+      _error in Ecto.StaleEntryError ->
         # nothing to do
         :ok
     end
@@ -466,6 +472,9 @@ defmodule BlockchainAPI.Committer do
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_add_gateway_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+      _error in Ecto.StaleEntryError ->
         # nothing to do
         :ok
     end
@@ -496,6 +505,9 @@ defmodule BlockchainAPI.Committer do
                              |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_assert_location_v1, txn))
     rescue
       _error in Ecto.NoResultsError ->
+        # nothing to do
+        :ok
+      _error in Ecto.StaleEntryError ->
         # nothing to do
         :ok
     end

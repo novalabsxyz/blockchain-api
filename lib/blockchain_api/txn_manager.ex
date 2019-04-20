@@ -86,11 +86,17 @@ defmodule BlockchainAPI.TxnManager do
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
         try do
+          _pending_account_txn = pending_txn.hash
+                                 |> Query.AccountTransaction.get_pending_txn!()
+                                 |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_payment_v1, txn))
           _pending_txn = pending_txn.hash
                          |> Query.PendingTransaction.get!()
                          |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
         rescue
           _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+          _error in Ecto.StaleEntryError ->
             # nothing to do
             :ok
         end
@@ -117,11 +123,17 @@ defmodule BlockchainAPI.TxnManager do
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
         try do
+          _pending_account_txn = pending_txn.hash
+                                 |> Query.AccountTransaction.get_pending_txn!()
+                                 |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_add_gateway_v1, txn))
           _pending_txn = pending_txn.hash
                          |> Query.PendingTransaction.get!()
                          |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
         rescue
           _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+          _error in Ecto.StaleEntryError ->
             # nothing to do
             :ok
         end
@@ -149,11 +161,17 @@ defmodule BlockchainAPI.TxnManager do
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
         try do
+          _pending_account_txn = pending_txn.hash
+                                 |> Query.AccountTransaction.get_pending_txn!()
+                                 |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_assert_location_v1, txn))
           _pending_txn = pending_txn.hash
                          |> Query.PendingTransaction.get!()
                          |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
         rescue
           _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+          _error in Ecto.StaleEntryError ->
             # nothing to do
             :ok
         end
@@ -181,11 +199,17 @@ defmodule BlockchainAPI.TxnManager do
             Logger.error("Res: error, Reason: #{Atom.to_string(reason)}, Txn: #{Util.bin_to_string(pending_txn.hash)}")
         end
         try do
+          _pending_account_txn = pending_txn.hash
+                                 |> Query.AccountTransaction.get_pending_txn!()
+                                 |> Query.AccountTransaction.delete_pending!(AccountTransaction.map_pending(:blockchain_txn_coinbase_v1, txn))
           _pending_txn = pending_txn.hash
                          |> Query.PendingTransaction.get!()
                          |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
         rescue
           _error in Ecto.NoResultsError ->
+            # nothing to do
+            :ok
+          _error in Ecto.StaleEntryError ->
             # nothing to do
             :ok
         end
