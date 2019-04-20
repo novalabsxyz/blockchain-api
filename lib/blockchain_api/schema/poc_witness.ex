@@ -15,19 +15,19 @@ defmodule BlockchainAPI.Schema.POCWitness do
     :signal,
     :packet_hash,
     :signature,
-    :primary
+    :owner
   ]
 
   @derive {Jason.Encoder, only: @fields}
   schema "poc_witnesses" do
     field :poc_path_elements_id, :integer, null: false
     field :gateway, :binary, null: false
+    field :owner, :binary, null: false
     field :location, :string, null: false
     field :timestamp, :integer, null: false
     field :signal, :integer, null: false
     field :packet_hash, :binary, null: false
     field :signature, :binary, null: false
-    field :primary, :boolean, null: false
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -50,21 +50,22 @@ defmodule BlockchainAPI.Schema.POCWitness do
       gateway: Util.bin_to_string(poc_witness.gateway),
       signature: Util.bin_to_string(poc_witness.signature),
       packet_hash: Base.encode64(poc_witness.packet_hash),
+      owner: Util.bin_to_string(poc_witness.owner),
       lat: lat,
       lng: lng
     })
   end
 
-  def map(id, wx_loc, is_primary, poc_witness) do
+  def map(id, wx_loc, owner, poc_witness) do
     %{
       poc_path_elements_id: id,
+      owner: owner,
       gateway: :blockchain_poc_witness_v1.gateway(poc_witness),
       location: Util.h3_to_string(wx_loc),
       timestamp: :blockchain_poc_witness_v1.timestamp(poc_witness),
       signal: :blockchain_poc_witness_v1.signal(poc_witness),
       packet_hash: :blockchain_poc_witness_v1.packet_hash(poc_witness),
       signature: :blockchain_poc_witness_v1.signature(poc_witness),
-      primary: is_primary
     }
   end
 

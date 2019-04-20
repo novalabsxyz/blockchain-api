@@ -9,19 +9,21 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.POCPathElement
   }
 
+  def show!(id) do
+    path_query()
+    |> receipt_query(id)
+    |> Repo.one!()
+    |> encode_entry()
+  end
+
   def list(_) do
     POCReceiptsTransaction
     |> Repo.all()
   end
 
   def challenges(_params) do
-    path_query = from(path in POCPathElement, preload: [:poc_receipt, :poc_witness])
-    receipt_query = from(
-      rx in POCReceiptsTransaction,
-      preload: [poc_path_elements: ^path_query],
-      order_by: [desc: rx.id]
-    )
-    receipt_query
+    path_query()
+    |> receipt_query()
     |> Repo.all()
     |> format_challenges()
   end
@@ -61,6 +63,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     %{
       id: entry.id,
       challenger: Util.bin_to_string(entry.challenger),
+      challenger_owner: Util.bin_to_string(entry.challenger_owner),
       hash: Util.bin_to_string(entry.hash),
       onion: Util.bin_to_string(entry.onion),
       signature: Util.bin_to_string(entry.signature),
@@ -74,37 +77,35 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Enum.map(path_elements,
       fn(element) ->
         witnesses = encode_witnesses(element.poc_witness)
-        receipts = encode_receipts(element.poc_receipt)
-        result = result(receipts, witnesses)
+        receipt = encode_receipts(element.poc_receipt)
+        result = result(receipt, witnesses)
         {lat, lng} = Util.h3_to_lat_lng(element.challengee_loc)
         %{
           witnesses: witnesses,
-          receipts: receipts,
+          receipt: receipt,
           result: to_string(result),
           address: Util.bin_to_string(element.challengee),
+          owner: Util.bin_to_string(element.challengee_owner),
           lat: lat,
-          lng: lng
+          lng: lng,
+          primary: element.primary
         }
       end)
   end
 
-  defp encode_receipts([]), do: []
-  defp encode_receipts(receipts) do
-    Enum.map(
-      receipts,
-      fn(receipt) ->
-        {lat, lng} = Util.h3_to_lat_lng(receipt.location)
-        %{
-          address: Util.bin_to_string(receipt.gateway),
-          lat: lat,
-          lng: lng,
-          signal: receipt.signal,
-          signature: Util.bin_to_string(receipt.signature),
-          origin: receipt.origin,
-          time: receipt.timestamp,
-          primary: receipt.primary
-        }
-      end)
+  defp encode_receipts([]), do: %{}
+  defp encode_receipts([receipt]) do
+    {lat, lng} = Util.h3_to_lat_lng(receipt.location)
+    %{
+      address: Util.bin_to_string(receipt.gateway),
+      owner: Util.bin_to_string(receipt.owner),
+      lat: lat,
+      lng: lng,
+      signal: receipt.signal,
+      signature: Util.bin_to_string(receipt.signature),
+      origin: receipt.origin,
+      time: System.convert_time_unit(receipt.timestamp, :nanosecond, :millisecond)
+    }
   end
 
   defp encode_witnesses([]), do: []
@@ -115,21 +116,45 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
         {lat, lng} = Util.h3_to_lat_lng(witness.location)
         %{
           address: Util.bin_to_string(witness.gateway),
+          owner: Util.bin_to_string(witness.owner),
           lat: lat,
           lng: lng,
           signal: witness.signal,
           signature: Util.bin_to_string(witness.signature),
-          time: witness.timestamp,
-          primary: witness.primary
+          time: System.convert_time_unit(witness.timestamp, :nanosecond, :millisecond)
         }
       end)
   end
 
-  defp result(receipts, witnesses) do
-    case {receipts, witnesses} do
-      {[], _} -> :failure
-      {_, []} -> :untested
+  defp result(receipt, witnesses) do
+    case {receipt, witnesses} do
+      {rx, _} when map_size(rx) == 0 -> :failure
       {_, _} -> :success
     end
+  end
+
+  defp path_query() do
+    from(
+      path in POCPathElement,
+      preload: [:poc_receipt, :poc_witness],
+      order_by: [desc: path.id]
+    )
+  end
+
+  defp receipt_query(path_query) do
+    from(
+      rx in POCReceiptsTransaction,
+      preload: [poc_path_elements: ^path_query],
+      order_by: [desc: rx.id]
+    )
+  end
+
+  defp receipt_query(path_query, id) do
+    from(
+      rx in POCReceiptsTransaction,
+      preload: [poc_path_elements: ^path_query],
+      order_by: [desc: rx.id],
+      where: rx.id == ^id
+    )
   end
 end
