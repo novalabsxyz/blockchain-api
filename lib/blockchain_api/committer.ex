@@ -331,7 +331,15 @@ defmodule BlockchainAPI.Committer do
     last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
     {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
 
-    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(challenge_block), chain)
+    # TODO: This needs to be fixed in core, we should block on add_block event
+    old_ledger =
+      case :blockchain.ledger_at(:blockchain_block.height(challenge_block), chain) do
+        {:ok, oldie} ->
+          oldie
+        {:error, :height_too_old} ->
+          ledger
+      end
+
     {target, _gateway} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
 
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, old_ledger)
