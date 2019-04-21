@@ -9,7 +9,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     CoinbaseView,
     POCRequestView,
     POCReceiptsView,
-    SecurityView
+    SecurityView,
+    ElectionView
   }
   require Logger
 
@@ -57,6 +58,11 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(SecurityView)
         |> render("show.json", security: security)
+      "election" ->
+        election = Query.ElectionTransaction.get!(bin_hash)
+        conn
+        |> put_view(ElectionView)
+        |> render("show.json", election: election)
       "location" ->
         location = Query.LocationTransaction.get!(bin_hash)
         conn

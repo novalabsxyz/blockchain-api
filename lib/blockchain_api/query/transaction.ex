@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.LocationTransaction,
     Schema.POCRequestTransaction,
     Schema.POCReceiptsTransaction,
-    Schema.SecurityTransaction
+    Schema.SecurityTransaction,
+    Schema.ElectionTransaction
   }
 
   def list(_params) do
@@ -53,6 +54,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == coinbase_transaction.hash,
       left_join: security_transaction in SecurityTransaction,
       on: transaction.hash == security_transaction.hash,
+      left_join: election_transaction in ElectionTransaction,
+      on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
       on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
@@ -74,6 +77,7 @@ defmodule BlockchainAPI.Query.Transaction do
         height: block.height,
         coinbase: coinbase_transaction,
         security: security_transaction,
+        election: election_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
         location: location_transaction,
@@ -163,6 +167,27 @@ defmodule BlockchainAPI.Query.Transaction do
     )
     |> Repo.one!()
   end
+
+  def get_election!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: election_transaction in ElectionTransaction,
+      on: transaction.hash == election_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        proof: election_transaction.proof,
+        delay: election_transaction.delay,
+        hash: election_transaction.hash,
+        election_height: election_transaction.height
+      }
+    )
+    |> Repo.one!()
+  end
+
 
   def get_gateway!(txn_hash) do
     from(
