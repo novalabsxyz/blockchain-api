@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Util do
   alias BlockchainAPI.Schema.{
     PaymentTransaction,
     CoinbaseTransaction,
+    SecurityTransaction,
     LocationTransaction,
     GatewayTransaction,
     POCRequestTransaction,
@@ -86,6 +87,9 @@ defmodule BlockchainAPI.Util do
   end
   def clean_txn_struct(%{coinbase: coinbase, height: height, time: time}) when is_map(coinbase) do
     Map.merge(CoinbaseTransaction.encode_model(coinbase), %{type: "coinbase", height: height, time: time})
+  end
+  def clean_txn_struct(%{security: security, height: height, time: time}) when is_map(security) do
+    Map.merge(SecurityTransaction.encode_model(security), %{type: "security", height: height, time: time})
   end
   def clean_txn_struct(%{gateway: gateway, height: height, time: time}) when is_map(gateway) do
     Map.merge(GatewayTransaction.encode_model(gateway), %{type: "gateway", height: height, time: time})
