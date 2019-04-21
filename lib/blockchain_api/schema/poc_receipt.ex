@@ -16,20 +16,20 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     :data,
     :signature,
     :origin,
-    :primary
+    :owner
   ]
 
   @derive {Jason.Encoder, only: @fields}
   schema "poc_receipts" do
     field :poc_path_elements_id, :integer, null: false
     field :gateway, :binary, null: false
+    field :owner, :binary, null: false
     field :location, :string, null: false
     field :timestamp, :integer, null: false
     field :signal, :integer, null: false
     field :data, :binary, null: false
     field :signature, :binary, null: false
     field :origin, :string, null: false
-    field :primary, :boolean, null: false
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -50,6 +50,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     |> Map.take(@fields)
     |> Map.merge(%{
       gateway: Util.bin_to_string(poc_receipt.gateway),
+      owner: Util.bin_to_string(poc_receipt.owner),
       signature: Util.bin_to_string(poc_receipt.signature),
       data: Base.encode64(poc_receipt.data),
       lat: lat,
@@ -57,9 +58,10 @@ defmodule BlockchainAPI.Schema.POCReceipt do
     })
   end
 
-  def map(id, rx_loc, is_primary, poc_receipt) do
+  def map(id, rx_loc, rx_owner, poc_receipt) do
     %{
       poc_path_elements_id: id,
+      owner: rx_owner,
       gateway: :blockchain_poc_receipt_v1.gateway(poc_receipt),
       location: Util.h3_to_string(rx_loc),
       timestamp: :blockchain_poc_receipt_v1.timestamp(poc_receipt),
@@ -67,7 +69,6 @@ defmodule BlockchainAPI.Schema.POCReceipt do
       data: :blockchain_poc_receipt_v1.data(poc_receipt),
       signature: :blockchain_poc_receipt_v1.signature(poc_receipt),
       origin: to_string(:blockchain_poc_receipt_v1.origin(poc_receipt)),
-      primary: is_primary
     }
   end
 

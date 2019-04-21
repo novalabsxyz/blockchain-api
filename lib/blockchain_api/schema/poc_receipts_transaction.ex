@@ -15,13 +15,16 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     :hash,
     :signature,
     :fee,
-    :onion]
+    :onion,
+    :challenger_owner
+  ]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "poc_receipts_transactions" do
     field :poc_request_transactions_id, :integer, null: false
     field :challenger, :binary, null: false
+    field :challenger_owner, :binary, null: false
     field :challenger_loc, :string, null: false
     field :hash, :binary, null: false
     field :signature, :binary, null: false
@@ -52,6 +55,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     |> Map.merge(%{
       hash: Util.bin_to_string(poc_receipts.hash),
       challenger: Util.bin_to_string(poc_receipts.challenger),
+      challenger_owner: Util.bin_to_string(poc_receipts.challenger_owner),
       challenger_lat: lat,
       challenger_lng: lng,
       signature: Util.bin_to_string(poc_receipts.signature),
@@ -67,11 +71,12 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     end
   end
 
-  def map(poc_request_id, challenger_loc, txn) do
+  def map(poc_request_id, challenger_loc, challenger_owner, txn) do
     %{
       poc_request_transactions_id: poc_request_id,
       challenger_loc: Util.h3_to_string(challenger_loc),
       challenger: :blockchain_txn_poc_receipts_v1.challenger(txn),
+      challenger_owner: challenger_owner,
       fee: :blockchain_txn_poc_receipts_v1.fee(txn),
       signature: :blockchain_txn_poc_receipts_v1.signature(txn),
       onion: :blockchain_txn_poc_receipts_v1.onion_key_hash(txn),

@@ -192,41 +192,69 @@ defmodule BlockchainAPI.Query.AccountTransaction do
 
   defp format(entries) do
     entries
-    |> Enum.map(
-      fn(entry) ->
+    |> Enum.reduce([],
+      fn(entry, acc) ->
         case entry.txn_status do
           "cleared" ->
             case entry.txn_type do
               "payment" ->
-                entry.txn_hash
-                |> Query.Transaction.get_payment!()
-                |> PaymentTransaction.encode_model()
+                res = entry.txn_hash
+                      |> Query.Transaction.get_payment!()
+                      |> PaymentTransaction.encode_model()
+                [res | acc]
               "coinbase" ->
-                entry.txn_hash
-                |> Query.Transaction.get_coinbase!()
-                |> CoinbaseTransaction.encode_model()
+                res = entry.txn_hash
+                      |> Query.Transaction.get_coinbase!()
+                      |> CoinbaseTransaction.encode_model()
+                [res | acc]
               "gateway" ->
-                entry.txn_hash
-                |> Query.Transaction.get_gateway!()
-                |> GatewayTransaction.encode_model()
+                res = entry.txn_hash
+                      |> Query.Transaction.get_gateway!()
+                      |> GatewayTransaction.encode_model()
+                [res | acc]
               "location" ->
-                entry.txn_hash
-                |> Query.Transaction.get_location!()
-                |> LocationTransaction.encode_model()
+                res = entry.txn_hash
+                      |> Query.Transaction.get_location!()
+                      |> LocationTransaction.encode_model()
+                [res | acc]
             end
           "pending" ->
             case entry.txn_type do
               "payment" ->
-                Query.PendingPayment.get!(entry.txn_hash)
+                try do
+                  res = Query.PendingPayment.get!(entry.txn_hash)
+                  [res | acc]
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    acc
+                end
               "coinbase" ->
-                Query.PendingCoinbase.get!(entry.txn_hash)
+                try do
+                  res = Query.PendingCoinbase.get!(entry.txn_hash)
+                  [res | acc]
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    acc
+                end
               "gateway" ->
-                Query.PendingGateway.get!(entry.txn_hash)
+                try do
+                  res = Query.PendingGateway.get!(entry.txn_hash)
+                  [res | acc]
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    acc
+                end
               "location" ->
-                Query.PendingLocation.get!(entry.txn_hash)
+                try do
+                  res = Query.PendingLocation.get!(entry.txn_hash)
+                  [res | acc]
+                rescue
+                  _error in Ecto.NoResultsError ->
+                    acc
+                end
             end
         end
-      end
-    )
+      end)
+      |> Enum.reverse()
   end
 end

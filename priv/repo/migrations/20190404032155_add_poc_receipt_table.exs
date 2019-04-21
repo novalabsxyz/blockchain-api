@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocReceiptTable do
       add :signature, :binary, null: false
       add :origin, :string, null: false
       add :location, :string, null: false
-      add :primary, :boolean, null: false
+      add :owner, :binary, null: false
 
       timestamps()
     end
