@@ -43,6 +43,10 @@ defmodule BlockchainAPI.Schema.Transaction do
     %{type: "coinbase", status: "cleared", hash: :blockchain_txn_coinbase_v1.hash(txn)}
   end
 
+  def map(:blockchain_txn_security_coinbase_v1, txn) do
+    %{type: "security", status: "cleared", hash: :blockchain_txn_security_coinbase_v1.hash(txn)}
+  end
+
   def map(:blockchain_txn_payment_v1, txn) do
     %{type: "payment", status: "cleared", hash: :blockchain_txn_payment_v1.hash(txn)}
   end

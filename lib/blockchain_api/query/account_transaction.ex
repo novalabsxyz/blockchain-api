@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.CoinbaseTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.Hotspot
+    Schema.Hotspot,
+    Schema.SecurityTransaction
   }
 
   def create(attrs \\ %{}) do
@@ -206,6 +207,11 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                 res = entry.txn_hash
                       |> Query.Transaction.get_coinbase!()
                       |> CoinbaseTransaction.encode_model()
+                [res | acc]
+              "security" ->
+                res = entry.txn_hash
+                      |> Query.Transaction.get_security!()
+                      |> SecurityTransaction.encode_model()
                 [res | acc]
               "gateway" ->
                 res = entry.txn_hash

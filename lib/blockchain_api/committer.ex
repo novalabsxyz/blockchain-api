@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Committer do
     Schema.PaymentTransaction,
     Schema.LocationTransaction,
     Schema.CoinbaseTransaction,
+    Schema.SecurityTransaction,
     Schema.POCRequestTransaction,
     Schema.AccountTransaction,
     Schema.AccountBalance,
@@ -131,6 +132,7 @@ defmodule BlockchainAPI.Committer do
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn)
+            :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
             _ ->
               :ok
           end
@@ -153,6 +155,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_add_gateway_v1 -> insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
             :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
             :blockchain_txn_gen_gateway_v1 -> insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
+            :blockchain_txn_security_coinbase_v1 -> insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
             _ -> :ok
           end
         end)
@@ -272,6 +275,11 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
     {:ok, _} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
+  end
+
+  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
+    {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
@@ -500,7 +508,13 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn) do
+    # This can only appear in the genesis block
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_gen_gateway_v1, txn))
+  end
+
+  defp insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn) do
+    # This can only appear in the genesis block
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_security_coinbase_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do

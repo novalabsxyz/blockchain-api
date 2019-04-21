@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
     Schema.POCRequestTransaction,
-    Schema.POCReceiptsTransaction
+    Schema.POCReceiptsTransaction,
+    Schema.SecurityTransaction
   }
 
   def list(_params) do
@@ -50,6 +51,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: block.height == transaction.block_height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.hash,
+      left_join: security_transaction in SecurityTransaction,
+      on: transaction.hash == security_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
       on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
@@ -70,6 +73,7 @@ defmodule BlockchainAPI.Query.Transaction do
         time: block.time,
         height: block.height,
         coinbase: coinbase_transaction,
+        security: security_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
         location: location_transaction,
@@ -136,6 +140,25 @@ defmodule BlockchainAPI.Query.Transaction do
         payee: coinbase_transaction.payee,
         amount: coinbase_transaction.amount,
         hash: coinbase_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_security!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: security_transaction in SecurityTransaction,
+      on: transaction.hash == security_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: security_transaction.payee,
+        amount: security_transaction.amount,
+        hash: security_transaction.hash,
       }
     )
     |> Repo.one!()
