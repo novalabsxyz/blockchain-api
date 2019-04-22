@@ -6,7 +6,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Util,
     Repo,
     Schema.POCReceiptsTransaction,
-    Schema.POCPathElement
+    Schema.POCPathElement,
+    Schema.Transaction
   }
 
   def show!(id) do
@@ -50,7 +51,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     entries |> Enum.map(&encode_entry/1)
   end
 
-  defp encode_entry(entry) do
+  defp encode_entry(%{challenge: entry, height: height}) do
 
     path_elements = entry.poc_path_elements
                     |> encode_path_elements()
@@ -68,7 +69,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       onion: Util.bin_to_string(entry.onion),
       signature: Util.bin_to_string(entry.signature),
       pathElements: path_elements,
-      success: success
+      success: success,
+      height: height
     }
   end
 
@@ -145,7 +147,10 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     from(
       rx in POCReceiptsTransaction,
       preload: [poc_path_elements: ^path_query],
-      order_by: [desc: rx.id]
+      left_join: t in Transaction,
+      on: rx.hash == t.hash,
+      order_by: [desc: rx.id],
+      select: %{challenge: rx, height: t.block_height}
     )
   end
 
@@ -153,8 +158,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     from(
       rx in POCReceiptsTransaction,
       preload: [poc_path_elements: ^path_query],
+      left_join: t in Transaction,
+      on: rx.hash == t.hash,
       order_by: [desc: rx.id],
-      where: rx.id == ^id
+      where: rx.id == ^id,
+      select: %{challenge: rx, height: t.block_height}
     )
   end
 end
