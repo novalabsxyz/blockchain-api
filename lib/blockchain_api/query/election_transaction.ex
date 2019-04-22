@@ -24,16 +24,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> encode_entry()
   end
 
-  def at_height!(height) do
-    from(
-      e in ElectionTransaction,
-      preload: [:consensus_members],
-      where: e.height == ^height
-    )
-    |> Repo.one!()
-    |> encode_entry()
-  end
-
   def create(attrs \\ %{}) do
     %ElectionTransaction{}
     |> ElectionTransaction.changeset(attrs)
