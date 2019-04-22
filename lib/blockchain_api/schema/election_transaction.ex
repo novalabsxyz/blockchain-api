@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.ElectionTransaction, Schema.ConsensusMember}
-  @fields [:proof, :delay, :height, :hash]
+  @fields [:proof, :delay, :election_height, :hash]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
     # Proof is null for genesis block
     field :proof, :binary, null: true
     field :delay, :integer, null: false
-    field :height, :integer, null: false
+    field :election_height, :integer, null: false
 
     has_many :consensus_members, ConsensusMember, foreign_key: :election_transactions_id, references: :id
     timestamps()
@@ -21,7 +21,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
   def changeset(election, attrs) do
     election
     |> cast(attrs, @fields)
-    |> validate_required([:hash, :delay, :height])
+    |> validate_required([:hash, :delay, :election_height])
     |> foreign_key_constraint(:hash)
   end
 
@@ -46,7 +46,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
   def map(election) do
     %{
       proof: :blockchain_txn_consensus_group_v1.proof(election),
-      height: :blockchain_txn_consensus_group_v1.height(election),
+      election_height: :blockchain_txn_consensus_group_v1.height(election),
       delay: :blockchain_txn_consensus_group_v1.delay(election),
       hash: :blockchain_txn_consensus_group_v1.hash(election)
     }

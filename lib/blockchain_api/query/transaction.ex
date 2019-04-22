@@ -24,6 +24,10 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.block_height == block.height,
       left_join: coinbase_transaction in CoinbaseTransaction,
       on: transaction.hash == coinbase_transaction.hash,
+      left_join: security_transaction in SecurityTransaction,
+      on: transaction.hash == security_transaction.hash,
+      left_join: election_transaction in ElectionTransaction,
+      on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
       on: transaction.hash == payment_transaction.hash,
       left_join: gateway_transaction in GatewayTransaction,
@@ -35,7 +39,9 @@ defmodule BlockchainAPI.Query.Transaction do
         coinbase_transaction,
         payment_transaction,
         gateway_transaction,
-        location_transaction
+        location_transaction,
+        security_transaction,
+        election_transaction
       ])
 
     query

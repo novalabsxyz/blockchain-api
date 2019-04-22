@@ -51,7 +51,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       members: members,
       proof: Util.bin_to_string(entry.proof),
       hash: Util.bin_to_string(entry.hash),
-      election_height: entry.height,
+      election_height: entry.election_height,
       delay: entry.delay
     }
   end
