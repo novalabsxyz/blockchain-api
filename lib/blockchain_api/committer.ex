@@ -19,7 +19,9 @@ defmodule BlockchainAPI.Committer do
     Schema.POCPathElement,
     Schema.POCReceipt,
     Schema.POCWitness,
-    Schema.PendingTransaction
+    Schema.PendingTransaction,
+    Schema.ElectionTransaction,
+    Schema.ConsensusMember
   }
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
@@ -133,6 +135,7 @@ defmodule BlockchainAPI.Committer do
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn)
             :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
+            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height)
             _ ->
               :ok
           end
@@ -280,6 +283,19 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
+  end
+
+  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
+    {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
+
+    :ok = Enum.each(
+      :blockchain_txn_consensus_group_v1.members(txn),
+      fn(member) ->
+        {:ok, member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
+        IO.inspect(member_entry, label: "member")
+      end)
+
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do

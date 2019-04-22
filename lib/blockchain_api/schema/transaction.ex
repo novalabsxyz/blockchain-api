@@ -40,27 +40,31 @@ defmodule BlockchainAPI.Schema.Transaction do
   end
 
   def map(:blockchain_txn_coinbase_v1, txn) do
-    %{type: "coinbase", status: "cleared", hash: :blockchain_txn_coinbase_v1.hash(txn)}
+    %{type: "coinbase", hash: :blockchain_txn_coinbase_v1.hash(txn)}
+  end
+
+  def map(:blockchain_txn_consensus_group_v1, txn) do
+    %{type: "election", hash: :blockchain_txn_consensus_group_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_security_coinbase_v1, txn) do
-    %{type: "security", status: "cleared", hash: :blockchain_txn_security_coinbase_v1.hash(txn)}
+    %{type: "security", hash: :blockchain_txn_security_coinbase_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_payment_v1, txn) do
-    %{type: "payment", status: "cleared", hash: :blockchain_txn_payment_v1.hash(txn)}
+    %{type: "payment", hash: :blockchain_txn_payment_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_add_gateway_v1, txn) do
-    %{type: "gateway", status: "cleared", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
+    %{type: "gateway", hash: :blockchain_txn_add_gateway_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_assert_location_v1, txn) do
-    %{type: "location", status: "cleared", hash: :blockchain_txn_assert_location_v1.hash(txn)}
+    %{type: "location", hash: :blockchain_txn_assert_location_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_gen_gateway_v1, txn) do
-    %{type: "gateway", status: "cleared", hash: :blockchain_txn_gen_gateway_v1.hash(txn)}
+    %{type: "gateway", hash: :blockchain_txn_gen_gateway_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_poc_request_v1, txn) do
