@@ -30,7 +30,8 @@ defmodule BlockchainAPI.MixProject do
         :inets,
         :xmerl,
         :timex,
-        :httpoison
+        :httpoison,
+        :erl_angry_purple_tiger
       ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
@@ -62,7 +63,7 @@ defmodule BlockchainAPI.MixProject do
 
       # blockchain requirements
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "rg/sync-notify"},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
