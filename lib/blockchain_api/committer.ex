@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Committer do
   alias BlockchainAPI.{
     Repo,
     Query,
+    Util,
     Schema.Block,
     Schema.Transaction,
     Schema.GatewayTransaction,
@@ -292,10 +293,8 @@ defmodule BlockchainAPI.Committer do
     :ok = Enum.each(
       :blockchain_txn_consensus_group_v1.members(txn),
       fn(member) ->
-        {:ok, member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
-        IO.inspect(member_entry, label: "member")
+        {:ok, _member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
       end)
-
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
@@ -347,24 +346,27 @@ defmodule BlockchainAPI.Committer do
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
-    block_hash = :blockchain_block.hash_block(block)
-    entropy = <<secret :: binary, block_hash :: binary, challenger :: binary>>
 
     ledger = :blockchain.ledger(chain)
     {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
     {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
 
-    # TODO: This needs to be fixed in core, we should block on add_block event
-    old_ledger =
-      case :blockchain.ledger_at(:blockchain_block.height(challenge_block), chain) do
-        {:ok, oldie} ->
-          oldie
-        {:error, :height_too_old} ->
-          ledger
-      end
+    challenge_block_hash = :blockchain_block.hash_block(challenge_block)
+    entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
+
+    challenge_block_height = :blockchain_block.height(challenge_block)
+    block_height = :blockchain_block.height(block)
+    {:ok, old_ledger} = :blockchain.ledger_at(challenge_block_height, chain)
 
     {target, _gateway} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
+
+    Logger.warn("challenge_block_height: #{challenge_block_height}")
+    Logger.warn("block_height: #{block_height}")
+    Logger.warn("height: #{height}")
+    Logger.warn("target_address: #{Util.bin_to_string(target)}")
+    {:ok, target_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(target))
+    Logger.warn("target_name: #{target_name}")
 
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, old_ledger)
     challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
@@ -385,12 +387,17 @@ defmodule BlockchainAPI.Committer do
         res = challengee |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
 
         case res do
-          {:error, _} -> :ok
+          {:error, _} ->
+            :ok
 
           {:ok, challengee_info} ->
             challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
             challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
             is_primary = challengee == target
+
+            Logger.warn("challengee: #{Util.bin_to_string(challengee)}")
+            {:ok, challengee_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(challengee))
+            Logger.warn("challengee_name: #{challengee_name}")
 
             {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, challengee_loc, challengee_owner, is_primary, element)
                                         |> Query.POCPathElement.create()
