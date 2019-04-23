@@ -28,23 +28,23 @@ defmodule BlockchainAPI.Committer do
 
   require Logger
 
-  def commit(block, chain) do
+  def commit(block, ledger) do
     # NOTE: the block commit _needs_ to happen as a single DB transaction
     # to ensure consistency
-    commit_block(block, chain)
+    commit_block(block, ledger)
     # This is extra information that we're gathering just for the application
-    commit_account_balances(block, chain)
+    commit_account_balances(block, ledger)
   end
 
-  defp commit_block(block, chain) do
+  defp commit_block(block, ledger) do
     block_txn =
       Repo.transaction(fn() ->
 
         {:ok, inserted_block} = block
                                 |> Block.map()
                                 |> Query.Block.create()
-        add_accounts(block, chain)
-        add_transactions(block, chain)
+        add_accounts(block, ledger)
+        add_transactions(block, ledger)
         add_account_transactions(block)
         # NOTE: move this elsewhere...
         BlockChannel.broadcast_change(inserted_block)
@@ -60,10 +60,10 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp commit_account_balances(block, chain) do
+  defp commit_account_balances(block, ledger) do
     account_bal_txn =
       Repo.transaction(fn() ->
-        add_account_balances(block, chain)
+        add_account_balances(block, ledger)
       end)
 
     case account_bal_txn do
@@ -79,13 +79,12 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all accounts
   #==================================================================
-  defp add_accounts(block, chain) do
+  defp add_accounts(block, ledger) do
     # NOTE: A block may contain multiple transactions of different types
     # There could also be multiple transactions made from the same account address
     # Since this is just add_accounts, and address is a primary key, I think it's probably
     # fine to add it directly, BUT the balance needs to be updated at the end for the account
     # and so does the transaction fee
-    ledger = :blockchain.ledger(chain)
     {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
 
     case :blockchain_block.transactions(block) do
@@ -117,7 +116,7 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all transactions
   #==================================================================
-  defp add_transactions(block, chain) do
+  defp add_transactions(block, ledger) do
     height = :blockchain_block.height(block)
     case :blockchain_block.transactions(block) do
       [] ->
@@ -129,8 +128,8 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
             :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
-            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height, chain)
-            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain, block)
+            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, height, ledger)
+            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, block, ledger)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
@@ -169,9 +168,8 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all account balances (if there is a change)
   #==================================================================
-  defp add_account_balances(block, chain) do
-    chain
-    |> :blockchain.ledger()
+  defp add_account_balances(block, ledger) do
+    ledger
     |> :blockchain_ledger_v1.entries()
     |> Enum.map(fn {address, entry} ->
       try do
@@ -326,10 +324,9 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height, chain) do
+  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, height, ledger) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
 
-    ledger = :blockchain.ledger(chain)
     {:ok, challenger_info} = txn
                              |> :blockchain_txn_poc_request_v1.challenger()
                              |> :blockchain_ledger_v1.find_gateway_info(ledger)
@@ -341,13 +338,14 @@ defmodule BlockchainAPI.Committer do
                                 |> Query.POCRequestTransaction.create()
   end
 
-  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, chain, block) do
+  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, height, block, ledger) do
+
+    chain = :blockchain_worker.blockchain()
 
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
 
-    ledger = :blockchain.ledger(chain)
     {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
     {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
@@ -357,7 +355,9 @@ defmodule BlockchainAPI.Committer do
 
     challenge_block_height = :blockchain_block.height(challenge_block)
     block_height = :blockchain_block.height(block)
-    {:ok, old_ledger} = :blockchain.ledger_at(challenge_block_height, chain)
+
+    new_chain = :blockchain.ledger(ledger, chain)
+    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(challenge_block), new_chain)
 
     {target, _gateway} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
 
@@ -403,7 +403,8 @@ defmodule BlockchainAPI.Committer do
                                         |> Query.POCPathElement.create()
 
             case :blockchain_poc_path_element_v1.receipt(element) do
-              :undefined -> :ok
+              :undefined ->
+                :ok
               receipt ->
                 rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
                 {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
@@ -412,7 +413,6 @@ defmodule BlockchainAPI.Committer do
 
                 {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
                                       |> Query.POCReceipt.create()
-
             end
 
             element
@@ -431,12 +431,9 @@ defmodule BlockchainAPI.Committer do
                     {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
                                           |> Query.POCWitness.create()
                 end
-              end
-            )
+              end)
         end
-        end
-
-    )
+      end)
   end
 
   #==================================================================

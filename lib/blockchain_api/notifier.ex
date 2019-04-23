@@ -36,7 +36,7 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, false}}, %{:rewarder => rewarder, :chain => chain}=state) do
+  def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:rewarder => rewarder, :chain => chain}=state) do
     {:ok, block} = :blockchain.get_block(hash, chain)
     case :blockchain_block.transactions(block) do
       [] ->
