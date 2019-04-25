@@ -347,33 +347,14 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
 
-    chain = :blockchain_worker.blockchain()
-
+    height = :blockchain_block.height(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
-    secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
-
-    {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
-    last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
-    {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
-
-    challenge_block_hash = :blockchain_block.hash_block(challenge_block)
-    entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
-
-    challenge_block_height = :blockchain_block.height(challenge_block)
-    block_height = :blockchain_block.height(block)
-
-    new_chain = :blockchain.ledger(ledger, chain)
-    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(challenge_block), new_chain)
-
-    {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways)
-
-    {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, old_ledger)
+    {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
     challenger_owner = :blockchain_ledger_gateway_v1.owner_address(challenger_info)
 
-    {:ok, _transaction_entry} = Query.Transaction.create(block_height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
 
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)
 
@@ -383,97 +364,78 @@ defmodule BlockchainAPI.Committer do
                                                               txn)
                                    |> Query.POCReceiptsTransaction.create()
 
-    path_from_txn = txn |> :blockchain_txn_poc_receipts_v1.path()
+    path = :blockchain_txn_poc_receipts_v1.path(txn)
 
-    challengees = path_from_txn
-                  |> Enum.map(fn(element) -> :blockchain_poc_path_element_v1.challengee(element) end)
+    # XXX: There's a race condition which needs further debugging to fix this
+    # For the time being, let's just find the middle element in path and classify that
+    # as a target. It doesn't really matter anyway.
+    fake_target = Enum.at(path, div(length(path), 2))
 
-    path_b58 = path |> Enum.map(fn(p) -> :libp2p_crypto.bin_to_b58(p) end)
-    challengees_b58 = challengees |> Enum.map(fn(c) -> :libp2p_crypto.bin_to_b58(c) end)
+    path
+    |> Enum.map(
+      fn(element) when element != :undefined ->
+        challengee = element |> :blockchain_poc_path_element_v1.challengee()
+        res = challengee |> :blockchain_ledger_v1.find_gateway_info(ledger)
 
-    {:ok, ledger_height} = :blockchain_ledger_v1.current_height(ledger)
-    {:ok, chain_height} = :blockchain.height(chain)
+        case res do
+          {:error, _} ->
+            :ok
 
-    case path == challengees do
-      false ->
-        Logger.error("Paths don't match!!!!!!")
-        Logger.error("challenge_block_height: #{challenge_block_height}")
-        Logger.error("block_height: #{block_height}")
-        Logger.error("ledger height: #{ledger_height}")
-        Logger.error("chain height: #{chain_height}")
-        Logger.error("target_address: #{Util.bin_to_string(target)}")
-        {:ok, target_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(target))
-        Logger.error("target_name: #{target_name}")
-        Logger.error("path: #{inspect path_b58}")
-        Logger.error("challengees: #{inspect challengees_b58}")
-        :ok
-      true ->
-        path_from_txn
-        |> Enum.map(
-          fn(element) when element != :undefined ->
-            challengee = element |> :blockchain_poc_path_element_v1.challengee()
-            res = challengee |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
+          {:ok, challengee_info} ->
+            challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
+            challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
+            is_primary = challengee == fake_target
 
-            case res do
-              {:error, _} ->
+            Logger.warn("challengee: #{Util.bin_to_string(challengee)}")
+            {:ok, challengee_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(challengee))
+            Logger.warn("challengee_name: #{challengee_name}")
+
+            {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash,
+              challengee_loc,
+              challengee_owner,
+              is_primary,
+              element)
+              |> Query.POCPathElement.create()
+
+            case :blockchain_poc_path_element_v1.receipt(element) do
+              :undefined ->
                 :ok
+              receipt ->
+                rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
+                {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(ledger)
+                rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
+                rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
 
-              {:ok, challengee_info} ->
-                challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
-                challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
-                is_primary = challengee == target
-
-                Logger.warn("challengee: #{Util.bin_to_string(challengee)}")
-                {:ok, challengee_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(challengee))
-                Logger.warn("challengee_name: #{challengee_name}")
-
-                {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash,
-                                                               challengee_loc,
-                                                               challengee_owner,
-                                                               is_primary,
-                                                               element)
-                                            |> Query.POCPathElement.create()
-
-                case :blockchain_poc_path_element_v1.receipt(element) do
-                  :undefined ->
-                    :ok
-                  receipt ->
-                    rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
-                    {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(old_ledger)
-                    rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
-                    rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
-
-                    {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id,
-                                                         rx_loc,
-                                                         rx_owner,
-                                                         receipt)
-                                          |> Query.POCReceipt.create()
-                end
-
-                element
-                |> :blockchain_poc_path_element_v1.witnesses()
-                |> Enum.map(
-                  fn(witness) when witness != :undefined ->
-                    witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
-
-                    case :blockchain_ledger_v1.find_gateway_info(witness_gateway, old_ledger) do
-                      {:error, _} ->
-                        :ok
-                      {:ok, wx_info} ->
-                        wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
-                        wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
-
-                        {:ok, _poc_witness} = POCWitness.map(path_element_entry.id,
-                                                             wx_loc,
-                                                             wx_owner,
-                                                             witness)
-                                              |> Query.POCWitness.create()
-                    end
-                  end)
+                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id,
+                  rx_loc,
+                  rx_owner,
+                  receipt)
+                  |> Query.POCReceipt.create()
             end
-          end)
-    end
-  end
+
+            element
+            |> :blockchain_poc_path_element_v1.witnesses()
+            |> Enum.map(
+              fn(witness) when witness != :undefined ->
+                witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
+
+                case :blockchain_ledger_v1.find_gateway_info(witness_gateway, ledger) do
+                  {:error, _} ->
+                    :ok
+                  {:ok, wx_info} ->
+                    wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
+                    wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
+
+                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id,
+                      wx_loc,
+                      wx_owner,
+                      witness)
+                      |> Query.POCWitness.create()
+                end
+              end)
+        end
+      end)
+end
 
   #==================================================================
   # Insert account transactions
