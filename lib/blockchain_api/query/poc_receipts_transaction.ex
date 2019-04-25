@@ -153,7 +153,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
 
   defp result(receipt, witnesses) do
     case {receipt, witnesses} do
-      {rx, _} when map_size(rx) == 0 -> :failure
+      {rx, []} when map_size(rx) == 0 -> :failure
       {_, _} -> :success
     end
   end
