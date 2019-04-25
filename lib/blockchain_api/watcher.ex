@@ -69,9 +69,6 @@ defmodule BlockchainAPI.Watcher do
   @impl true
   def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain}) when chain != nil do
     Logger.info("Got add_block event")
-
-    Logger.warn("Ledger: #{inspect ledger}")
-
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain, ledger)
     {:noreply, state}
