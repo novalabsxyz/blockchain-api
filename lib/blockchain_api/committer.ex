@@ -357,18 +357,20 @@ defmodule BlockchainAPI.Committer do
 
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)
 
-    {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(poc_request.id,
-                                                              challenger_loc,
-                                                              challenger_owner,
-                                                              txn)
+    {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(poc_request.id, challenger_loc, challenger_owner, txn)
                                    |> Query.POCReceiptsTransaction.create()
 
     path = :blockchain_txn_poc_receipts_v1.path(txn)
+    challengees = path
+                  |> Enum.map(
+                    fn(element) when element != :undefined ->
+                      :blockchain_poc_path_element_v1.challengee(element)
+                    end)
 
     # XXX: There's a race condition which needs further debugging to fix this
     # For the time being, let's just find the middle element in path and classify that
     # as a target. It doesn't really matter anyway.
-    fake_target = Enum.at(path, div(length(path), 2))
+    fake_target = Enum.at(challengees, div(length(challengees), 2))
 
     path
     |> Enum.map(
@@ -389,12 +391,8 @@ defmodule BlockchainAPI.Committer do
             {:ok, challengee_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(challengee))
             Logger.warn("challengee_name: #{challengee_name}")
 
-            {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash,
-              challengee_loc,
-              challengee_owner,
-              is_primary,
-              element)
-              |> Query.POCPathElement.create()
+            {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, challengee_loc, challengee_owner, is_primary, element)
+                                        |> Query.POCPathElement.create()
 
             case :blockchain_poc_path_element_v1.receipt(element) do
               :undefined ->
@@ -405,11 +403,8 @@ defmodule BlockchainAPI.Committer do
                 rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
                 rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
 
-                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id,
-                  rx_loc,
-                  rx_owner,
-                  receipt)
-                  |> Query.POCReceipt.create()
+                {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
+                                      |> Query.POCReceipt.create()
             end
 
             element
@@ -425,11 +420,8 @@ defmodule BlockchainAPI.Committer do
                     wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
                     wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
 
-                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id,
-                      wx_loc,
-                      wx_owner,
-                      witness)
-                      |> Query.POCWitness.create()
+                    {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
+                                          |> Query.POCWitness.create()
                 end
               end)
         end
