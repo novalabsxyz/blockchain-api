@@ -4,7 +4,6 @@ defmodule BlockchainAPI.Committer do
   alias BlockchainAPI.{
     Repo,
     Query,
-    Util,
     Schema.Block,
     Schema.Transaction,
     Schema.GatewayTransaction,
@@ -345,7 +344,6 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
-
     height = :blockchain_block.height(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
@@ -386,11 +384,6 @@ defmodule BlockchainAPI.Committer do
             challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
             challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
             is_primary = challengee == fake_target
-
-            Logger.warn("challengee: #{Util.bin_to_string(challengee)}")
-            {:ok, challengee_name} = :erl_angry_purple_tiger.animal_name(Util.bin_to_string(challengee))
-            Logger.warn("challengee_name: #{challengee_name}")
-
             {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, challengee_loc, challengee_owner, is_primary, element)
                                         |> Query.POCPathElement.create()
 
