@@ -4,6 +4,12 @@ defmodule BlockchainAPI.Application do
   @moduledoc false
 
   use Application
+  alias Honeydew.EctoPollQueue
+  alias BlockchainAPI.Repo
+  alias BlockchainAPI.Job.SubmitPayment
+  alias BlockchainAPI.Schema.PendingPayment
+
+  import BlockchainAPI.Schema.PendingPayment, only: [submit_payment_queue: 0]
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
@@ -51,15 +57,17 @@ defmodule BlockchainAPI.Application do
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
       {BlockchainAPI.Watcher, watcher_worker_opts},
-      {BlockchainAPI.TxnManager, []},
       {BlockchainAPI.FakeRewarder, []},
-      {BlockchainAPI.Notifier, []}
+      # {BlockchainAPI.Notifier, []}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, sup} = Supervisor.start_link(children, opts)
+
+    :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
+
+    {:ok, sup}
   end
 
   # Tell Phoenix to update the endpoint configuration
@@ -78,6 +86,11 @@ defmodule BlockchainAPI.Application do
     |> List.to_string()
     |> String.split(",")
     |> Enum.map(&String.to_charlist/1)
+  end
+
+  defp queue_args(schema) do
+    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 5)
+    [schema: schema, repo: Repo, poll_interval: poll_interval]
   end
 
 end
