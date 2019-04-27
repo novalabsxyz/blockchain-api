@@ -110,4 +110,16 @@ defmodule BlockchainAPI.Util do
   end
   def clean_txn_struct(%{height: _height, time: _time}), do: nil
   def clean_txn_struct(map) when map == %{}, do: nil
+
+  def ledger_nonce(address) do
+    # TODO: Use the ledger at the time of adding the block
+    ledger = :blockchain.ledger(:blockchain_worker.blockchain())
+    case :blockchain_ledger_v1.find_entry(address, ledger) do
+      {:error, _reason} ->
+        # Return 0 if there is no entry in the ledger
+        0
+      {:ok, entry} ->
+        :blockchain_ledger_entry_v1.nonce(entry)
+    end
+  end
 end
