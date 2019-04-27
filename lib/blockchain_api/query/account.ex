@@ -56,6 +56,7 @@ defmodule BlockchainAPI.Query.Account do
       pp in PendingPayment,
       where: pp.payer == ^address,
       where: pp.status != "error",
+      where: pp.status != "cleared",
       select: pp.nonce,
       order_by: [desc: pp.id],
       limit: 1
@@ -71,19 +72,20 @@ defmodule BlockchainAPI.Query.Account do
 
     pending_nonce = Repo.one(query_pending_nonce)
     account_nonce = Repo.one(query_account_nonce)
+    ledger_nonce = Util.ledger_nonce(address)
     case {pending_nonce, account_nonce} do
       {nil, nil} ->
         # there is neither a pending_nonce nor an account_nonce
         0
       {nil, account_nonce} ->
         # there is no pending_nonce but an account_nonce
-        account_nonce
+        max(ledger_nonce, account_nonce)
       {pending_nonce, nil} ->
         # this shouldn't be possible _ideally_
-        pending_nonce
+        max(ledger_nonce, pending_nonce)
       {pending_nonce, account_nonce} ->
         # return the max of pending_nonce, account_nonce
-        max(pending_nonce, account_nonce)
+        max(ledger_nonce, max(pending_nonce, account_nonce))
     end
   end
 
