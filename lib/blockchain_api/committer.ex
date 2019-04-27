@@ -19,7 +19,6 @@ defmodule BlockchainAPI.Committer do
     Schema.POCPathElement,
     Schema.POCReceipt,
     Schema.POCWitness,
-    Schema.PendingTransaction,
     Schema.ElectionTransaction,
     Schema.ConsensusMember
   }
@@ -293,7 +292,6 @@ defmodule BlockchainAPI.Committer do
       :blockchain_txn_consensus_group_v1.members(txn),
       fn(member) ->
         {:ok, member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
-        IO.inspect(member_entry, label: "member")
       end)
 
   end
@@ -449,18 +447,6 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
     end
-    try do
-      _pending_txn = hash
-                     |> Query.PendingTransaction.get!()
-                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_coinbase_v1, txn))
-    rescue
-      _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-      _error in Ecto.NoResultsError ->
-        # nothing to do
-        :ok
-    end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_coinbase_v1, txn))
   end
 
@@ -475,18 +461,6 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
       _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-    end
-    try do
-      _pending_txn = hash
-                     |> Query.PendingTransaction.get!()
-                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_payment_v1, txn))
-    rescue
-      _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-      _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
     end
@@ -505,18 +479,6 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
       _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-    end
-    try do
-      _pending_txn = hash
-                     |> Query.PendingTransaction.get!()
-                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_add_gateway_v1, txn))
-    rescue
-      _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-      _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
     end
@@ -544,18 +506,6 @@ defmodule BlockchainAPI.Committer do
         # nothing to do
         :ok
       _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-    end
-    try do
-      _pending_txn = hash
-                     |> Query.PendingTransaction.get!()
-                     |> Query.PendingTransaction.delete!(PendingTransaction.map(:blockchain_txn_assert_location_v1, txn))
-    rescue
-      _error in Ecto.StaleEntryError ->
-        # nothing to do
-        :ok
-      _error in Ecto.NoResultsError ->
         # nothing to do
         :ok
     end
