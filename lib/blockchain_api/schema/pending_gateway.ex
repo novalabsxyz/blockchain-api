@@ -1,13 +1,10 @@
 defmodule BlockchainAPI.Schema.PendingGateway do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util,
-    Schema.PendingGateway,
-    Schema.PendingTransaction
-  }
+  alias BlockchainAPI.{Util, Schema.PendingGateway}
 
   @fields [
-    :pending_transactions_hash,
+    :hash,
     :status,
     :owner,
     :gateway,
@@ -16,14 +13,12 @@ defmodule BlockchainAPI.Schema.PendingGateway do
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_gateways" do
-    field :pending_transactions_hash, :binary, null: false
+    field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
     field :amount, :integer, null: false, default: 0
-
-    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
 
     timestamps()
   end
@@ -34,7 +29,6 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
-    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)
   end
 
@@ -44,8 +38,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_gateway.owner),
       gateway: Util.bin_to_string(pending_gateway.gateway),
-      pending_transactions_hash: Util.bin_to_string(pending_gateway.pending_transactions_hash),
-      hash: Util.bin_to_string(pending_gateway.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_gateway.hash),
       type: "gateway"
     })
   end
@@ -58,10 +51,10 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     end
   end
 
-  def map(hash, txn) do
+  def map(txn) do
     %{
-      pending_transactions_hash: hash,
       status: "pending",
+      hash: :blockchain_txn_add_gateway_v1.hash(txn),
       owner: :blockchain_txn_add_gateway_v1.owner(txn),
       gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
       fee: :blockchain_txn_add_gateway_v1.fee(txn),

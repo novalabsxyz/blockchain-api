@@ -1,19 +1,21 @@
 defmodule BlockchainAPI.Schema.PendingPayment do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util,
-    Schema.PendingPayment,
-    Schema.PendingTransaction
-  }
+  import Honeydew.EctoPollQueue.Schema
+  alias BlockchainAPI.{Util, Schema.PendingPayment}
 
   @fields [
-    :pending_transactions_hash,
+    :hash,
     :status,
     :payer,
     :payee,
     :nonce,
     :fee,
-    :amount]
+    :amount,
+    :txn
+  ]
+
+  @submit_payment_queue :submit_payment_queue
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_payments" do
@@ -22,10 +24,11 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     field :nonce, :integer, null: false, default: 0
     field :payee, :binary, null: false
     field :payer, :binary, null: false
-    field :pending_transactions_hash, :binary, null: false
+    field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
+    field :txn, :binary, null: false
 
-    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
+    honeydew_fields(:submit_payment_queue)
 
     timestamps()
   end
@@ -36,18 +39,17 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:payer)
-    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
   end
 
   def encode_model(pending_payment) do
     pending_payment
     |> Map.take(@fields)
+    |> Map.delete(:txn)
     |> Map.merge(%{
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
-      pending_transactions_hash: Util.bin_to_string(pending_payment.pending_transactions_hash),
-      hash: Util.bin_to_string(pending_payment.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_payment.hash),
       type: "payment"
     })
   end
@@ -60,16 +62,22 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     end
   end
 
-  def map(hash, txn) do
+  def map(txn) do
     %{
-      pending_transactions_hash: hash,
       status: "pending",
+      hash: :blockchain_txn_payment_v1.hash(txn),
       fee: :blockchain_txn_payment_v1.fee(txn),
       amount: :blockchain_txn_payment_v1.amount(txn),
       nonce: :blockchain_txn_payment_v1.nonce(txn),
       payer: :blockchain_txn_payment_v1.payer(txn),
-      payee: :blockchain_txn_payment_v1.payee(txn)
+      payee: :blockchain_txn_payment_v1.payee(txn),
+      txn: :blockchain_txn.serialize(txn)
     }
   end
 
+  def submit_payment_queue, do: @submit_payment_queue
+
+  def honeydew_task(id, _queue) do
+    {:run, [id]}
+  end
 end
