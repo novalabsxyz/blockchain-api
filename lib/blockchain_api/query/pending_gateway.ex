@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> Repo.one!
   end
 
+  def get_by_id!(id) do
+    PendingGateway
+    |> where([pg], pg.id == ^id)
+    |> Repo.one!()
+  end
+
   def update!(pg, attrs \\ %{}) do
     pg
     |> PendingGateway.changeset(attrs)

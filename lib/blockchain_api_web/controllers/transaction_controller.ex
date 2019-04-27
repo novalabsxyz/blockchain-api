@@ -92,6 +92,12 @@ defmodule BlockchainAPIWeb.TransactionController do
     case :blockchain_txn.type(txn) do
       :blockchain_txn_payment_v1 ->
         Schema.PendingPayment.map(txn) |> Query.PendingPayment.create()
+      :blockchain_txn_add_gateway_v1 ->
+        Schema.PendingGateway.map(txn) |> Query.PendingGateway.create()
+      :blockchain_txn_assert_location_v1 ->
+        Schema.PendingLocation.map(txn) |> Query.PendingLocation.create()
+      :blockchain_txn_coinbase_v1 ->
+        Schema.PendingCoinbase.map(txn) |> Query.PendingCoinbase.create()
       _ ->
         :ok
     end

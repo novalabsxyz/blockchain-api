@@ -6,10 +6,13 @@ defmodule BlockchainAPI.Application do
   use Application
   alias Honeydew.EctoPollQueue
   alias BlockchainAPI.Repo
-  alias BlockchainAPI.Job.SubmitPayment
-  alias BlockchainAPI.Schema.PendingPayment
+  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}
+  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase}
 
   import BlockchainAPI.Schema.PendingPayment, only: [submit_payment_queue: 0]
+  import BlockchainAPI.Schema.PendingGateway, only: [submit_gateway_queue: 0]
+  import BlockchainAPI.Schema.PendingLocation, only: [submit_location_queue: 0]
+  import BlockchainAPI.Schema.PendingCoinbase, only: [submit_coinbase_queue: 0]
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
@@ -66,6 +69,12 @@ defmodule BlockchainAPI.Application do
 
     :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
+    :ok = Honeydew.start_queue(submit_gateway_queue(), queue: {EctoPollQueue, queue_args(PendingGateway)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
+    :ok = Honeydew.start_queue(submit_location_queue(), queue: {EctoPollQueue, queue_args(PendingLocation)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
+    :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
 
     {:ok, sup}
   end
@@ -89,6 +98,7 @@ defmodule BlockchainAPI.Application do
   end
 
   defp queue_args(schema) do
+    # NOTE: Check for new jobs every 5s, this query is frequent but quite inexpensive
     poll_interval = Application.get_env(:ecto_poll_queue, :interval, 5)
     [schema: schema, repo: Repo, poll_interval: poll_interval]
   end

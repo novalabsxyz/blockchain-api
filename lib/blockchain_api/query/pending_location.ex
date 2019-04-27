@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> Repo.one!
   end
 
+  def get_by_id!(id) do
+    PendingLocation
+    |> where([pl], pl.id == ^id)
+    |> Repo.one!()
+  end
+
   def update!(pl, attrs \\ %{}) do
     pl
     |> PendingLocation.changeset(attrs)

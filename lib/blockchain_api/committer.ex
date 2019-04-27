@@ -291,7 +291,7 @@ defmodule BlockchainAPI.Committer do
     :ok = Enum.each(
       :blockchain_txn_consensus_group_v1.members(txn),
       fn(member) ->
-        {:ok, member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
+        {:ok, _member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
       end)
 
   end

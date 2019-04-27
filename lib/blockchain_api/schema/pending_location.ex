@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.PendingLocation do
   use Ecto.Schema
   import Ecto.Changeset
+  import Honeydew.EctoPollQueue.Schema
   alias BlockchainAPI.{Util, Schema.PendingLocation}
 
   @fields [
@@ -10,7 +11,11 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     :fee,
     :owner,
     :location,
-    :gateway]
+    :gateway,
+    :txn
+  ]
+
+  @submit_location_queue :submit_location_queue
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_locations" do
@@ -21,6 +26,9 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     field :owner, :binary, null: false
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
+    field :txn, :binary, null: false
+
+    honeydew_fields(@submit_location_queue)
 
     timestamps()
   end
@@ -37,6 +45,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   def encode_model(pending_location) do
     pending_location
     |> Map.take(@fields)
+    |> Map.delete(:txn)
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
@@ -61,7 +70,10 @@ defmodule BlockchainAPI.Schema.PendingLocation do
       location: Util.h3_to_string(:blockchain_txn_assert_location_v1.location(txn)),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       owner: :blockchain_txn_assert_location_v1.owner(txn),
-      status: "pending"
+      status: "pending",
+      txn: :blockchain_txn.serialize(txn)
     }
   end
+
+  def submit_location_queue, do: @submit_location_queue
 end

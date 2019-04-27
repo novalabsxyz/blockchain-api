@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.PendingGateway do
   use Ecto.Schema
   import Ecto.Changeset
+  import Honeydew.EctoPollQueue.Schema
   alias BlockchainAPI.{Util, Schema.PendingGateway}
 
   @fields [
@@ -9,7 +10,11 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     :owner,
     :gateway,
     :fee,
-    :amount]
+    :amount,
+    :txn
+  ]
+
+  @submit_gateway_queue :submit_gateway_queue
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_gateways" do
@@ -19,6 +24,9 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
     field :amount, :integer, null: false, default: 0
+    field :txn, :binary, null: false
+
+    honeydew_fields(@submit_gateway_queue)
 
     timestamps()
   end
@@ -35,6 +43,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
   def encode_model(pending_gateway) do
     pending_gateway
     |> Map.take(@fields)
+    |> Map.delete(:txn)
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_gateway.owner),
       gateway: Util.bin_to_string(pending_gateway.gateway),
@@ -59,6 +68,9 @@ defmodule BlockchainAPI.Schema.PendingGateway do
       gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
       fee: :blockchain_txn_add_gateway_v1.fee(txn),
       amount: :blockchain_txn_add_gateway_v1.amount(txn),
+      txn: :blockchain_txn.serialize(txn)
     }
   end
+
+  def submit_gateway_queue, do: @submit_gateway_queue
 end

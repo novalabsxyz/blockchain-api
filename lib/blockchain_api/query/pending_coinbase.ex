@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
     |> Repo.one!
   end
 
+  def get_by_id!(id) do
+    PendingCoinbase
+    |> where([pc], pc.id == ^id)
+    |> Repo.one!()
+  end
+
   def update!(pc, attrs \\ %{}) do
     pc
     |> PendingCoinbase.changeset(attrs)

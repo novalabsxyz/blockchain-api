@@ -28,7 +28,7 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     field :status, :string, null: false, default: "pending"
     field :txn, :binary, null: false
 
-    honeydew_fields(:submit_payment_queue)
+    honeydew_fields(@submit_payment_queue)
 
     timestamps()
   end
@@ -76,8 +76,4 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   end
 
   def submit_payment_queue, do: @submit_payment_queue
-
-  def honeydew_task(id, _queue) do
-    {:run, [id]}
-  end
 end
