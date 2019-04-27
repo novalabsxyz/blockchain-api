@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Query}
+  alias BlockchainAPI.{Util, Query, Schema}
   alias BlockchainAPIWeb.{
     PaymentView,
     GatewayView,
@@ -83,18 +83,20 @@ defmodule BlockchainAPIWeb.TransactionController do
     end
   end
 
-  def create(conn, %{"txn" => txn}) do
-    case BlockchainAPI.TxnManager.submit(txn) do
-      :submitted ->
-        conn |> send_resp(200, "Submitted")
-      :pending ->
-        conn |> send_resp(200, "Pending")
-      :error ->
-        conn |> send_resp(200, "Error")
-      :done ->
-        conn |> send_resp(200, "Done")
+  def create(conn, %{"txn" => txn0}) do
+
+    txn = txn0
+          |> Base.decode64!()
+          |> :blockchain_txn.deserialize()
+
+    case :blockchain_txn.type(txn) do
+      :blockchain_txn_payment_v1 ->
+        Schema.PendingPayment.map(txn) |> Query.PendingPayment.create()
       _ ->
-        conn |> send_resp(404, "Not Found")
+        :ok
     end
+
+    send_resp(conn, 200, "ok")
+
   end
 end
