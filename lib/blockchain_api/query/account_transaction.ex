@@ -25,51 +25,44 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   def list(address, %{"before" => before, "limit" => limit}=_params) do
 
     # NOTE: no pagination for pending recvs
-    payee_pending = Query.PendingPayment.get_payee_pending(address)
+    pending = Query.PendingPayment.get_pending_by_address(address)
     rest =  address
             |> list_query()
             |> filter_before(before, limit)
             |> Repo.all()
             |> format()
 
-    payee_pending ++ rest
-
+    pending ++ rest
   end
   def list(address, %{"before" => before}=_params) do
-
-    # NOTE: no pagination for pending recvs
-    payee_pending = Query.PendingPayment.get_payee_pending(address)
+    pending = Query.PendingPayment.get_pending_by_address(address)
     rest = address
            |> list_query()
            |> filter_before(before, @default_limit)
            |> Repo.all()
            |> format()
 
-    payee_pending ++ rest
+    pending ++ rest
   end
   def list(address, %{"limit" => limit}=_params) do
-
-    # NOTE: no pagination for pending recvs
-    payee_pending = Query.PendingPayment.get_payee_pending(address)
+    pending = Query.PendingPayment.get_pending_by_address(address)
     rest = address
            |> list_query()
            |> limit(^limit)
            |> Repo.all()
            |> format()
 
-    payee_pending ++ rest
+    pending ++ rest
   end
   def list(address, %{}) do
-
-    # NOTE: no pagination for pending recvs
-    payee_pending = Query.PendingPayment.get_payee_pending(address)
+    pending = Query.PendingPayment.get_pending_by_address(address)
 
     rest = address
            |> list_query()
            |> Repo.all()
            |> format()
 
-    payee_pending ++ rest
+    pending ++ rest
   end
 
   def get_pending_txn!(txn_hash) do
