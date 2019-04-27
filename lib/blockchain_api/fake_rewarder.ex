@@ -2,9 +2,9 @@ defmodule BlockchainAPI.FakeRewarder do
   use GenServer
   require Logger
   @me __MODULE__
-  alias BlockchainAPI.{Query, TxnManager}
-  @amount 10000000
-  @interval 30
+  alias BlockchainAPI.{Query, Schema}
+  @amount 1000000
+  @interval 2
 
   #==================================================================
   # API
@@ -66,11 +66,17 @@ defmodule BlockchainAPI.FakeRewarder do
           |> Enum.each(
             fn(hotspot) ->
               nonce = Query.Account.get_speculative_nonce(payer_entry.address)
-              :blockchain_txn_payment_v1.new(payer_entry.address, hotspot.owner, Enum.random(1..@amount), payer_entry.fee, nonce+1)
-              |> :blockchain_txn.sign(sigfun)
-              |> :blockchain_txn.serialize()
-              |> Base.encode64()
-              |> TxnManager.submit()
+              txn =
+                :blockchain_txn_payment_v1.new(payer_entry.address,
+                  hotspot.owner,
+                  Enum.random(1..@amount),
+                  payer_entry.fee,
+                  nonce+1)
+                |> :blockchain_txn.sign(sigfun)
+
+              {:ok, _pending_txn} = Schema.PendingPayment.map(txn)
+                                    |> Query.PendingPayment.create()
+
             end)
       end
     rescue
