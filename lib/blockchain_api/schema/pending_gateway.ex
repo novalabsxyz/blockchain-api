@@ -11,7 +11,8 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     :gateway,
     :fee,
     :amount,
-    :txn
+    :txn,
+    :submit_height
   ]
 
   @submit_gateway_queue :submit_gateway_queue
@@ -25,6 +26,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     field :fee, :integer, null: false, default: 0
     field :amount, :integer, null: false, default: 0
     field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
     honeydew_fields(@submit_gateway_queue)
 
@@ -43,7 +45,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
   def encode_model(pending_gateway) do
     pending_gateway
     |> Map.take(@fields)
-    |> Map.delete(:txn)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_gateway.owner),
       gateway: Util.bin_to_string(pending_gateway.gateway),
@@ -60,7 +62,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     end
   end
 
-  def map(txn) do
+  def map(txn, submit_height) do
     %{
       status: "pending",
       hash: :blockchain_txn_add_gateway_v1.hash(txn),
@@ -68,7 +70,8 @@ defmodule BlockchainAPI.Schema.PendingGateway do
       gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
       fee: :blockchain_txn_add_gateway_v1.fee(txn),
       amount: :blockchain_txn_add_gateway_v1.amount(txn),
-      txn: :blockchain_txn.serialize(txn)
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
 

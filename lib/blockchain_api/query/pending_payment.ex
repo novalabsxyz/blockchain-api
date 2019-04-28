@@ -10,9 +10,15 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> Repo.insert()
   end
 
+  def list_pending() do
+    PendingPayment
+    |> where([pp], pp.status == "pending")
+    |> Repo.all
+  end
+
   def get!(hash) do
     PendingPayment
-    |> where([pp], pp.pending_transactions_hash == ^hash)
+    |> where([pp], pp.hash == ^hash)
     |> Repo.one!
   end
 
@@ -52,6 +58,10 @@ defmodule BlockchainAPI.Query.PendingPayment do
     )
     |> Repo.all()
     |> format()
+  end
+
+  def delete!(pp) do
+    pp |> Repo.delete!()
   end
 
   #==================================================================

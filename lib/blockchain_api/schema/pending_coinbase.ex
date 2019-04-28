@@ -4,7 +4,14 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
 
   alias BlockchainAPI.{Util, Schema.PendingCoinbase}
 
-  @fields [:payee, :hash, :status, :amount, :txn]
+  @fields [
+    :payee,
+    :hash,
+    :status,
+    :amount,
+    :txn,
+    :submit_height
+  ]
 
   @submit_coinbase_queue :submit_coinbase_queue
 
@@ -15,6 +22,7 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     field :amount, :integer, null: false, default: 0
     field :payee, :binary, null: false
     field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
     timestamps()
   end
@@ -30,7 +38,7 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
   def encode_model(pending_coinbase) do
     pending_coinbase
     |> Map.take(@fields)
-    |> Map.delete(:txn)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       hash: Util.bin_to_string(pending_coinbase.hash),
       payee: Util.bin_to_string(pending_coinbase.payee),
@@ -46,13 +54,14 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     end
   end
 
-  def map(txn) do
+  def map(txn, submit_height) do
     %{
       hash: :blockchain_txn_coinbase_v1.hash(txn),
       amount: :blockchain_txn_coinbase_v1.amount(txn),
       status: "pending",
       payee: :blockchain_txn_coinbase_v1.payee(txn),
-      txn: :blockchain_txn.serialize(txn)
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
 

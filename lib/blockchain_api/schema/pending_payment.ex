@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     :nonce,
     :fee,
     :amount,
-    :txn
+    :txn,
+    :submit_height
   ]
 
   @submit_payment_queue :submit_payment_queue
@@ -27,6 +28,7 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
     honeydew_fields(@submit_payment_queue)
 
@@ -45,7 +47,7 @@ defmodule BlockchainAPI.Schema.PendingPayment do
   def encode_model(pending_payment) do
     pending_payment
     |> Map.take(@fields)
-    |> Map.delete(:txn)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       payer: Util.bin_to_string(pending_payment.payer),
       payee: Util.bin_to_string(pending_payment.payee),
@@ -62,7 +64,7 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     end
   end
 
-  def map(txn) do
+  def map(txn, submit_height) do
     %{
       status: "pending",
       hash: :blockchain_txn_payment_v1.hash(txn),
@@ -71,7 +73,8 @@ defmodule BlockchainAPI.Schema.PendingPayment do
       nonce: :blockchain_txn_payment_v1.nonce(txn),
       payer: :blockchain_txn_payment_v1.payer(txn),
       payee: :blockchain_txn_payment_v1.payee(txn),
-      txn: :blockchain_txn.serialize(txn)
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
 

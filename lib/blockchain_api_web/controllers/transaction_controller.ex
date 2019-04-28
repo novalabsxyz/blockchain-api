@@ -89,20 +89,23 @@ defmodule BlockchainAPIWeb.TransactionController do
           |> Base.decode64!()
           |> :blockchain_txn.deserialize()
 
-    case :blockchain_txn.type(txn) do
-      :blockchain_txn_payment_v1 ->
-        Schema.PendingPayment.map(txn) |> Query.PendingPayment.create()
-      :blockchain_txn_add_gateway_v1 ->
-        Schema.PendingGateway.map(txn) |> Query.PendingGateway.create()
-      :blockchain_txn_assert_location_v1 ->
-        Schema.PendingLocation.map(txn) |> Query.PendingLocation.create()
-      :blockchain_txn_coinbase_v1 ->
-        Schema.PendingCoinbase.map(txn) |> Query.PendingCoinbase.create()
-      _ ->
-        :ok
+    case :blockchain.height(:blockchain_worker.blockchain()) do
+      {:error, _} ->
+        send_resp(conn, 404, "no_chain")
+      {:ok, chain_height} ->
+        case :blockchain_txn.type(txn) do
+          :blockchain_txn_payment_v1 ->
+            Schema.PendingPayment.map(txn, chain_height) |> Query.PendingPayment.create()
+          :blockchain_txn_add_gateway_v1 ->
+            Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
+          :blockchain_txn_assert_location_v1 ->
+            Schema.PendingLocation.map(txn, chain_height) |> Query.PendingLocation.create()
+          :blockchain_txn_coinbase_v1 ->
+            Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
+          _ ->
+            :ok
+        end
+        send_resp(conn, 200, "ok")
     end
-
-    send_resp(conn, 200, "ok")
-
   end
 end

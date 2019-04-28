@@ -1,8 +1,8 @@
 defmodule BlockchainAPI.Job.SubmitCoinbase do
   alias BlockchainAPI.Query.PendingCoinbase
+  alias BlockchainAPI.Util
   require Logger
 
-  # By default, Honeydew will call the `run/1` function with the id of your newly inserted row.
   def run(id) do
     Logger.debug("running job for #{inspect(id)}")
 
@@ -14,11 +14,11 @@ defmodule BlockchainAPI.Job.SubmitCoinbase do
       fn(res) ->
         case res do
           :ok ->
-            Logger.info("Txn: #{inspect(:blockchain_txn.hash(txn))} accepted!")
+            Logger.info("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} accepted!")
             pending_coinbase
             |> PendingCoinbase.update!(%{status: "cleared"})
           {:error, reason} ->
-            Logger.error("Txn: #{inspect(:blockchain_txn.hash(txn))} failed!, reason: #{inspect(reason)}")
+            Logger.error("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} failed!, reason: #{inspect(reason)}")
             pending_coinbase
             |> PendingCoinbase.update!(%{status: "error"})
         end

@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     :owner,
     :location,
     :gateway,
-    :txn
+    :txn,
+    :submit_height
   ]
 
   @submit_location_queue :submit_location_queue
@@ -27,6 +28,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
     honeydew_fields(@submit_location_queue)
 
@@ -45,7 +47,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
   def encode_model(pending_location) do
     pending_location
     |> Map.take(@fields)
-    |> Map.delete(:txn)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
@@ -62,7 +64,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     end
   end
 
-  def map(txn) do
+  def map(txn, submit_height) do
     %{
       hash: :blockchain_txn_assert_location_v1.hash(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
@@ -71,7 +73,8 @@ defmodule BlockchainAPI.Schema.PendingLocation do
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       owner: :blockchain_txn_assert_location_v1.owner(txn),
       status: "pending",
-      txn: :blockchain_txn.serialize(txn)
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
 

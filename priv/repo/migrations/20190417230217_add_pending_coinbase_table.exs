@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingCoinbaseTable do
       add :status, :string, null: false, default: "pending"
       add :hash, :binary, null: false
       add :txn, :binary, null: false
+      add :submit_height, :bigint, null: false, default: 0
 
       honeydew_fields(submit_coinbase_queue())
 
