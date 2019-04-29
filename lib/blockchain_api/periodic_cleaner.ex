@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.PeriodicCleaner do
   @moduledoc """
   This module will look at pending payment transactions (for now)
-  and eagerly remove those transactions which haven't cleared for
+  and eagerly error out those transactions which haven't cleared for
   past 20 blocks.
   """
 
@@ -38,7 +38,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
       {:ok, chain_height} ->
         Query.PendingPayment.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
-        |> Enum.map(&Query.PendingPayment.delete!()/1)
+        |> Enum.map(fn(pp) -> Query.PendingPayment.update!(pp, %{status: "error"}) end)
     end
 
     # reschedule cleanup
