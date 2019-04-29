@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.TransactionController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Util, Query}
+  alias BlockchainAPI.{Util, Query, Schema}
   alias BlockchainAPIWeb.{
     PaymentView,
     GatewayView,
@@ -83,18 +83,29 @@ defmodule BlockchainAPIWeb.TransactionController do
     end
   end
 
-  def create(conn, %{"txn" => txn}) do
-    case BlockchainAPI.TxnManager.submit(txn) do
-      :submitted ->
-        conn |> send_resp(200, "Submitted")
-      :pending ->
-        conn |> send_resp(200, "Pending")
-      :error ->
-        conn |> send_resp(200, "Error")
-      :done ->
-        conn |> send_resp(200, "Done")
-      _ ->
-        conn |> send_resp(404, "Not Found")
+  def create(conn, %{"txn" => txn0}) do
+
+    txn = txn0
+          |> Base.decode64!()
+          |> :blockchain_txn.deserialize()
+
+    case :blockchain.height(:blockchain_worker.blockchain()) do
+      {:error, _} ->
+        send_resp(conn, 404, "no_chain")
+      {:ok, chain_height} ->
+        case :blockchain_txn.type(txn) do
+          :blockchain_txn_payment_v1 ->
+            Schema.PendingPayment.map(txn, chain_height) |> Query.PendingPayment.create()
+          :blockchain_txn_add_gateway_v1 ->
+            Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
+          :blockchain_txn_assert_location_v1 ->
+            Schema.PendingLocation.map(txn, chain_height) |> Query.PendingLocation.create()
+          :blockchain_txn_coinbase_v1 ->
+            Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
+          _ ->
+            :ok
+        end
+        send_resp(conn, 200, "ok")
     end
   end
 end

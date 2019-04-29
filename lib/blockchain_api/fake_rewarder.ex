@@ -2,9 +2,9 @@ defmodule BlockchainAPI.FakeRewarder do
   use GenServer
   require Logger
   @me __MODULE__
-  alias BlockchainAPI.{Query, TxnManager}
-  @amount 10000000
-  @interval 30
+  alias BlockchainAPI.{Query, Schema}
+  @amount 1000000
+  @interval 2
 
   #==================================================================
   # API
@@ -55,23 +55,34 @@ defmodule BlockchainAPI.FakeRewarder do
     {:noreply, state}
   end
 
-  def reward_hotspots(%{:payer => payer, :sigfun => sigfun}) do
+  def reward_hotspots(%{:payer => payer, :sigfun => sigfun, :chain => chain}) do
     try do
       payer_entry = Query.Account.get!(payer)
       case Query.Hotspot.all() do
         [] ->
           {:error, :no_hotspots}
         hotspots ->
-          hotspots
-          |> Enum.each(
-            fn(hotspot) ->
-              nonce = Query.Account.get_speculative_nonce(payer_entry.address)
-              :blockchain_txn_payment_v1.new(payer_entry.address, hotspot.owner, Enum.random(1..@amount), payer_entry.fee, nonce+1)
-              |> :blockchain_txn.sign(sigfun)
-              |> :blockchain_txn.serialize()
-              |> Base.encode64()
-              |> TxnManager.submit()
-            end)
+          case :blockchain.height(chain) do
+            {:error, _}=e ->
+              e
+            {:ok, chain_height} ->
+              hotspots
+              |> Enum.each(
+                fn(hotspot) ->
+                  nonce = Query.Account.get_speculative_nonce(payer_entry.address)
+                  txn =
+                    :blockchain_txn_payment_v1.new(payer_entry.address,
+                      hotspot.owner,
+                      Enum.random(1..@amount),
+                      payer_entry.fee,
+                      nonce+1)
+                      |> :blockchain_txn.sign(sigfun)
+
+                  {:ok, _pending_txn} = Schema.PendingPayment.map(txn, chain_height)
+                                        |> Query.PendingPayment.create()
+
+                end)
+          end
       end
     rescue
       _error in Ecto.NoResultsError ->

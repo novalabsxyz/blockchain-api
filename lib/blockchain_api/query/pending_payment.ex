@@ -10,10 +10,22 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> Repo.insert()
   end
 
+  def list_pending() do
+    PendingPayment
+    |> where([pp], pp.status == "pending")
+    |> Repo.all
+  end
+
   def get!(hash) do
     PendingPayment
-    |> where([pp], pp.pending_transactions_hash == ^hash)
+    |> where([pp], pp.hash == ^hash)
     |> Repo.one!
+  end
+
+  def get_by_id!(id) do
+    PendingPayment
+    |> where([pp], pp.id == ^id)
+    |> Repo.one!()
   end
 
   def update!(pp, attrs \\ %{}) do
@@ -34,15 +46,22 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> format()
   end
 
-  def get_payee_pending(address) do
+  def get_pending_by_address(address) do
     from(
       pp in PendingPayment,
       where: pp.payee == ^address,
+      or_where: pp.payer == ^address,
       where: pp.status == "pending",
+      where: pp.status != "error",
+      where: pp.status != "cleared",
       select: pp
     )
     |> Repo.all()
     |> format()
+  end
+
+  def delete!(pp) do
+    pp |> Repo.delete!()
   end
 
   #==================================================================

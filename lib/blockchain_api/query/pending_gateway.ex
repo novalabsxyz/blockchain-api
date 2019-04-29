@@ -12,8 +12,14 @@ defmodule BlockchainAPI.Query.PendingGateway do
 
   def get!(hash) do
     PendingGateway
-    |> where([pg], pg.pending_transactions_hash == ^hash)
+    |> where([pg], pg.hash == ^hash)
     |> Repo.one!
+  end
+
+  def get_by_id!(id) do
+    PendingGateway
+    |> where([pg], pg.id == ^id)
+    |> Repo.one!()
   end
 
   def update!(pg, attrs \\ %{}) do

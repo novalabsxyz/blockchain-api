@@ -12,8 +12,14 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
 
   def get!(hash) do
     PendingCoinbase
-    |> where([pc], pc.pending_transactions_hash == ^hash)
+    |> where([pc], pc.hash == ^hash)
     |> Repo.one!
+  end
+
+  def get_by_id!(id) do
+    PendingCoinbase
+    |> where([pc], pc.id == ^id)
+    |> Repo.one!()
   end
 
   def update!(pc, attrs \\ %{}) do

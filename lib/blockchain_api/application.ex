@@ -4,6 +4,15 @@ defmodule BlockchainAPI.Application do
   @moduledoc false
 
   use Application
+  alias Honeydew.EctoPollQueue
+  alias BlockchainAPI.Repo
+  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}
+  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase}
+
+  import PendingPayment, only: [submit_payment_queue: 0]
+  import PendingGateway, only: [submit_gateway_queue: 0]
+  import PendingLocation, only: [submit_location_queue: 0]
+  import PendingCoinbase, only: [submit_coinbase_queue: 0]
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
@@ -51,15 +60,24 @@ defmodule BlockchainAPI.Application do
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
       {BlockchainAPI.Watcher, watcher_worker_opts},
-      {BlockchainAPI.TxnManager, []},
       {BlockchainAPI.FakeRewarder, []},
-      {BlockchainAPI.Notifier, []}
+      {BlockchainAPI.PeriodicCleaner, []},
+      # {BlockchainAPI.Notifier, []}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, sup} = Supervisor.start_link(children, opts)
+
+    :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
+    :ok = Honeydew.start_queue(submit_gateway_queue(), queue: {EctoPollQueue, queue_args(PendingGateway)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
+    :ok = Honeydew.start_queue(submit_location_queue(), queue: {EctoPollQueue, queue_args(PendingLocation)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
+    :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
+
+    {:ok, sup}
   end
 
   # Tell Phoenix to update the endpoint configuration
@@ -78,6 +96,12 @@ defmodule BlockchainAPI.Application do
     |> List.to_string()
     |> String.split(",")
     |> Enum.map(&String.to_charlist/1)
+  end
+
+  defp queue_args(schema) do
+    # NOTE: Check for new jobs every 5s, this query is frequent but quite inexpensive
+    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 5)
+    [schema: schema, repo: Repo, poll_interval: poll_interval]
   end
 
 end

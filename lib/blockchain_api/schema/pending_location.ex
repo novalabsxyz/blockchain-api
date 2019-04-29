@@ -1,19 +1,22 @@
 defmodule BlockchainAPI.Schema.PendingLocation do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util,
-    Schema.PendingLocation,
-    Schema.PendingTransaction
-  }
+  import Honeydew.EctoPollQueue.Schema
+  alias BlockchainAPI.{Util, Schema.PendingLocation}
 
   @fields [
-    :pending_transactions_hash,
+    :hash,
     :status,
     :nonce,
     :fee,
     :owner,
     :location,
-    :gateway]
+    :gateway,
+    :txn,
+    :submit_height
+  ]
+
+  @submit_location_queue :submit_location_queue
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_locations" do
@@ -22,10 +25,12 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     field :location, :string, null: false
     field :nonce, :integer, null: false, default: 0
     field :owner, :binary, null: false
-    field :pending_transactions_hash, :binary, null: false
+    field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
+    field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
-    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
+    honeydew_fields(@submit_location_queue)
 
     timestamps()
   end
@@ -36,18 +41,17 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
-    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_location, name: :unique_pending_location)
   end
 
   def encode_model(pending_location) do
     pending_location
     |> Map.take(@fields)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       owner: Util.bin_to_string(pending_location.owner),
       gateway: Util.bin_to_string(pending_location.gateway),
-      pending_transactions_hash: Util.bin_to_string(pending_location.pending_transactions_hash),
-      hash: Util.bin_to_string(pending_location.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_location.hash),
       type: "location"
     })
   end
@@ -60,15 +64,19 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     end
   end
 
-  def map(hash, txn) do
+  def map(txn, submit_height) do
     %{
-      pending_transactions_hash: hash,
+      hash: :blockchain_txn_assert_location_v1.hash(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),
       gateway: :blockchain_txn_assert_location_v1.gateway(txn),
       location: Util.h3_to_string(:blockchain_txn_assert_location_v1.location(txn)),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       owner: :blockchain_txn_assert_location_v1.owner(txn),
-      status: "pending"
+      status: "pending",
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
+
+  def submit_location_queue, do: @submit_location_queue
 end

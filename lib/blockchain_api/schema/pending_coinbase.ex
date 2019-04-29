@@ -2,21 +2,27 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BlockchainAPI.{Util,
-    Schema.PendingCoinbase,
-    Schema.PendingTransaction
-  }
+  alias BlockchainAPI.{Util, Schema.PendingCoinbase}
 
-  @fields [:payee, :pending_transactions_hash, :status, :amount]
+  @fields [
+    :payee,
+    :hash,
+    :status,
+    :amount,
+    :txn,
+    :submit_height
+  ]
+
+  @submit_coinbase_queue :submit_coinbase_queue
 
   @derive {Jason.Encoder, only: @fields}
   schema "pending_coinbases" do
-    field :pending_transactions_hash, :binary, null: false
+    field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :amount, :integer, null: false, default: 0
     field :payee, :binary, null: false
-
-    belongs_to :pending_transactions, PendingTransaction, define_field: false, foreign_key: :hash
+    field :txn, :binary, null: false
+    field :submit_height, :integer, null: false, default: 0
 
     timestamps()
   end
@@ -26,16 +32,15 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     pending_coinbase
     |> cast(attrs, @fields)
     |> validate_required(@fields)
-    |> foreign_key_constraint(:pending_transactions_hash)
     |> unique_constraint(:unique_pending_coinbase, name: :unique_pending_coinbase)
   end
 
   def encode_model(pending_coinbase) do
     pending_coinbase
     |> Map.take(@fields)
+    |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
-      pending_transactions_hash: Util.bin_to_string(pending_coinbase.pending_transactions_hash),
-      hash: Util.bin_to_string(pending_coinbase.pending_transactions_hash),
+      hash: Util.bin_to_string(pending_coinbase.hash),
       payee: Util.bin_to_string(pending_coinbase.payee),
       type: "coinbase"
     })
@@ -49,13 +54,16 @@ defmodule BlockchainAPI.Schema.PendingCoinbase do
     end
   end
 
-  def map(hash, txn) do
+  def map(txn, submit_height) do
     %{
-      pending_transactions_hash: hash,
+      hash: :blockchain_txn_coinbase_v1.hash(txn),
       amount: :blockchain_txn_coinbase_v1.amount(txn),
       status: "pending",
       payee: :blockchain_txn_coinbase_v1.payee(txn),
+      txn: :blockchain_txn.serialize(txn),
+      submit_height: submit_height
     }
   end
 
+  def submit_coinbase_queue, do: @submit_coinbase_queue
 end
