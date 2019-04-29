@@ -6,7 +6,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
   """
 
   use GenServer
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.{Query, Util}
   require Logger
 
   @me __MODULE__
@@ -38,7 +38,13 @@ defmodule BlockchainAPI.PeriodicCleaner do
       {:ok, chain_height} ->
         Query.PendingPayment.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
-        |> Enum.map(fn(pp) -> Query.PendingPayment.update!(pp, %{status: "error"}) end)
+        |> Enum.map(
+          fn(pp) ->
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error,
+              pending_txn_submission_height: #{inspect(pp.submit_height)},
+              chain_height: #{inspect(chain_height)}")
+            Query.PendingPayment.update!(pp, %{status: "error"})
+          end)
     end
 
     # reschedule cleanup

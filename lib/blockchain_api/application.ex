@@ -9,10 +9,10 @@ defmodule BlockchainAPI.Application do
   alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}
   alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase}
 
-  import BlockchainAPI.Schema.PendingPayment, only: [submit_payment_queue: 0]
-  import BlockchainAPI.Schema.PendingGateway, only: [submit_gateway_queue: 0]
-  import BlockchainAPI.Schema.PendingLocation, only: [submit_location_queue: 0]
-  import BlockchainAPI.Schema.PendingCoinbase, only: [submit_coinbase_queue: 0]
+  import PendingPayment, only: [submit_payment_queue: 0]
+  import PendingGateway, only: [submit_gateway_queue: 0]
+  import PendingLocation, only: [submit_location_queue: 0]
+  import PendingCoinbase, only: [submit_coinbase_queue: 0]
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
