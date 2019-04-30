@@ -345,57 +345,53 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
     :timer.sleep(1000)
+
     height = :blockchain_block.height(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
     challenger_owner = :blockchain_ledger_gateway_v1.owner_address(challenger_info)
+    challengees = for element <- :blockchain_txn_poc_receipts_v1.path(txn), do: :blockchain_poc_path_element_v1.challengee(element)
+    {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
+    new_chain = :blockchain.ledger(ledger, :blockchain_worker.blockchain())
+    chain_ledger = :blockchain.ledger(new_chain)
+    {:ok, chain_height} = :blockchain.height(new_chain)
+    {:ok, chain_ledger_height} = :blockchain_ledger_v1.current_height(chain_ledger)
+    {:ok, lagging_ledger_height} = :blockchain_ledger_v1.current_height(:blockchain_ledger_v1.mode(:delayed, ledger))
 
+    Logger.info("poc_receipt_txn_entry:
+      block_height: #{height},
+      chain_height: #{chain_height},
+      chain_ledger_height: #{chain_ledger_height},
+      event_ledger_height: #{event_ledger_height},
+      lagging_ledger_height: #{lagging_ledger_height}")
+
+    ## recalculate target
+    {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
+    last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
+    {:ok, challenge_block} = :blockchain.get_block(last_challenge, new_chain)
+    challenge_block_hash = :blockchain_block.hash_block(challenge_block)
+    challenge_block_height = :blockchain_block.height(challenge_block)
+    Logger.info("challenge block height: #{challenge_block_height}")
+    {:ok, old_ledger} = :blockchain.ledger_at(challenge_block_height, new_chain)
+    secret = :blockchain_txn_poc_receipts_v1.secret(txn)
+    entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
+    {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
+    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways)
+    txn_path = :blockchain_txn_poc_receipts_v1.path(txn)
+
+    ## DB operations
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
-
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)
-
     {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(poc_request.id, challenger_loc, challenger_owner, txn)
                                    |> Query.POCReceiptsTransaction.create()
 
-    path = :blockchain_txn_poc_receipts_v1.path(txn)
-    challengees = path
-                  |> Enum.map(
-                    fn(element) when element != :undefined ->
-                      :blockchain_poc_path_element_v1.challengee(element)
-                    end)
-
-    # set the chain to use the event ledger
-    chain = :blockchain.ledger(ledger, :blockchain_worker.blockchain())
-    chain_ledger = :blockchain.ledger(chain)
-    block_height = :blockchain_block.height(block)
-    {:ok, chain_height} = :blockchain.height(chain)
-    {:ok, chain_ledger_height} = :blockchain_ledger_v1.current_height(chain_ledger)
-    {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
-
-    Logger.info("poc_receipt_txn_entry=================
-      block_height: #{block_height},
-      chain_height: #{chain_height},
-      chain_ledger_height: #{chain_ledger_height},
-      event_ledger_height: #{event_ledger_height}"
-    )
-
-    # recalculate target
-    {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
-    last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
-    {:ok, challenge_block} = :blockchain.get_block(last_challenge, chain)
-    {:ok, old_ledger} = :blockchain.ledger_at(:blockchain_block.height(challenge_block), :blockchain_worker.blockchain())
-    block_hash = :blockchain_block.hash_block(block)
-    secret = :blockchain_txn_poc_receipts_v1.secret(txn)
-    entropy = <<secret :: binary, block_hash :: binary, challenger :: binary>>
-    {target, _gateway} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-
-    case Enum.member?(challengees, target) do
+    case (Enum.member?(challengees, target) and path == txn_path) do
       false ->
         raise BlockchainAPI.CommitError, message: "target not in challengees!"
       true ->
-        path
+        txn_path
         |> Enum.map(
           fn(element) when element != :undefined ->
             challengee = element |> :blockchain_poc_path_element_v1.challengee()
