@@ -68,8 +68,18 @@ defmodule BlockchainAPI.Watcher do
 
   @impl true
   def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain}) when chain != nil do
-    Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)
+    block_height = :blockchain_block.height(block)
+    chain_ledger = :blockchain.ledger(chain)
+    {:ok, chain_height} = :blockchain.height(chain)
+    {:ok, chain_ledger_height} = :blockchain_ledger_v1.current_height(chain_ledger)
+    {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
+
+    Logger.info("block_height: #{block_height},
+      chain_height: #{chain_height},
+      chain_ledger_height: #{chain_ledger_height},
+      event_ledger_height: #{event_ledger_height}")
+
     add_block(block, chain, ledger)
     {:noreply, state}
   end
