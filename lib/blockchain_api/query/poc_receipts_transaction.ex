@@ -2,6 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
+  @default_limit 100
+
   alias BlockchainAPI.{
     Util,
     Repo,
@@ -22,11 +24,32 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
   end
 
-  def challenges(_params) do
+  def challenges(%{"before" => before, "limit" => limit}=_params) do
+    path_query()
+    |> receipt_query()
+    |> filter_before(before, limit)
+    |> Repo.all()
+    |> encode()
+  end
+  def challenges(%{"before" => before}=_params) do
+    path_query()
+    |> receipt_query()
+    |> filter_before(before, @default_limit)
+    |> Repo.all()
+    |> encode()
+  end
+  def challenges(%{"limit" => limit}=_params) do
+    path_query()
+    |> receipt_query()
+    |> limit(^limit)
+    |> Repo.all()
+    |> encode()
+  end
+  def challenges(%{}) do
     path_query()
     |> receipt_query()
     |> Repo.all()
-    |> format_challenges()
+    |> encode()
   end
 
   def get!(hash) do
@@ -46,8 +69,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.insert()
   end
 
-  defp format_challenges([]), do: []
-  defp format_challenges(entries) do
+  defp encode([]), do: []
+  defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 
@@ -164,5 +187,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       where: rx.id == ^id,
       select: %{challenge: rx, height: t.block_height}
     )
+  end
+
+  defp filter_before(query, before, limit) do
+    query
+    |> where([poc_rx], poc_rx.id < ^before)
+    |> limit(^limit)
   end
 end
