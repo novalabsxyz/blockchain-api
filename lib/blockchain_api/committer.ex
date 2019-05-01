@@ -376,6 +376,13 @@ defmodule BlockchainAPI.Committer do
     Logger.info("challenge block height: #{challenge_block_height}")
     {:ok, old_ledger} = :blockchain.ledger_at(challenge_block_height, new_chain)
 
+    case height == (event_ledger_height + 1) do
+      false ->
+        raise BlockchainAPI.CommitError, message: "height: #{height}, event_ledger_height: #{event_ledger_height}"
+      true ->
+        :ok
+    end
+
     case :blockchain_ledger_v1.context_cache(old_ledger) do
       {:undefined, :undefined} ->
         raise BlockchainAPI.CommitError, message: "context and cache missing"
