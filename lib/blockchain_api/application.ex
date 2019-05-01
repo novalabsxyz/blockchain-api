@@ -30,8 +30,10 @@ defmodule BlockchainAPI.Application do
           {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
       end
 
-    seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
-    seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
+    # seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
+    # seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
+    seed_nodes = Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
+    seed_node_dns =  String.to_charlist(System.get_env("SEED_NODE_DNS"))
     seed_addresses = dns_to_addresses(seed_node_dns)
 
     blockchain_sup_opts = [

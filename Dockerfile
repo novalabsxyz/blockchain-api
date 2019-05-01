@@ -1,65 +1,83 @@
-#==========================================================
+#============
 # Build Stage
-#==========================================================
-FROM elixir:latest as build
-RUN apt-get update && apt-get install -y cmake doxygen
+#============
+FROM elixir:latest as builder
 
-#==========================================================
-# Install core deps
-#==========================================================
-WORKDIR /tmp
 ENV LD_LIBRARY_PATH /usr/local/lib
-RUN apt-get update
-RUN apt-get install -y flex bison libgmp-dev cmake libsodium-dev
-RUN git clone -b stable https://github.com/jedisct1/libsodium.git
-RUN cd libsodium && ./configure --prefix=/usr && make check && make install && cd ..
+# Define Libsodium version
+ENV LIBSODIUM_VERSION 1.0.16
 
-#==========================================================
-# Support private repos (for now)
-#==========================================================
+# Install some tools: gcc build tools, unzip, etc
+RUN \
+    apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install curl build-essential unzip locate flex bison libgmp-dev cmake doxygen
+
+# Download & extract & make libsodium
+# Move libsodium build
+RUN \
+    mkdir -p /tmpbuild/libsodium && \
+    cd /tmpbuild/libsodium && \
+    curl -L https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz -o libsodium-${LIBSODIUM_VERSION}.tar.gz && \
+    tar xfvz libsodium-${LIBSODIUM_VERSION}.tar.gz && \
+    cd /tmpbuild/libsodium/libsodium-${LIBSODIUM_VERSION}/ && \
+    ./configure && \
+    make && make check && \
+    make install && \
+    mv src/libsodium /usr/local/ && \
+    rm -Rf /tmpbuild/
+
+# For getting access to private repos (temporary)
+# Create a .ssh folder in the app directory and copy your private key there
 COPY --chown=root .ssh/id_rsa /root/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN echo "StrictHostKeyChecking no " >> /root/.ssh/config
 
-#==========================================================
-# Switch to app directory
-#==========================================================
+# Application name
+ARG APP_NAME
+# Application version
+ARG APP_VSN
+# Prod environment
+ARG MIX_ENV=prod
+
+ENV APP_NAME=${APP_NAME} \
+    APP_VSN=${APP_VSN} \
+    MIX_ENV=${MIX_ENV}
+
+# Set work directory
 WORKDIR /opt/blockchain_api
 
-#==========================================================
-# Copy everything
-#==========================================================
+# COPY APP src code
 COPY . .
 
-#==========================================================
-# Build Release
-#==========================================================
-RUN rm -Rf _build \
-    && rm -Rf deps \
-    && mix local.rebar --force \
+RUN mix local.rebar --force \
     && mix local.hex --force \
     && mix deps.get \
+    && make clean \
     && make release
 
-#==========================================================
-# Extract Release archive to /opt/export for copying in next stage
-#==========================================================
-RUN APP_NAME="blockchain_api"  \
-    && RELEASE_DIR=`ls -d _build/prod/rel/$APP_NAME/releases/*/` \
-    && mkdir /opt/export \
-    && tar -xf "$RELEASE_DIR/$APP_NAME.tar.gz" -C /opt/export
+RUN \
+  mkdir -p /opt/built && \
+  make release && \
+  cp _build/${MIX_ENV}/rel/${APP_NAME}/releases/${APP_VSN}/${APP_NAME}.tar.gz /opt/built && \
+  cd /opt/built && \
+  tar -xzf ${APP_NAME}.tar.gz && \
+  rm ${APP_NAME}.tar.gz
 
-#==========================================================
+#=================
 # Deployment Stage
-#==========================================================
+#=================
 FROM elixir:latest
+ARG APP_NAME
 
-COPY --from=build /opt/export/ .
-COPY --from=build /opt/blockchain_api/cmd .
+RUN apt-get update
 
-EXPOSE 4001
-ENV REPLACE_OS_VARS=true NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod
+ENV REPLACE_OS_VARS=true \
+    APP_NAME=${APP_NAME}
 
-ENTRYPOINT ["/bin/blockchain_api"]
-CMD ["foreground"]
+WORKDIR /opt/blockchain_api
+
+COPY --from=builder /opt/built .
+
+CMD trap 'exit' INT; /opt/blockchain_api/bin/${APP_NAME} foreground
