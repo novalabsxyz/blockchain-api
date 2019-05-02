@@ -62,15 +62,15 @@ reset-test-db:
 
 docker-build:
 	docker build --build-arg APP_NAME=$(APP_NAME) \
-        --build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg SEED_NODES=${SEED_NODES} \
 		--build-arg SEED_NODE_DNS=${SEED_NODE_DNS} \
 		--build-arg GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY} \
 		--build-arg ONESIGNAL_API_KEY=${ONESIGNAL_API_KEY} \
 		--build-arg ONESIGNAL_APP_ID=${ONESIGNAL_APP_ID} \
 		--build-arg SECRET_KEY_BASE=${SECRET_KEY_BASE} \
-        -t $(APP_NAME):$(APP_VSN)-$(BUILD) \
-        -t $(APP_NAME):latest .
+		-t $(APP_NAME):$(APP_VSN)-$(BUILD) \
+		-t $(APP_NAME):latest .
 
 docker-run:
 	docker run --env-file config/docker.env \

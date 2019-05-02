@@ -5,27 +5,27 @@ FROM elixir:latest as builder
 
 ENV LD_LIBRARY_PATH /usr/local/lib
 # Define Libsodium version
-ENV LIBSODIUM_VERSION 1.0.16
+# ENV LIBSODIUM_VERSION 1.0.16
 
 # Install some tools: gcc build tools, unzip, etc
 RUN \
     apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install curl build-essential unzip locate flex bison libgmp-dev cmake doxygen
+    apt-get -y install curl build-essential unzip locate flex bison libgmp-dev cmake doxygen autoconf automake yasm libgmp-dev libtool cmake clang-format lcov libsodium-dev libclang-dev libstdc++6 gcc-6 g++-6 libx32stdc++-6-dev
 
 # Download & extract & make libsodium
 # Move libsodium build
-RUN \
-    mkdir -p /tmpbuild/libsodium && \
-    cd /tmpbuild/libsodium && \
-    curl -L https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz -o libsodium-${LIBSODIUM_VERSION}.tar.gz && \
-    tar xfvz libsodium-${LIBSODIUM_VERSION}.tar.gz && \
-    cd /tmpbuild/libsodium/libsodium-${LIBSODIUM_VERSION}/ && \
-    ./configure && \
-    make && make check && \
-    make install && \
-    mv src/libsodium /usr/local/ && \
-    rm -Rf /tmpbuild/
+# RUN \
+#     mkdir -p /tmpbuild/libsodium && \
+#     cd /tmpbuild/libsodium && \
+#     curl -L https://download.libsodium.org/libsodium/releases/libsodium-${LIBSODIUM_VERSION}.tar.gz -o libsodium-${LIBSODIUM_VERSION}.tar.gz && \
+#     tar xfvz libsodium-${LIBSODIUM_VERSION}.tar.gz && \
+#     cd /tmpbuild/libsodium/libsodium-${LIBSODIUM_VERSION}/ && \
+#     ./configure && \
+#     make && make check && \
+#     make install && \
+#     mv src/libsodium /usr/local/ && \
+#     rm -Rf /tmpbuild/
 
 # For getting access to private repos (temporary)
 # Create a .ssh folder in the app directory and copy your private key there

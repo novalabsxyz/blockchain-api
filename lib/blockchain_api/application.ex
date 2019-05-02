@@ -32,7 +32,7 @@ defmodule BlockchainAPI.Application do
 
     # seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
     # seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
-    seed_nodes = Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
+    seed_nodes = Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1)
     seed_node_dns =  String.to_charlist(System.get_env("SEED_NODE_DNS"))
     seed_addresses = dns_to_addresses(seed_node_dns)
 
