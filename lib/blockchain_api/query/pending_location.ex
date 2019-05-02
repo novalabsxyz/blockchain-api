@@ -27,4 +27,10 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> PendingLocation.changeset(attrs)
     |> Repo.update!()
   end
+
+  def list_pending() do
+    PendingLocation
+    |> where([pl], pl.status == "pending")
+    |> Repo.all
+  end
 end
