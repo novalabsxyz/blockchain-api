@@ -2,7 +2,7 @@
   "artificery": {:hex, :artificery, "0.4.1", "90b1fcedb9034853b36dbea2174f9fc1172bd50b0686a723178103def5c9c1c8", [:mix], [], "hexpm"},
   "backoff": {:hex, :backoff, "1.1.6", "83b72ed2108ba1ee8f7d1c22e0b4a00cfe3593a67dbc792799e8cce9f42f796b", [:rebar3], [], "hexpm"},
   "base32": {:hex, :base32, "0.1.0", "044f6dc95709727ca2176f3e97a41ddaa76b5bc690d3536908618c0cb32616a2", [:rebar3], [], "hexpm"},
-  "blockchain": {:git, "git@github.com:helium/blockchain-core.git", "65beb6a664e039c228a6c7d5600c3af56e482306", [branch: "rg/sync-notify"]},
+  "blockchain": {:git, "git@github.com:helium/blockchain-core.git", "8d587cb01cf5066290ae17bf8f6ed75565a37e70", [branch: "master"]},
   "certifi": {:hex, :certifi, "2.5.1", "867ce347f7c7d78563450a18a6a28a8090331e77fa02380b4a21962a65d36ee5", [:rebar3], [{:parse_trans, "~>3.3", [hex: :parse_trans, repo: "hexpm", optional: false]}], "hexpm"},
   "clique": {:git, "https://github.com/helium/clique.git", "e327ba3058004c32dd2166416a60497ba87933af", [branch: "develop"]},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [:mix], [], "hexpm"},
