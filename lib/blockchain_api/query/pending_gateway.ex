@@ -27,4 +27,10 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> PendingGateway.changeset(attrs)
     |> Repo.update!()
   end
+
+  def list_pending() do
+    PendingGateway
+    |> where([pg], pg.status == "pending")
+    |> Repo.all
+  end
 end

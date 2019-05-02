@@ -60,16 +60,27 @@ defmodule BlockchainAPI.Watcher do
   def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, _state) do
     Logger.info("Got integrate_genesis_block event")
     chain = :blockchain_worker.blockchain()
+    ledger = :blockchain.ledger(chain)
     {:ok, block} = :blockchain.get_block(genesis_hash, chain)
-    add_block(block, chain)
+    add_block(block, chain, ledger)
     {:noreply, %{chain: chain}}
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %{chain: chain}) when chain != nil do
-    Logger.info("Got add_block event")
+  def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain}) when chain != nil do
     {:ok, block} = :blockchain.get_block(hash, chain)
-    add_block(block, chain)
+    block_height = :blockchain_block.height(block)
+    chain_ledger = :blockchain.ledger(chain)
+    {:ok, chain_height} = :blockchain.height(chain)
+    {:ok, chain_ledger_height} = :blockchain_ledger_v1.current_height(chain_ledger)
+    {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
+
+    Logger.info("block_height: #{block_height},
+      chain_height: #{chain_height},
+      chain_ledger_height: #{chain_ledger_height},
+      event_ledger_height: #{event_ledger_height}")
+
+    add_block(block, chain, ledger)
     {:noreply, state}
   end
 
@@ -81,7 +92,7 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   # Private Functions
   #==================================================================
-  defp add_block(block, chain) do
+  defp add_block(block, chain, ledger) do
     height = :blockchain_block.height(block)
     try do
       Query.Block.get!(height)
@@ -90,14 +101,14 @@ defmodule BlockchainAPI.Watcher do
         case Query.Block.get_latest() do
           [nil] ->
             # nothing in the db yet
-            Committer.commit(block, chain)
+            Committer.commit(block, ledger)
           [last_known_height] ->
             case height > last_known_height do
               true ->
                 Range.new(last_known_height + 1, height)
                 |> Enum.map(fn h ->
                   {:ok, b} = :blockchain.get_block(h, chain)
-                  Committer.commit(b, chain)
+                  Committer.commit(b, ledger)
                 end)
               false ->
                 :ok

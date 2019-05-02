@@ -20,14 +20,12 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 
 config :blockchain_api, env: Mix.env()
 
-# Do not print debug messages in production
-config :logger, level: :debug
-
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  timeout: 60000
+  timeout: 60000,
+  log: false
 
 # ## SSL Support
 #
