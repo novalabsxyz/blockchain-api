@@ -1,4 +1,4 @@
-.PHONY: all compile clean release devrelease test help
+.PHONY: all compile clean release devrelease test
 
 MIX=$(shell which mix)
 APP_NAME ?= `grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
@@ -60,23 +60,27 @@ test:
 reset-test-db:
 	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
 
+# Docker commands
 docker-build:
-	docker build --build-arg APP_NAME=$(APP_NAME) \
-		--build-arg APP_VSN=$(APP_VSN) \
+	docker build \
+		--build-arg APP_NAME=${APP_NAME} \
+		--build-arg MIX_ENV=${MIX_ENV} \
 		--build-arg SEED_NODES=${SEED_NODES} \
 		--build-arg SEED_NODE_DNS=${SEED_NODE_DNS} \
 		--build-arg GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY} \
 		--build-arg ONESIGNAL_API_KEY=${ONESIGNAL_API_KEY} \
 		--build-arg ONESIGNAL_APP_ID=${ONESIGNAL_APP_ID} \
 		--build-arg SECRET_KEY_BASE=${SECRET_KEY_BASE} \
-		-t $(APP_NAME):$(APP_VSN)-$(BUILD) \
-		-t $(APP_NAME):latest .
+		--build-arg PORT=${PORT} \
+		--build-arg DATBASE_NAME=${DATABASE_NAME} \
+		--build-arg DATABASE_USER=${DATABASE_USER} \
+		--build-arg DATABASE_PASS=${DATABASE_PASS} \
+		--build-arg DATABASE_HOST=${DATABASE_HOST} \
+        --build-arg APP_VSN=$(APP_VSN) \
+        -t $(APP_NAME):$(APP_VSN)-$(BUILD) \
+        -t $(APP_NAME):latest .
 
 docker-run:
 	docker run --env-file config/docker.env \
-        --expose 4001 -p 4001:4001 \
-        --rm -it $(APP_NAME):latest
-
-help:
-	@echo "$(APP_NAME):$(APP_VSN)-$(BUILD)"
-	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}
+		--expose 4001 -p 4001:4001 \
+		--rm -it $(APP_NAME):latest
