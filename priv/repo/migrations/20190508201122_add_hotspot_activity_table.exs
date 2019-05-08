@@ -10,6 +10,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
       add :poc_rx_txn_block_height, references(:blocks, on_delete: :nothing, column: :height), null: true
       add :poc_witness_id, references(:poc_witnesses, on_delete: :nothing, column: :id), null: true
       add :poc_rx_id, references(:poc_receipts, on_delete: :nothing, column: :id), null: true
+      add :poc_witness_challenge_id, references(:poc_receipts_transactions, on_delete: :nothing, column: :id), null: true
+      add :poc_rx_challenge_id, references(:poc_receipts_transactions, on_delete: :nothing, column: :id), null: true
 
       timestamps()
     end

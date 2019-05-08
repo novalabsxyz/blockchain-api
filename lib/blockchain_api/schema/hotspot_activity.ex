@@ -12,6 +12,8 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     :poc_rx_txn_block_height,
     :poc_witness_id,
     :poc_rx_id,
+    :poc_witness_challenge_id,
+    :poc_rx_challenge_id,
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -23,6 +25,8 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :poc_rx_txn_block_height, :integer, null: true
     field :poc_witness_id, :integer, null: true
     field :poc_rx_id, :integer, null: true
+    field :poc_witness_challenge_id, :integer, null: true
+    field :poc_rx_challenge_id, :integer, null: true
 
     timestamps()
   end
@@ -39,6 +43,8 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     |> foreign_key_constraint(:poc_rx_txn_block_height)
     |> foreign_key_constraint(:poc_witness_id)
     |> foreign_key_constraint(:poc_rx_id)
+    |> foreign_key_constraint(:poc_witness_challenge_id)
+    |> foreign_key_constraint(:poc_rx_challenge_id)
   end
 
   def encode_model(hotspot_activity) do
