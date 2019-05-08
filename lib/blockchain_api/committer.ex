@@ -456,7 +456,7 @@ defmodule BlockchainAPI.Committer do
                                               |> Query.POCReceipt.create()
 
                         {:ok, _activity_entry} = Query.HotspotActivity.create(%{
-                          gateway: challengee,
+                          gateway: rx_gateway,
                           poc_rx_txn_hash: :blockchain_txn.hash(txn),
                           poc_rx_txn_block_height: height,
                           poc_rx_id: poc_receipt.id
@@ -481,7 +481,7 @@ defmodule BlockchainAPI.Committer do
                                                  |> Query.POCWitness.create()
 
                             {:ok, _activity_entry} = Query.HotspotActivity.create(%{
-                              gateway: challengee,
+                              gateway: witness_gateway,
                               poc_rx_txn_hash: :blockchain_txn.hash(txn),
                               poc_rx_txn_block_height: height,
                               poc_witness_id: poc_witness.id
