@@ -332,15 +332,22 @@ defmodule BlockchainAPI.Committer do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
 
-    {:ok, challenger_info} = txn
-                             |> :blockchain_txn_poc_request_v1.challenger()
-                             |> :blockchain_ledger_v1.find_gateway_info(ledger)
+    challenger = txn |> :blockchain_txn_poc_request_v1.challenger()
+
+    {:ok, challenger_info} = challenger |> :blockchain_ledger_v1.find_gateway_info(ledger)
 
     challenger_loc = challenger_info |> :blockchain_ledger_gateway_v1.location()
     challenger_owner = challenger_info |> :blockchain_ledger_gateway_v1.owner_address()
 
     {:ok, _poc_request_entry} = POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
                                 |> Query.POCRequestTransaction.create()
+
+    {:ok, _activity_entry} =
+      Query.HotspotActivity.create(%{
+        gateway: challenger,
+        poc_req_txn_hash: :blockchain_txn.hash(txn),
+        poc_req_txn_block_height: height
+      })
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
@@ -445,8 +452,17 @@ defmodule BlockchainAPI.Committer do
                         rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
                         rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
 
-                        {:ok, _poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
+                        {:ok, poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
                                               |> Query.POCReceipt.create()
+
+                        {:ok, _activity_entry} = Query.HotspotActivity.create(%{
+                          gateway: rx_gateway,
+                          poc_rx_txn_hash: :blockchain_txn.hash(txn),
+                          poc_rx_txn_block_height: height,
+                          poc_rx_id: poc_receipt.id,
+                          poc_rx_challenge_id: poc_receipt_txn_entry.id
+                        })
+
                     end
 
                     element
@@ -462,8 +478,16 @@ defmodule BlockchainAPI.Committer do
                             wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
                             wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
 
-                            {:ok, _poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
-                                                  |> Query.POCWitness.create()
+                            {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
+                                                 |> Query.POCWitness.create()
+
+                            {:ok, _activity_entry} = Query.HotspotActivity.create(%{
+                              gateway: witness_gateway,
+                              poc_rx_txn_hash: :blockchain_txn.hash(txn),
+                              poc_rx_txn_block_height: height,
+                              poc_witness_id: poc_witness.id,
+                              poc_witness_challenge_id: poc_receipt_txn_entry.id
+                            })
                         end
                       end)
                 end
