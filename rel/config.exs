@@ -49,7 +49,9 @@ environment :prod do
     peer: "rel/commands/peer",
     genesis: "rel/commands/genesis",
     ledger: "rel/commands/ledger",
-    status: "rel/commands/status"
+    status: "rel/commands/status",
+    create_db: "rel/commands/create_db.sh",
+    migrate_db: "rel/commands/migrate_db.sh"
   ]
 end
 
@@ -63,6 +65,11 @@ release :blockchain_api do
   set applications: [
     :runtime_tools
   ]
-  set pre_start_hooks: "rel/hooks"
+  set config_providers: [
+    {Mix.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/config.exs"]}
+  ]
+  set overlays: [
+    {:copy, "rel/config.exs", "etc/config.exs"}
+  ]
 end
 

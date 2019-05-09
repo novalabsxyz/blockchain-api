@@ -1,25 +1,21 @@
-version: '3.5'
+version: '3.6'
 
 services:
-  db:
-    image: postgres:11-alpine
-    volumes:
-      - /var/lib/postgresql/data
-    ports:
-      - 5432
+  app:
+    image: blockchain_api:latest
     env_file:
       - config/docker.env
-  web:
-    image: "blockchain_api:latest"
     ports:
-      - "80:4001"
-    volumes:
-      - type: bind
-        source: .
-        target: /opt/app/blockchain_api
-    env_file:
-      - config/docker.env
+      - "4001:4001"
     depends_on:
       - db
-    command:
-      - ./run.sh
+  db:
+    image: postgres:latest
+    env_file:
+      - config/docker.env
+    restart: "always"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

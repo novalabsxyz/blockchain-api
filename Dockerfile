@@ -14,7 +14,12 @@ ENV APP_NAME="blockchain_api"
 RUN \
     apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install curl build-essential unzip locate flex bison libgmp-dev cmake doxygen
+    apt-get -y install curl build-essential unzip locate flex bison libgmp-dev cmake doxygen locales tree
+
+RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
+RUN locale-gen en_US.UTF-8
 
 # Download & extract & make libsodium
 # Move libsodium build
@@ -39,17 +44,20 @@ RUN echo "StrictHostKeyChecking no " >> /root/.ssh/config
 WORKDIR /opt/app
 
 # Copy only the required files
-COPY ./lib ./lib
-COPY ./priv ./priv
-COPY ./cmd .
-COPY ./Makefile .
-COPY ./mix.exs .
-COPY ./mix.lock .
-COPY ./config/prod.exs ./config/prod.exs
-COPY ./config/config.exs ./config/config.exs
-COPY ./rebar3 .
-COPY ./rel ./rel
-COPY ./run.sh .
+ADD ./lib ./lib
+ADD ./priv ./priv
+ADD ./cmd .
+ADD ./Makefile .
+ADD ./mix.exs .
+ADD ./mix.lock .
+ADD ./config/prod.exs ./config/prod.exs
+ADD ./config/config.exs ./config/config.exs
+ADD ./rebar3 .
+ADD ./rel ./rel
+ADD ./run.sh .
+
+# Check whether we have everything we need
+RUN tree
 
 # Env must be set at _build_ time for app to work correctly
 ENV REPLACE_OS_VARS=true
@@ -99,16 +107,28 @@ RUN mix local.rebar --force && \
 FROM elixir:latest
 
 RUN apt-get update
+RUN apt-get -y install locales tree
 
 ARG APP_NAME
 
+# Why the fuck do I have to do this again >:(
+RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
+RUN locale-gen en_US.UTF-8
+
 ENV REPLACE_OS_VARS=true
 ENV APP_NAME=${APP_NAME}
+ENV LD_LIBRARY_PATH /usr/local/lib
+ENV MIX_ENV prod
 
+# Copy libsodium and stuff
+COPY --from=build /usr/local .
+
+# Move to the app directory
 WORKDIR /opt/app
 
-COPY --from=build /usr/local .
+# Copy the built release
 COPY --from=build /opt/built .
-COPY --from=build /opt/app/run.sh .
 
 CMD trap 'exit' INT; /opt/app/bin/${APP_NAME} foreground

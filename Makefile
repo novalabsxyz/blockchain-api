@@ -72,7 +72,7 @@ docker-build:
 		--build-arg ONESIGNAL_APP_ID=${ONESIGNAL_APP_ID} \
 		--build-arg SECRET_KEY_BASE=${SECRET_KEY_BASE} \
 		--build-arg PORT=${PORT} \
-		--build-arg DATBASE_NAME=${DATABASE_NAME} \
+		--build-arg DATABASE_NAME=${DATABASE_NAME} \
 		--build-arg DATABASE_USER=${DATABASE_USER} \
 		--build-arg DATABASE_PASS=${DATABASE_PASS} \
 		--build-arg DATABASE_HOST=${DATABASE_HOST} \
