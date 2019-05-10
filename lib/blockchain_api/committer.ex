@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Committer do
   alias BlockchainAPI.{
     Repo,
     Query,
+    Schema.Account,
     Schema.Block,
     Schema.Transaction,
     Schema.GatewayTransaction,
@@ -22,28 +23,20 @@ defmodule BlockchainAPI.Committer do
     Schema.ElectionTransaction,
     Schema.ConsensusMember
   }
+
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
   require Logger
 
   def commit(block, ledger) do
-    # NOTE: the block commit _needs_ to happen as a single DB transaction
-    # to ensure consistency
-    commit_block(block, ledger)
-    # This is extra information that we're gathering just for the application
-    commit_account_balances(block, ledger)
-  end
-
-  defp commit_block(block, ledger) do
     block_txn =
       Repo.transaction(fn() ->
 
-        {:ok, inserted_block} = block
-                                |> Block.map()
-                                |> Query.Block.create()
-        add_accounts(block, ledger)
+        {:ok, inserted_block} = block |> Block.map() |> Query.Block.create()
         add_transactions(block, ledger)
         add_account_transactions(block)
+        commit_account_balances(block, ledger)
+        update_account_fee(ledger)
         # NOTE: move this elsewhere...
         BlockChannel.broadcast_change(inserted_block)
       end)
@@ -74,42 +67,47 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
+  defp update_account_fee(ledger) do
+    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
+    Query.Account.update_all_fee(fee)
+  end
+
   #==================================================================
   # Add all accounts
   #==================================================================
-  defp add_accounts(block, ledger) do
-    # NOTE: A block may contain multiple transactions of different types
-    # There could also be multiple transactions made from the same account address
-    # Since this is just add_accounts, and address is a primary key, I think it's probably
-    # fine to add it directly, BUT the balance needs to be updated at the end for the account
-    # and so does the transaction fee
-    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
+  # defp add_accounts(block, ledger) do
+  #   # NOTE: A block may contain multiple transactions of different types
+  #   # There could also be multiple transactions made from the same account address
+  #   # Since this is just add_accounts, and address is a primary key, I think it's probably
+  #   # fine to add it directly, BUT the balance needs to be updated at the end for the account
+  #   # and so does the transaction fee
+  #   {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
 
-    case :blockchain_block.transactions(block) do
-      [] ->
-        :ok
-      txns ->
-        Enum.map(txns,
-          fn txn ->
-            case :blockchain_txn.type(txn) do
-              :blockchain_txn_coinbase_v1 ->
-                {:ok, account} = upsert_account(:blockchain_txn_coinbase_v1, txn, ledger)
-                # NOTE: move this elsewhere...
-                AccountChannel.broadcast_change(account)
-              :blockchain_txn_payment_v1 ->
-                {:ok, account} = upsert_account(:blockchain_txn_payment_v1, txn, ledger)
-                # NOTE: move this elsewhere...
-                AccountChannel.broadcast_change(account)
-              _ ->
-                :ok
-            end
-          end)
-    end
+  #   case :blockchain_block.transactions(block) do
+  #     [] ->
+  #       :ok
+  #     txns ->
+  #       Enum.map(txns,
+  #         fn txn ->
+  #           case :blockchain_txn.type(txn) do
+  #             :blockchain_txn_coinbase_v1 ->
+  #               {:ok, account} = upsert_account(:blockchain_txn_coinbase_v1, txn, ledger)
+  #               # NOTE: move this elsewhere...
+  #               AccountChannel.broadcast_change(account)
+  #             :blockchain_txn_payment_v1 ->
+  #               {:ok, account} = upsert_account(:blockchain_txn_payment_v1, txn, ledger)
+  #               # NOTE: move this elsewhere...
+  #               AccountChannel.broadcast_change(account)
+  #             _ ->
+  #               :ok
+  #           end
+  #         end)
+  #   end
 
-    # NOTE: We'd have added whatever accounts were added/updated for this block at this point
-    # It should be "safe" to update the transaction fee for each account from the ledger
-    Query.Account.update_all_fee(fee)
-  end
+  #   # NOTE: We'd have added whatever accounts were added/updated for this block at this point
+  #   # It should be "safe" to update the transaction fee for each account from the ledger
+  #   Query.Account.update_all_fee(fee)
+  # end
 
   #==================================================================
   # Add all transactions
@@ -121,18 +119,18 @@ defmodule BlockchainAPI.Committer do
       txns ->
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, block)
-            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, block)
-            :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, block)
-            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block)
+            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, block, ledger)
+            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, block, ledger)
+            :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, ledger)
+            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, ledger)
             :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger)
             :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger)
             :blockchain_txn_assert_location_v1 ->
-              insert_transaction(:blockchain_txn_assert_location_v1, txn, block)
+              insert_transaction(:blockchain_txn_assert_location_v1, txn, block, ledger)
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn)
-            :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block)
-            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, block)
+            :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block, ledger)
+            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, block, ledger)
             _ ->
               :ok
           end
@@ -198,92 +196,123 @@ defmodule BlockchainAPI.Committer do
   # Upsert account from transactions
   #==================================================================
 
-  defp upsert_account(:blockchain_txn_coinbase_v1, txn, ledger) do
-    addr = :blockchain_txn_coinbase_v1.payee(txn)
-    {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
-    try do
-      account = Query.Account.get!(addr)
-      account_map =
-        %{balance: :blockchain_ledger_entry_v1.balance(entry),
-          nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-      account = Query.Account.update!(account, account_map)
-      {:ok, account}
-    rescue
-      _error in Ecto.NoResultsError ->
-        account_map =
-          %{address: addr,
-            balance: :blockchain_ledger_entry_v1.balance(entry),
-            nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-        Query.Account.create(account_map)
-    end
-  end
+  # defp upsert_account(:blockchain_txn_coinbase_v1, txn, ledger) do
+  #   addr = :blockchain_txn_coinbase_v1.payee(txn)
+  #   {:ok, entry} = :blockchain_ledger_v1.find_entry(addr, ledger)
+  #   try do
+  #     account = Query.Account.get!(addr)
+  #     account_map =
+  #       %{balance: :blockchain_ledger_entry_v1.balance(entry),
+  #         nonce: :blockchain_ledger_entry_v1.nonce(entry)}
+  #     account = Query.Account.update!(account, account_map)
+  #     {:ok, account}
+  #   rescue
+  #     _error in Ecto.NoResultsError ->
+  #       account_map =
+  #         %{address: addr,
+  #           balance: :blockchain_ledger_entry_v1.balance(entry),
+  #           nonce: :blockchain_ledger_entry_v1.nonce(entry)}
+  #       Query.Account.create(account_map)
+  #   end
+  # end
 
-  defp upsert_account(:blockchain_txn_payment_v1, txn, ledger) do
-    payee = :blockchain_txn_payment_v1.payee(txn)
-    payer = :blockchain_txn_payment_v1.payer(txn)
-    amount = :blockchain_txn_payment_v1.amount(txn)
+  # defp upsert_account(:blockchain_txn_payment_v1, txn, ledger) do
+  #   payee = :blockchain_txn_payment_v1.payee(txn)
+  #   payer = :blockchain_txn_payment_v1.payer(txn)
+  #   amount = :blockchain_txn_payment_v1.amount(txn)
 
-    # NOTE: It's possible that this is a brand new payee and hasn't appeared
-    # on the ledger yet, we create a dummy entry for it to make the DB happy
-    payee_entry =
-      case :blockchain_ledger_v1.find_entry(payee, ledger) do
-        {:ok, p} ->
-          p
-        {:error, :not_found} ->
-          :blockchain_ledger_entry_v1.new(0, amount)
-      end
+  #   # NOTE: It's possible that this is a brand new payee and hasn't appeared
+  #   # on the ledger yet, we create a dummy entry for it to make the DB happy
+  #   payee_entry =
+  #     case :blockchain_ledger_v1.find_entry(payee, ledger) do
+  #       {:ok, p} ->
+  #         p
+  #       {:error, :not_found} ->
+  #         :blockchain_ledger_entry_v1.new(0, amount)
+  #     end
 
-    {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
+  #   {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
 
-    try do
-      payer_account = Query.Account.get!(payer)
-      payer_map =
-        %{balance: :blockchain_ledger_entry_v1.balance(payer_entry),
-          nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-      account = Query.Account.update!(payer_account, payer_map)
-      {:ok, account}
-    rescue
-      _error in Ecto.NoResultsError ->
-        payer_map =
-          %{address: payer,
-            balance: :blockchain_ledger_entry_v1.balance(payer_entry),
-            nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
-        Query.Account.create(payer_map)
-    end
-    try do
-      payee_account = Query.Account.get!(payee)
-      payee_map =
-        %{balance: :blockchain_ledger_entry_v1.balance(payee_entry),
-          nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-      account = Query.Account.update!(payee_account, payee_map)
-      {:ok, account}
-    rescue
-      _error in Ecto.NoResultsError ->
-        payee_map =
-          %{address: payee,
-            balance: :blockchain_ledger_entry_v1.balance(payee_entry),
-            nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-        Query.Account.create(payee_map)
-    end
-  end
+  #   try do
+  #     payer_account = Query.Account.get!(payer)
+  #     payer_map =
+  #       %{balance: :blockchain_ledger_entry_v1.balance(payer_entry),
+  #         nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
+  #     account = Query.Account.update!(payer_account, payer_map)
+  #     {:ok, account}
+  #   rescue
+  #     _error in Ecto.NoResultsError ->
+  #       payer_map =
+  #         %{address: payer,
+  #           balance: :blockchain_ledger_entry_v1.balance(payer_entry),
+  #           nonce: :blockchain_ledger_entry_v1.nonce(payer_entry)}
+  #       Query.Account.create(payer_map)
+  #   end
+  #   try do
+  #     payee_account = Query.Account.get!(payee)
+  #     payee_map =
+  #       %{balance: :blockchain_ledger_entry_v1.balance(payee_entry),
+  #         nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
+  #     account = Query.Account.update!(payee_account, payee_map)
+  #     {:ok, account}
+  #   rescue
+  #     _error in Ecto.NoResultsError ->
+  #       payee_map =
+  #         %{address: payee,
+  #           balance: :blockchain_ledger_entry_v1.balance(payee_entry),
+  #           nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
+  #       Query.Account.create(payee_map)
+  #   end
+  # end
 
 
   #==================================================================
   # Insert individual transactions
   #==================================================================
-  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, block, ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-    {:ok, _} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
+    {:ok, _coinbase_entry} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
+
+    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
+    payee = :blockchain_txn_coinbase_v1.payee(txn)
+    amount = :blockchain_txn_coinbase_v1.amount(txn)
+
+    entry =
+      case :blockchain_ledger_v1.find_entry(payee, ledger) do
+        {:error, :not_found} ->
+          :blockchain_ledger_entry_v1.new(0, amount)
+        {:ok, e} ->
+          e
+      end
+
+    try do
+      account = Query.Account.get!(payee)
+      map = %{
+        address: payee,
+        balance: :blockchain_ledger_entry_v1.balance(entry),
+        fee: fee,
+        nonce: :blockchain_ledger_entry_v1.nonce(entry)}
+      {:ok, account_entry} = Account.changeset(account, map) |> Repo.insert()
+      AccountChannel.broadcast_change(account_entry)
+    rescue
+      _error in Ecto.NoResultsError ->
+        map = %{
+          address: payee,
+          balance: :blockchain_ledger_entry_v1.balance(entry),
+          fee: fee,
+          nonce: :blockchain_ledger_entry_v1.nonce(entry)}
+        {:ok, _} = Account.changeset(%Account{}, map) |> Repo.insert()
+    end
   end
 
-  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
@@ -295,25 +324,25 @@ defmodule BlockchainAPI.Committer do
       end)
   end
 
-  defp insert_transaction(:blockchain_txn_payment_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_payment_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
     {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
     {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_assert_location_v1, txn))
   end
 
-  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block) do
+  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
 
