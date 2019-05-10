@@ -20,7 +20,7 @@ defmodule BlockchainAPI.FakeRewarder do
   def init(_args) do
     :ok = :blockchain_event.add_handler(self())
     chain = :blockchain_worker.blockchain()
-    {:ok, public_key, sigfun} = :blockchain_swarm.keys()
+    {:ok, public_key, sigfun, _ecdh_fun} = :blockchain_swarm.keys()
     payer = :libp2p_crypto.pubkey_to_bin(public_key)
     {:ok, %{payer: payer, sigfun: sigfun, reward_height: 0, chain: chain}}
   end
