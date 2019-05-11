@@ -167,30 +167,16 @@ defmodule BlockchainAPI.Committer do
     payee = :blockchain_txn_coinbase_v1.payee(txn)
     amount = :blockchain_txn_coinbase_v1.amount(txn)
 
-    entry =
-      case :blockchain_ledger_v1.find_entry(payee, ledger) do
-        {:error, :not_found} ->
-          :blockchain_ledger_entry_v1.new(0, amount)
-        {:ok, e} ->
-          e
-      end
-
     try do
       account = Query.Account.get!(payee)
-      map = %{
-        balance: :blockchain_ledger_entry_v1.balance(entry),
-        fee: fee,
-        nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-      {:ok, account_entry} = Account.changeset(account, map) |> Repo.update()
+      {:ok, account_entry} = Account.changeset(account, %{balance: (account.balance + amount), fee: fee})
+                             |> Repo.update()
       AccountChannel.broadcast_change(account_entry)
     rescue
       _error in Ecto.NoResultsError ->
-        map = %{
-          address: payee,
-          balance: :blockchain_ledger_entry_v1.balance(entry),
-          fee: fee,
-          nonce: :blockchain_ledger_entry_v1.nonce(entry)}
-        {:ok, _} = Account.changeset(%Account{}, map) |> Repo.insert()
+        {:ok, account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount, fee: fee})
+                               |> Repo.insert()
+        AccountChannel.broadcast_change(account_entry)
     end
   end
 
@@ -212,7 +198,7 @@ defmodule BlockchainAPI.Committer do
       end)
   end
 
-  defp insert_transaction(:blockchain_txn_payment_v1, txn, block, ledger) do
+  defp insert_transaction(:blockchain_txn_payment_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
     {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
@@ -225,39 +211,23 @@ defmodule BlockchainAPI.Committer do
     payer_nonce = :blockchain_txn_payment_v1.nonce(txn)
 
     # The payee can be unknown (a new account for example)
-    payee_entry =
-      case :blockchain_ledger_v1.find_entry(payee, ledger) do
-        {:error, :not_found} ->
-          :blockchain_ledger_entry_v1.new(0, amount)
-        {:ok, e} ->
-          e
-      end
     try do
       payee_account = Query.Account.get!(payee)
-      map = %{
-        balance: :blockchain_ledger_entry_v1.balance(payee_entry),
-        fee: fee,
-        nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-      {:ok, _} = Account.changeset(payee_account, map) |> Repo.update()
+      {:ok, payee_account_entry} = Account.changeset(payee_account, %{balance: (payee_account.balance + amount), fee: fee})
+                                   |> Repo.update()
+      AccountChannel.broadcast_change(payee_account_entry)
     rescue
       _error in Ecto.NoResultsError ->
-        map = %{
-          address: payee,
-          balance: :blockchain_ledger_entry_v1.balance(payee_entry),
-          fee: fee,
-          nonce: :blockchain_ledger_entry_v1.nonce(payee_entry)}
-        {:ok, _} = Account.changeset(%Account{}, map) |> Repo.insert()
+        {:ok, payee_account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount, fee: fee})
+                                     |> Repo.insert()
+        AccountChannel.broadcast_change(payee_account_entry)
     end
 
     # A payment transaction cannot originate from an unknown payer
-    {:ok, payer_entry} = :blockchain_ledger_v1.find_entry(payer, ledger)
     payer_account = Query.Account.get!(payer)
-    payer_map = %{
-      balance: :blockchain_ledger_entry_v1.balance(payer_entry),
-      fee: fee,
-      nonce: payer_nonce}
-    {:ok, _} = Account.changeset(payer_account, payer_map) |> Repo.update()
-
+    {:ok, payer_account_entry} = Account.changeset(payer_account, %{balance: (payer_account.balance - amount), fee: fee, nonce: payer_nonce})
+                                 |> Repo.update()
+    AccountChannel.broadcast_change(payer_account_entry)
   end
 
   defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, _ledger) do
