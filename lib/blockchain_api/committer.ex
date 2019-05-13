@@ -158,23 +158,22 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Insert individual transactions
   #==================================================================
-  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, block, ledger) do
+  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, block, _ledger) do
     height = :blockchain_block.height(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
     {:ok, _coinbase_entry} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
 
-    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
     payee = :blockchain_txn_coinbase_v1.payee(txn)
     amount = :blockchain_txn_coinbase_v1.amount(txn)
 
     try do
       account = Query.Account.get!(payee)
-      {:ok, account_entry} = Account.changeset(account, %{balance: (account.balance + amount), fee: fee})
+      {:ok, account_entry} = Account.changeset(account, %{balance: (account.balance + amount)})
                              |> Repo.update()
       AccountChannel.broadcast_change(account_entry)
     rescue
       _error in Ecto.NoResultsError ->
-        {:ok, account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount, fee: fee})
+        {:ok, account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount})
                                |> Repo.insert()
         AccountChannel.broadcast_change(account_entry)
     end
@@ -213,19 +212,19 @@ defmodule BlockchainAPI.Committer do
     # The payee can be unknown (a new account for example)
     try do
       payee_account = Query.Account.get!(payee)
-      {:ok, payee_account_entry} = Account.changeset(payee_account, %{balance: (payee_account.balance + amount), fee: fee})
+      {:ok, payee_account_entry} = Account.changeset(payee_account, %{balance: (payee_account.balance + amount)})
                                    |> Repo.update()
       AccountChannel.broadcast_change(payee_account_entry)
     rescue
       _error in Ecto.NoResultsError ->
-        {:ok, payee_account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount, fee: fee})
+        {:ok, payee_account_entry} = Account.changeset(%Account{}, %{address: payee, balance: amount})
                                      |> Repo.insert()
         AccountChannel.broadcast_change(payee_account_entry)
     end
 
     # A payment transaction cannot originate from an unknown payer
     payer_account = Query.Account.get!(payer)
-    {:ok, payer_account_entry} = Account.changeset(payer_account, %{balance: (payer_account.balance - amount), fee: fee, nonce: payer_nonce})
+    {:ok, payer_account_entry} = Account.changeset(payer_account, %{balance: (payer_account.balance - (amount+fee)), nonce: payer_nonce})
                                  |> Repo.update()
     AccountChannel.broadcast_change(payer_account_entry)
   end
