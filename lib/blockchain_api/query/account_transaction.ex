@@ -180,7 +180,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
 
   defp filter_before(query, before, limit) do
     query
-    |> where([at], at.inserted_at < ^before)
+    |> where([at], at.id < ^before)
     |> limit(^limit)
   end
 
@@ -195,34 +195,34 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                 res = entry.txn_hash
                       |> Query.Transaction.get_payment!()
                       |> PaymentTransaction.encode_model()
-                [res | acc]
+                [Map.merge(res, %{id: entry.id}) | acc]
               "coinbase" ->
                 res = entry.txn_hash
                       |> Query.Transaction.get_coinbase!()
                       |> CoinbaseTransaction.encode_model()
-                [res | acc]
+                [Map.merge(res, %{id: entry.id}) | acc]
               "security" ->
                 res = entry.txn_hash
                       |> Query.Transaction.get_security!()
                       |> SecurityTransaction.encode_model()
-                [res | acc]
+                [Map.merge(res, %{id: entry.id}) | acc]
               "gateway" ->
                 res = entry.txn_hash
                       |> Query.Transaction.get_gateway!()
                       |> GatewayTransaction.encode_model()
-                [res | acc]
+                [Map.merge(res, %{id: entry.id}) | acc]
               "location" ->
                 res = entry.txn_hash
                       |> Query.Transaction.get_location!()
                       |> LocationTransaction.encode_model()
-                [res | acc]
+                [Map.merge(res, %{id: entry.id}) | acc]
             end
           "pending" ->
             case entry.txn_type do
               "payment" ->
                 try do
                   res = Query.PendingPayment.get!(entry.txn_hash)
-                  [res | acc]
+                  [Map.merge(res, %{id: entry.id}) | acc]
                 rescue
                   _error in Ecto.NoResultsError ->
                     acc
@@ -230,7 +230,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
               "coinbase" ->
                 try do
                   res = Query.PendingCoinbase.get!(entry.txn_hash)
-                  [res | acc]
+                  [Map.merge(res, %{id: entry.id}) | acc]
                 rescue
                   _error in Ecto.NoResultsError ->
                     acc
@@ -238,7 +238,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
               "gateway" ->
                 try do
                   res = Query.PendingGateway.get!(entry.txn_hash)
-                  [res | acc]
+                  [Map.merge(res, %{id: entry.id}) | acc]
                 rescue
                   _error in Ecto.NoResultsError ->
                     acc
@@ -246,7 +246,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
               "location" ->
                 try do
                   res = Query.PendingLocation.get!(entry.txn_hash)
-                  [res | acc]
+                  [Map.merge(res, %{id: entry.id}) | acc]
                 rescue
                   _error in Ecto.NoResultsError ->
                     acc
