@@ -20,7 +20,7 @@ defmodule BlockchainAPI.Application do
 
     swarm_key = to_charlist(:filename.join([base_dir, "blockchain_api", "swarm_key"]))
     :ok = :filelib.ensure_dir(swarm_key)
-    {pubkey, _ecdh_fun, sig_fun} =
+    {pubkey, ecdh_fun, sig_fun} =
       case :libp2p_crypto.load_keys(swarm_key) do
         {:ok, %{:secret => priv_key, :public => pub_key}} ->
           {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
@@ -35,7 +35,7 @@ defmodule BlockchainAPI.Application do
     seed_addresses = dns_to_addresses(seed_node_dns)
 
     blockchain_sup_opts = [
-      {:key, {pubkey, sig_fun}},
+      {:key, {pubkey, sig_fun, ecdh_fun}},
       {:seed_nodes, seed_nodes ++ seed_addresses},
       {:port, 0},
       {:num_consensus_members, 7},
