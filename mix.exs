@@ -64,8 +64,7 @@ defmodule BlockchainAPI.MixProject do
 
       # blockchain requirements
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "adt/ecdh-fun"},
-      {:libp2p, git: "git@github.com:helium/erlang-libp2p.git", override: true, branch: "adt/ecdh-fun"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
