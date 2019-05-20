@@ -37,6 +37,7 @@ defmodule BlockchainAPI.Committer do
         add_account_transactions(block)
         commit_account_balances(block, ledger)
         update_account_fee(ledger)
+        update_hotspot_score(ledger)
         # NOTE: move this elsewhere...
         BlockChannel.broadcast_change(inserted_block)
       end)
@@ -72,6 +73,15 @@ defmodule BlockchainAPI.Committer do
     Query.Account.update_all_fee(fee)
   end
 
+  defp update_hotspot_score(ledger) do
+    :ok = Query.Hotspot.all()
+          |> Enum.each(
+            fn(hotspot) ->
+              {:ok, score} = :blockchain_ledger_v1.gateway_score(hotspot.address, ledger)
+              Query.Hotspot.update!(hotspot, %{score: score})
+            end)
+  end
+
   #==================================================================
   # Add all transactions
   #==================================================================
@@ -84,14 +94,18 @@ defmodule BlockchainAPI.Committer do
           case :blockchain_txn.type(txn) do
             :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, block, ledger)
             :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, block, ledger)
-            :blockchain_txn_add_gateway_v1 -> insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, ledger)
-            :blockchain_txn_gen_gateway_v1 -> insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, ledger)
+            :blockchain_txn_add_gateway_v1 ->
+              insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, ledger)
+              upsert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
+            :blockchain_txn_gen_gateway_v1 ->
+              insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, ledger)
+              upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
             :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger)
             :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger)
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, block, ledger)
               # also upsert hotspot
-              upsert_hotspot(:blockchain_txn_assert_location_v1, txn)
+              upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
             :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block, ledger)
             :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, block, ledger)
             _ ->
@@ -252,7 +266,6 @@ defmodule BlockchainAPI.Committer do
         :ok
       _ ->
         {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_gen_gateway_v1, txn))
-        upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn)
     end
   end
 
@@ -506,10 +519,10 @@ end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
 
-  defp upsert_hotspot(txn_mod, txn) do
+  defp upsert_hotspot(txn_mod, txn, ledger) do
     try do
       hotspot = txn |> txn_mod.gateway() |> Query.Hotspot.get!()
-      case Hotspot.map(txn_mod, txn) do
+      case Hotspot.map(txn_mod, txn, ledger) do
         {:error, _}=error ->
           #XXX: Don't update if googleapi failed?
           error
@@ -519,7 +532,7 @@ end
     rescue
       _error in Ecto.NoResultsError ->
         # No hotspot entry exists in the hotspot table
-        case Hotspot.map(txn_mod, txn) do
+        case Hotspot.map(txn_mod, txn, ledger) do
           {:error, _}=error ->
             #XXX: Don't add it if googleapi failed?
             error
