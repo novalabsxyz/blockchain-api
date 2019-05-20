@@ -77,7 +77,12 @@ defmodule BlockchainAPI.Committer do
     :ok = Query.Hotspot.all()
           |> Enum.each(
             fn(hotspot) ->
+              {:ok, name} = :erl_angry_purple_tiger.animal_name(:libp2p_crypto.pubkey_to_b58(:libp2p_crypto.bin_to_pubkey(hotspot.address)))
               {:ok, score} = :blockchain_ledger_v1.gateway_score(hotspot.address, ledger)
+              {:ok, gwinfo} = :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger)
+              alpha = :blockchain_ledger_gateway_v1.alpha(gwinfo)
+              beta = :blockchain_ledger_gateway_v1.beta(gwinfo)
+              Logger.debug("Hotspot: #{name}, Score: #{score}, Alpha: #{alpha}, Beta: #{beta}")
               Query.Hotspot.update!(hotspot, %{score: score})
             end)
   end
