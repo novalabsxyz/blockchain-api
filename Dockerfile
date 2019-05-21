@@ -54,7 +54,6 @@ ADD ./config/prod.exs ./config/prod.exs
 ADD ./config/config.exs ./config/config.exs
 ADD ./rebar3 .
 ADD ./rel ./rel
-ADD ./run.sh .
 
 # Check whether we have everything we need
 RUN tree
