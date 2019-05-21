@@ -6,7 +6,8 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     Repo,
     Util,
     Schema.GatewayTransaction,
-    Schema.LocationTransaction
+    Schema.LocationTransaction,
+    Schema.Hotspot
   }
 
   def list(_params) do
@@ -14,6 +15,8 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
       g in GatewayTransaction,
       left_join: l in LocationTransaction,
       on: g.gateway == l.gateway,
+      left_join: h in Hotspot,
+      on: g.gateway == h.address,
       select: %{
         gateway: g.gateway,
         gateway_hash: g.hash,
@@ -22,7 +25,8 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
         location: l.location,
         location_fee: l.fee,
         location_nonce: l.nonce,
-        location_hash: l.hash
+        location_hash: l.hash,
+        score: h.score
       }
     )
 
