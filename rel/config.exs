@@ -53,6 +53,8 @@ environment :prod do
     create_db: "rel/commands/create_db.sh",
     migrate_db: "rel/commands/migrate_db.sh"
   ]
+  set pre_start_hooks: "rel/hooks/pre_start"
+  set post_start_hooks: "rel/hooks/post_start"
 end
 
 # You may define one or more releases in this file.

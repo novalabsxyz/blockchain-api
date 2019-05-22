@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Running database creation"
-bin/blockchain_api command Elixir.Release.Tasks create_db
+echo "Create DB"
+bin/blockchain_api command Elixir.BlockchainAPI.Release.Tasks createdb
 echo "DB created successfully"
