@@ -5,21 +5,21 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
     create table(:hotspots) do
       add :address, :binary, null: false
       add :owner, :binary, null: false
-      add :location, :string, null: false
-      add :long_city, :string, null: false
-      add :long_street, :string, null: false
-      add :long_state, :string, null: false
-      add :long_country, :string, null: false
-      add :short_street, :string, null: false
-      add :short_city, :string, null: false
-      add :short_state, :string, null: false
-      add :short_country, :string, null: false
+      add :score, :float, null: false, default: 0.0
+      add :location, :string, null: true
+      add :long_city, :string, null: true
+      add :long_street, :string, null: true
+      add :long_state, :string, null: true
+      add :long_country, :string, null: true
+      add :short_street, :string, null: true
+      add :short_city, :string, null: true
+      add :short_state, :string, null: true
+      add :short_country, :string, null: true
 
       timestamps()
     end
 
     create unique_index(:hotspots, [:address], name: :unique_hotspots)
-    create unique_index(:hotspots, [:short_city, :address], name: :unique_city_hotspots)
   end
 
   def down do

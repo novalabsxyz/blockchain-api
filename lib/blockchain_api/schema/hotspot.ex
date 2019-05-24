@@ -16,7 +16,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
     :short_state,
     :short_country,
     :lat,
-    :lng
+    :lng,
+    :score
   ]
 
   @derive {Phoenix.Param, key: :address}
@@ -33,6 +34,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
     field :short_city, :string, null: false
     field :short_state, :string, null: false
     field :short_country, :string, null: false
+    field :score, :float, null: false, default: 0.0
 
     timestamps()
   end
@@ -40,13 +42,25 @@ defmodule BlockchainAPI.Schema.Hotspot do
   @doc false
   def changeset(hotspot, attrs) do
     hotspot
-    |> cast(attrs, [:address, :owner, :location, :long_city, :long_country, :long_street, :long_state, :short_street, :short_city, :short_country, :short_state])
-    |> validate_required([:address, :owner, :location, :long_city, :long_country, :long_street, :long_state, :short_street, :short_city, :short_country, :short_state])
+    |> cast(attrs,
+      [:address,
+      :owner,
+      :location,
+      :long_city,
+      :long_country,
+      :long_street,
+      :long_state,
+      :short_street,
+      :short_city,
+      :short_country,
+      :short_state,
+      :score])
+    |> validate_required([:address, :owner, :score])
     |> unique_constraint(:unique_hotspots)
-    |> unique_constraint(:unique_city_hotspots)
   end
 
   def encode_model(hotspot) do
+    score = Decimal.from_float(hotspot.score) |> Decimal.round(4) |> Decimal.to_float()
     {lat, lng} = Util.h3_to_lat_lng(hotspot.location)
 
     hotspot
@@ -55,7 +69,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
       address: Util.bin_to_string(hotspot.address),
       owner: Util.bin_to_string(hotspot.owner),
       lat: lat,
-      lng: lng
+      lng: lng,
+      score: score
     })
   end
 
@@ -67,20 +82,52 @@ defmodule BlockchainAPI.Schema.Hotspot do
     end
   end
 
-  def map(txn_mod, txn) do
-    loc = txn_mod.location(txn)
-
-    case Util.reverse_geocode(loc) do
-      {:ok, loc_info_map} ->
-        Map.merge(
+  ## NOTE: special case for genesis gateways
+  def map(:blockchain_txn_gen_gateway_v1, txn, _ledger) do
+    case :blockchain_txn_gen_gateway_v1.location(txn) do
+      :undefined ->
         %{
-          address: txn_mod.gateway(txn),
-          owner: txn_mod.owner(txn),
-          location: Util.h3_to_string(loc)
-        }, loc_info_map)
-      error ->
-        # XXX: What if googleapi lookup fails!
+          address: :blockchain_txn_gen_gateway_v1.gateway(txn),
+          owner: :blockchain_txn_gen_gateway_v1.owner(txn),
+          location: nil,
+          score: :blockchain_txn_gen_gateway_v1.score(txn)
+        }
+      loc ->
+        case Util.reverse_geocode(loc) do
+          {:ok, loc_info_map} ->
+            Map.merge(
+              %{
+                address: :blockchain_txn_gen_gateway_v1.gateway(txn),
+                owner: :blockchain_txn_gen_gateway_v1.owner(txn),
+                location: Util.h3_to_string(loc),
+                score: :blockchain_txn_gen_gateway_v1.score(txn)
+              }, loc_info_map)
+          error ->
+            # XXX: What if googleapi lookup fails!
+            error
+        end
+    end
+  end
+
+  def map(txn_mod, txn, ledger) do
+    address = txn_mod.gateway(txn)
+    owner = txn_mod.owner(txn)
+    case :blockchain_ledger_v1.gateway_score(address, ledger) do
+      {:error, _}=error ->
         error
+      {:ok, score} ->
+        case txn_mod.location(txn) do
+          :undefined ->
+            %{address: address, owner: owner, location: nil, score: score}
+          loc ->
+            case Util.reverse_geocode(loc) do
+              {:ok, loc_info_map} ->
+                Map.merge(%{address: address, owner: owner, location: Util.h3_to_string(loc), score: score}, loc_info_map)
+              error ->
+                # XXX: What if googleapi lookup fails!
+                error
+            end
+        end
     end
   end
 end
