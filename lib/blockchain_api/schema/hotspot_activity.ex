@@ -28,7 +28,7 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :poc_rx_id, :integer, null: true
     field :poc_witness_challenge_id, :integer, null: true
     field :poc_rx_challenge_id, :integer, null: true
-    field :poc_score, :float, null: false, default: 0.0
+    field :poc_score, :float, null: true
 
     timestamps()
   end
@@ -37,7 +37,7 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
   def changeset(hotspot_activity, attrs) do
     hotspot_activity
     |> cast(attrs, @fields)
-    |> validate_required([:gateway, :poc_score])
+    |> validate_required([:gateway])
     |> foreign_key_constraint(:gateway)
     |> foreign_key_constraint(:poc_req_txn_hash)
     |> foreign_key_constraint(:poc_req_txn_block_height)
