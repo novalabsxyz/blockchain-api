@@ -12,6 +12,18 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.insert()
   end
 
+  def last_poc_score(address) do
+    from(
+      ha in HotspotActivity,
+      where: ha.gateway == ^address,
+      where: not is_nil(ha.poc_rx_txn_block_height),
+      order_by: [desc: ha.id],
+      select: ha.poc_score,
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
   def activity_for(address, %{"before" => before, "limit" => limit}=_params) do
     address
     |> activity_query()
@@ -81,7 +93,8 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       poc_req_txn_hash: poc_req_txn_hash,
       poc_witness_challenge_id: entry.poc_witness_challenge_id,
       poc_rx_challenge_id: entry.poc_rx_challenge_id,
-      poc_score: entry.poc_score
+      poc_score: entry.poc_score,
+      poc_score_delta: entry.poc_score_delta
     }
   end
 end

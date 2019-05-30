@@ -13,6 +13,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
       add :poc_witness_challenge_id, references(:poc_receipts_transactions, on_delete: :nothing, column: :id), null: true
       add :poc_rx_challenge_id, references(:poc_receipts_transactions, on_delete: :nothing, column: :id), null: true
       add :poc_score, :float, null: true
+      add :poc_score_delta, :float, null: true
 
       timestamps()
     end

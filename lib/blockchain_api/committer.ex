@@ -297,6 +297,8 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
+    ## TODO: Split this function into smaller helper functions
+
     height = :blockchain_block.height(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
@@ -400,7 +402,15 @@ defmodule BlockchainAPI.Committer do
                         {:ok, rx_score} = :blockchain_ledger_v1.gateway_score(rx_gateway, ledger)
 
                         {:ok, poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
-                                              |> Query.POCReceipt.create()
+                                             |> Query.POCReceipt.create()
+
+                        rx_score_delta =
+                          case Query.HotspotActivity.last_poc_score(rx_gateway) do
+                            nil ->
+                              0.0
+                            s ->
+                              rx_score - s
+                          end
 
                         {:ok, _activity_entry} = Query.HotspotActivity.create(%{
                           gateway: rx_gateway,
@@ -408,7 +418,8 @@ defmodule BlockchainAPI.Committer do
                           poc_rx_txn_block_height: height,
                           poc_rx_id: poc_receipt.id,
                           poc_rx_challenge_id: poc_receipt_txn_entry.id,
-                          poc_score: rx_score
+                          poc_score: rx_score,
+                          poc_score_delta: rx_score_delta
                         })
 
                     end
@@ -430,13 +441,22 @@ defmodule BlockchainAPI.Committer do
                             {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
                                                  |> Query.POCWitness.create()
 
+                            wx_score_delta =
+                              case Query.HotspotActivity.last_poc_score(witness_gateway) do
+                                nil ->
+                                  0.0
+                                s ->
+                                  wx_score - s
+                              end
+
                             {:ok, _activity_entry} = Query.HotspotActivity.create(%{
                               gateway: witness_gateway,
                               poc_rx_txn_hash: :blockchain_txn.hash(txn),
                               poc_rx_txn_block_height: height,
                               poc_witness_id: poc_witness.id,
                               poc_witness_challenge_id: poc_receipt_txn_entry.id,
-                              poc_score: wx_score
+                              poc_score: wx_score,
+                              poc_score_delta: wx_score_delta
                             })
                         end
                       end)

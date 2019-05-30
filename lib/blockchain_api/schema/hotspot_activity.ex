@@ -14,7 +14,8 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     :poc_rx_id,
     :poc_witness_challenge_id,
     :poc_rx_challenge_id,
-    :poc_score
+    :poc_score,
+    :poc_score_delta
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -29,6 +30,7 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :poc_witness_challenge_id, :integer, null: true
     field :poc_rx_challenge_id, :integer, null: true
     field :poc_score, :float, null: true
+    field :poc_score_delta, :float, null: true
 
     timestamps()
   end
