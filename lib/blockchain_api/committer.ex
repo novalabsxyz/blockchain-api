@@ -37,7 +37,7 @@ defmodule BlockchainAPI.Committer do
         add_account_transactions(block)
         commit_account_balances(block, ledger)
         update_account_fee(ledger)
-        update_hotspot_score(ledger)
+        update_hotspot_score(block, ledger)
         # NOTE: move this elsewhere...
         BlockChannel.broadcast_change(inserted_block)
       end)
@@ -73,7 +73,8 @@ defmodule BlockchainAPI.Committer do
     Query.Account.update_all_fee(fee)
   end
 
-  defp update_hotspot_score(ledger) do
+  defp update_hotspot_score(block, ledger) do
+    height = :blockchain_block.height(block)
     :ok = Query.Hotspot.all()
           |> Enum.each(
             fn(hotspot) ->
@@ -83,7 +84,7 @@ defmodule BlockchainAPI.Committer do
               alpha = :blockchain_ledger_gateway_v1.alpha(gwinfo)
               beta = :blockchain_ledger_gateway_v1.beta(gwinfo)
               Logger.debug("Hotspot: #{name}, Score: #{score}, Alpha: #{alpha}, Beta: #{beta}")
-              Query.Hotspot.update!(hotspot, %{score: score})
+              Query.Hotspot.update!(hotspot, %{score: score, score_update_height: height})
             end)
   end
 
