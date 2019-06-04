@@ -17,7 +17,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
     :short_country,
     :lat,
     :lng,
-    :score
+    :score,
+    :score_update_height
   ]
 
   @derive {Phoenix.Param, key: :address}
@@ -35,6 +36,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
     field :short_state, :string, null: false
     field :short_country, :string, null: false
     field :score, :float, null: false, default: 0.0
+    field :score_update_height, :integer, null: false, default: 0
 
     timestamps()
   end
@@ -54,8 +56,9 @@ defmodule BlockchainAPI.Schema.Hotspot do
       :short_city,
       :short_country,
       :short_state,
-      :score])
-    |> validate_required([:address, :owner, :score])
+      :score,
+      :score_update_height])
+    |> validate_required([:address, :owner, :score, :score_update_height])
     |> unique_constraint(:unique_hotspots)
   end
 

@@ -15,6 +15,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
       add :short_city, :string, null: true
       add :short_state, :string, null: true
       add :short_country, :string, null: true
+      add :score_update_height, :bigint, null: false, default: 0
 
       timestamps()
     end
