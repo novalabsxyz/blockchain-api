@@ -8,8 +8,10 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     :gateway,
     :poc_req_txn_hash,
     :poc_req_txn_block_height,
+    :poc_req_txn_block_time,
     :poc_rx_txn_hash,
     :poc_rx_txn_block_height,
+    :poc_rx_txn_block_time,
     :poc_witness_id,
     :poc_rx_id,
     :poc_witness_challenge_id,
@@ -23,8 +25,10 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :gateway, :binary, null: false
     field :poc_req_txn_hash, :binary, null: true
     field :poc_req_txn_block_height, :integer, null: true
+    field :poc_req_txn_block_time, :integer, null: true
     field :poc_rx_txn_hash, :binary, null: true
     field :poc_rx_txn_block_height, :integer, null: true
+    field :poc_rx_txn_block_time, :integer, null: true
     field :poc_witness_id, :integer, null: true
     field :poc_rx_id, :integer, null: true
     field :poc_witness_challenge_id, :integer, null: true
@@ -43,8 +47,10 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     |> foreign_key_constraint(:gateway)
     |> foreign_key_constraint(:poc_req_txn_hash)
     |> foreign_key_constraint(:poc_req_txn_block_height)
+    |> foreign_key_constraint(:poc_req_txn_block_time)
     |> foreign_key_constraint(:poc_rx_txn_hash)
     |> foreign_key_constraint(:poc_rx_txn_block_height)
+    |> foreign_key_constraint(:poc_rx_txn_block_time)
     |> foreign_key_constraint(:poc_witness_id)
     |> foreign_key_constraint(:poc_rx_id)
     |> foreign_key_constraint(:poc_witness_challenge_id)

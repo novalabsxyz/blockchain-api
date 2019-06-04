@@ -277,6 +277,7 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger) do
     height = :blockchain_block.height(block)
+    time = :blockchain_block.time(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
 
     challenger = txn |> :blockchain_txn_poc_request_v1.challenger()
@@ -293,7 +294,8 @@ defmodule BlockchainAPI.Committer do
       Query.HotspotActivity.create(%{
         gateway: challenger,
         poc_req_txn_hash: :blockchain_txn.hash(txn),
-        poc_req_txn_block_height: height
+        poc_req_txn_block_height: height,
+        poc_req_txn_block_time: time
       })
   end
 
@@ -301,6 +303,7 @@ defmodule BlockchainAPI.Committer do
     ## TODO: Split this function into smaller helper functions
 
     height = :blockchain_block.height(block)
+    time = :blockchain_block.time(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
@@ -417,6 +420,7 @@ defmodule BlockchainAPI.Committer do
                           gateway: rx_gateway,
                           poc_rx_txn_hash: :blockchain_txn.hash(txn),
                           poc_rx_txn_block_height: height,
+                          poc_rx_txn_block_time: time,
                           poc_rx_id: poc_receipt.id,
                           poc_rx_challenge_id: poc_receipt_txn_entry.id,
                           poc_score: rx_score,
@@ -454,6 +458,7 @@ defmodule BlockchainAPI.Committer do
                               gateway: witness_gateway,
                               poc_rx_txn_hash: :blockchain_txn.hash(txn),
                               poc_rx_txn_block_height: height,
+                              poc_rx_txn_block_time: time,
                               poc_witness_id: poc_witness.id,
                               poc_witness_challenge_id: poc_receipt_txn_entry.id,
                               poc_score: wx_score,
