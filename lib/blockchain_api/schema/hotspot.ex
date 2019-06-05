@@ -91,8 +91,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
         %{
           address: :blockchain_txn_gen_gateway_v1.gateway(txn),
           owner: :blockchain_txn_gen_gateway_v1.owner(txn),
-          location: nil,
-          score: :blockchain_txn_gen_gateway_v1.score(txn)
+          location: nil
         }
       loc ->
         case Util.reverse_geocode(loc) do
@@ -101,8 +100,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
               %{
                 address: :blockchain_txn_gen_gateway_v1.gateway(txn),
                 owner: :blockchain_txn_gen_gateway_v1.owner(txn),
-                location: Util.h3_to_string(loc),
-                score: :blockchain_txn_gen_gateway_v1.score(txn)
+                location: Util.h3_to_string(loc)
               }, loc_info_map)
           error ->
             # XXX: What if googleapi lookup fails!
