@@ -85,7 +85,6 @@ defmodule BlockchainAPI.Schema.Hotspot do
     end
   end
 
-  ## NOTE: special case for genesis gateways
   def map(:blockchain_txn_gen_gateway_v1, txn, _ledger) do
     case :blockchain_txn_gen_gateway_v1.location(txn) do
       :undefined ->
@@ -112,14 +111,22 @@ defmodule BlockchainAPI.Schema.Hotspot do
     end
   end
 
-  def map(txn_mod, txn, ledger) do
-    address = txn_mod.gateway(txn)
-    owner = txn_mod.owner(txn)
+  def map(:blockchain_txn_add_gateway_v1, txn, _ledger) do
+    %{
+      address: :blockchain_txn_add_gateway_v1.gateway(txn),
+      owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      location: nil
+    }
+  end
+
+  def map(:blockchain_txn_assert_location_v1, txn, ledger) do
+    address = :blockchain_txn_assert_location_v1.gateway(txn)
+    owner = :blockchain_txn_assert_location_v1.owner(txn)
     case :blockchain_ledger_v1.gateway_score(address, ledger) do
       {:error, _}=error ->
         error
       {:ok, score} ->
-        case txn_mod.location(txn) do
+        case :blockchain_txn_assert_location_v1.location(txn) do
           :undefined ->
             %{address: address, owner: owner, location: nil, score: score}
           loc ->
