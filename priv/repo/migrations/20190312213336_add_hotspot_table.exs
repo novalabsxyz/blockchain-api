@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
     create table(:hotspots) do
       add :address, :binary, null: false
       add :owner, :binary, null: false
-      add :score, :float, null: false, default: 0.0
+      add :score, :float, null: false, default: 0.25
       add :location, :string, null: true
       add :long_city, :string, null: true
       add :long_street, :string, null: true
