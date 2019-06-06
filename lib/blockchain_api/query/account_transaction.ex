@@ -25,44 +25,51 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   def list(address, %{"before" => before, "limit" => limit}=_params) do
 
     # NOTE: no pagination for pending recvs
-    pending = Query.PendingPayment.get_pending_by_address(address)
+    pp = Query.PendingPayment.get_pending_by_address(address)
+    pg = Query.PendingGateway.get_by_owner(address)
+    pl = Query.PendingLocation.get_by_owner(address)
     rest =  address
             |> list_query()
             |> filter_before(before, limit)
             |> Repo.all()
             |> format()
 
-    pending ++ rest
+    pp ++ pg ++ pl ++ rest
   end
   def list(address, %{"before" => before}=_params) do
-    pending = Query.PendingPayment.get_pending_by_address(address)
+    pp = Query.PendingPayment.get_pending_by_address(address)
+    pg = Query.PendingGateway.get_by_owner(address)
+    pl = Query.PendingLocation.get_by_owner(address)
     rest = address
            |> list_query()
            |> filter_before(before, @default_limit)
            |> Repo.all()
            |> format()
 
-    pending ++ rest
+    pp ++ pg ++ pl ++ rest
   end
   def list(address, %{"limit" => limit}=_params) do
-    pending = Query.PendingPayment.get_pending_by_address(address)
+    pp = Query.PendingPayment.get_pending_by_address(address)
+    pg = Query.PendingGateway.get_by_owner(address)
+    pl = Query.PendingLocation.get_by_owner(address)
     rest = address
            |> list_query()
            |> limit(^limit)
            |> Repo.all()
            |> format()
 
-    pending ++ rest
+    pp ++ pg ++ pl ++ rest
   end
   def list(address, %{}) do
-    pending = Query.PendingPayment.get_pending_by_address(address)
-
+    pp = Query.PendingPayment.get_pending_by_address(address)
+    pg = Query.PendingGateway.get_by_owner(address)
+    pl = Query.PendingLocation.get_by_owner(address)
     rest = address
            |> list_query()
            |> Repo.all()
            |> format()
 
-    pending ++ rest
+    pp ++ pg ++ pl ++ rest
   end
 
   def get_pending_txn!(txn_hash) do

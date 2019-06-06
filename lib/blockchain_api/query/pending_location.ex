@@ -33,4 +33,25 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> where([pl], pl.status == "pending")
     |> Repo.all
   end
+
+  def get_by_owner(address) do
+    from(
+      pl in PendingLocation,
+      where: pl.owner == ^address,
+      where: pl.status == "pending",
+      where: pl.status != "error",
+      where: pl.status != "cleared",
+      select: pl
+    )
+    |> Repo.all()
+    |> format()
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp format(entries) do
+    entries
+    |> Enum.map(fn(t) -> Map.merge(t, %{type: "location"}) end)
+  end
 end
