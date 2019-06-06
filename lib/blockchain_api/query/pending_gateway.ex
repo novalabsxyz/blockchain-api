@@ -33,4 +33,26 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> where([pg], pg.status == "pending")
     |> Repo.all
   end
+
+  def get_by_owner(address) do
+    from(
+      pg in PendingGateway,
+      where: pg.owner == ^address,
+      where: pg.status == "pending",
+      where: pg.status != "error",
+      where: pg.status != "cleared",
+      select: pg
+    )
+    |> Repo.all()
+    |> format()
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  defp format(entries) do
+    entries
+    |> Enum.map(fn(t) -> Map.merge(t, %{type: "gateway"}) end)
+  end
+
 end
