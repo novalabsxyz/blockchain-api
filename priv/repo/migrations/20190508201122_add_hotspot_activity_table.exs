@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:hotspot_activity) do
       add :gateway, references(:gateway_transactions, on_delete: :nothing, column: :gateway, type: :binary), null: false
       add :poc_req_txn_hash, references(:poc_request_transactions, on_delete: :nothing, column: :hash, type: :binary), null: true
@@ -21,7 +21,4 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
     end
   end
 
-  def down do
-    drop table(:hotspot_activity)
-  end
 end

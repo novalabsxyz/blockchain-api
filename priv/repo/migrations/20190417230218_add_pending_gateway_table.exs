@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
   import Honeydew.EctoPollQueue.Migration
   import BlockchainAPI.Schema.PendingGateway, only: [submit_gateway_queue: 0]
 
-  def up do
+  def change do
     create table(:pending_gateways) do
       add :status, :string, null: false, default: "pending"
       add :gateway, :binary, null: false
@@ -22,10 +22,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
 
     create unique_index(:pending_gateways, [:owner, :hash, :status], name: :unique_pending_gateway)
     honeydew_indexes(:pending_gateways, submit_gateway_queue())
-  end
-
-  def down do
-    drop table(:pending_gateways)
   end
 
 end

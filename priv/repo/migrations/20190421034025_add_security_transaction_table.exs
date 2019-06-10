@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddSecurityTransactionTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:security_transactions) do
       add :amount, :bigint, null: false
       add :payee, :binary, null: false
@@ -14,7 +14,4 @@ defmodule BlockchainAPI.Repo.Migrations.AddSecurityTransactionTable do
     create unique_index(:security_transactions, [:hash], name: :unique_security_hash)
   end
 
-  def down do
-    drop table(:security_transactions)
-  end
 end

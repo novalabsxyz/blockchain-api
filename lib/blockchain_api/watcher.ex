@@ -101,14 +101,15 @@ defmodule BlockchainAPI.Watcher do
         case Query.Block.get_latest() do
           [nil] ->
             # nothing in the db yet
-            Committer.commit(block, ledger)
+            Committer.commit(block, ledger, height)
           [last_known_height] ->
             case height > last_known_height do
               true ->
                 Range.new(last_known_height + 1, height)
                 |> Enum.map(fn h ->
                   {:ok, b} = :blockchain.get_block(h, chain)
-                  Committer.commit(b, ledger)
+                  h = :blockchain_block.height(b)
+                  Committer.commit(b, ledger, h)
                 end)
               false ->
                 :ok

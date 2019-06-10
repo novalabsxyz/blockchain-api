@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddLocationTransactionsTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:location_transactions) do
       add :owner, :binary, null: false
       add :location, :binary, null: false
@@ -15,10 +15,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddLocationTransactionsTable do
     end
 
     create unique_index(:location_transactions, [:hash], name: :unique_location_hash)
-  end
-
-  def down do
-    drop table(:location_transactions)
   end
 
 end

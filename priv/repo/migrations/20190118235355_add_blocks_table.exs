@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddBlocksTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:blocks) do
       add :height, :bigint, null: false
       add :hash, :binary, null: false
@@ -15,10 +15,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddBlocksTable do
     # NOTE: uncertain to add this, but presumably block times are ALWAYS unique
     # This helps in the creating the composite index for account_balances table
     create unique_index(:blocks, [:time], name: :unique_block_time)
-  end
-
-  def down do
-    drop table(:blocks)
   end
 
 end

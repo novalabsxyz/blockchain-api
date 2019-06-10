@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingCoinbaseTable do
   import Honeydew.EctoPollQueue.Migration
   import BlockchainAPI.Schema.PendingCoinbase, only: [submit_coinbase_queue: 0]
 
-  def up do
+  def change do
     create table(:pending_coinbases) do
       add :amount, :bigint, null: false
       add :payee, :binary, null: false
@@ -19,10 +19,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingCoinbaseTable do
 
     create unique_index(:pending_coinbases, [:hash], name: :unique_pending_coinbase)
     honeydew_indexes(:pending_coinbases, submit_coinbase_queue())
-  end
-
-  def down do
-    drop table(:pending_coinbases)
   end
 
 end

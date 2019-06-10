@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
   import Honeydew.EctoPollQueue.Migration
   import BlockchainAPI.Schema.PendingLocation, only: [submit_location_queue: 0]
 
-  def up do
+  def change do
     create table(:pending_locations) do
       add :status, :string, null: false, default: "pending"
       add :location, :binary, null: false
@@ -23,10 +23,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
 
     create unique_index(:pending_locations, [:owner, :gateway, :hash, :status], name: :unique_pending_location)
     honeydew_indexes(:pending_locations, submit_location_queue())
-  end
-
-  def down do
-    drop table(:pending_locations)
   end
 
 end
