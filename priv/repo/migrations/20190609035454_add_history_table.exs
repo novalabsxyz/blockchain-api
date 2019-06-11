@@ -3,12 +3,13 @@ defmodule BlockchainAPI.Repo.Migrations.AddHistoryTable do
 
   def change do
     create table(:history) do
-      add :height, :bigint, null: false
       add :name, :string, null: false
       add :score, :float, null: false
       add :alpha, :float, null: false
       add :beta, :float, null: false
       add :delta, :float, null: false
+
+      add :height, references(:blocks, on_delete: :nothing, column: :height), null: false
 
       timestamps()
     end
