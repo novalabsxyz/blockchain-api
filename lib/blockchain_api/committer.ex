@@ -90,7 +90,7 @@ defmodule BlockchainAPI.Committer do
           score: :erlang.element(2, :blockchain_ledger_v1.gateway_score(addr, ledger)),
           alpha: :blockchain_ledger_gateway_v1.alpha(gw),
           beta: :blockchain_ledger_gateway_v1.beta(gw),
-          delta: (height - :blockchain_ledger_gateway_v1.last_delta_update(gw))
+          delta: (height - :blockchain_ledger_gateway_v1.delta(gw))
         })
         [changeset | acc]
       end)
@@ -387,7 +387,7 @@ defmodule BlockchainAPI.Committer do
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
     {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways)
+    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways, height)
     txn_path0 = :blockchain_txn_poc_receipts_v1.path(txn)
     txn_path = txn_path0 |> Enum.map(fn(element) -> :blockchain_poc_path_element_v1.challengee(element) end)
 
