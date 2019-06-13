@@ -19,12 +19,19 @@ defmodule BlockchainAPIWeb.AccountController do
     try do
       bin_address = address |> Util.string_to_bin()
       account = bin_address |> Query.Account.get!() |> Schema.Account.encode_model()
+      account_security_balance =
+        case Query.SecurityTransaction.get_balance(bin_address) do
+          nil -> 0
+          b -> b.amount
+        end
+
       account_balance_history = bin_address |> Query.AccountBalance.get_history()
 
       account_data = account
                      |> Map.merge(
                        %{history: account_balance_history,
-                         nonce: Query.Account.get_speculative_nonce(bin_address)
+                         nonce: Query.Account.get_speculative_nonce(bin_address),
+                         security_balance: account_security_balance
                        })
 
       render(conn, "show.json", account: account_data)
@@ -40,6 +47,7 @@ defmodule BlockchainAPIWeb.AccountController do
             address: address,
             fee: fee,
             balance: 0,
+            security_balance: 0,
             history: %{
               day: Enum.map(1..24, fn(_) -> 0 end),
               week: Enum.map(1..22, fn(_) -> 0 end),
