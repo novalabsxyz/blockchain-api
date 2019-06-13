@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:hotspots) do
       add :address, :binary, null: false
       add :owner, :binary, null: false
@@ -21,10 +21,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
     end
 
     create unique_index(:hotspots, [:address], name: :unique_hotspots)
-  end
-
-  def down do
-    drop table(:hotspots)
   end
 
 end

@@ -29,6 +29,8 @@ defmodule BlockchainAPIWeb.Router do
     resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "hash"
     resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
     resources "/challenges", ChallengeController, only: [:index, :show], param: "id"
+
+    get "/history", HistoryController, :index
   end
 
   scope "/", BlockchainAPIWeb do

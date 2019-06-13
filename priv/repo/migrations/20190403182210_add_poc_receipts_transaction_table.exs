@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddPocReceiptsTransactionTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:poc_receipts_transactions) do
       add :poc_request_transactions_id, references(:poc_request_transactions, on_delete: :nothing, column: :id, type: :bigint), null: false
       add :signature, :binary, null: false
@@ -17,10 +17,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocReceiptsTransactionTable do
     end
 
     create unique_index(:poc_receipts_transactions, [:hash])
-  end
-
-  def down do
-    drop table(:poc_receipts_transactions)
   end
 
 end

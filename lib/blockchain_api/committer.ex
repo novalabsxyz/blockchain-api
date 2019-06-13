@@ -21,28 +21,16 @@ defmodule BlockchainAPI.Committer do
     Schema.POCReceipt,
     Schema.POCWitness,
     Schema.ElectionTransaction,
-    Schema.ConsensusMember
+    Schema.ConsensusMember,
+    Schema.History
   }
 
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
 
   require Logger
 
-  def commit(block, ledger) do
-    block_txn =
-      Repo.transaction(fn() ->
-
-        {:ok, inserted_block} = block |> Block.map() |> Query.Block.create()
-        add_transactions(block, ledger)
-        add_account_transactions(block)
-        commit_account_balances(block, ledger)
-        update_account_fee(ledger)
-        update_hotspot_score(block, ledger)
-        # NOTE: move this elsewhere...
-        BlockChannel.broadcast_change(inserted_block)
-      end)
-
-    case block_txn do
+  def commit(block, ledger, height) do
+    case commit_block(block, ledger, height) do
       {:ok, term} ->
         Logger.info("Successfully committed block at height: #{:blockchain_block.height(block)} to db!")
         {:ok, term}
@@ -50,6 +38,28 @@ defmodule BlockchainAPI.Committer do
         Logger.error("Failed to commit block at height: #{:blockchain_block.height(block)}")
         {:error, reason}
     end
+
+    case commit_scores(ledger, height) do
+      {:ok, multi_score_result}  ->
+        Logger.info("Succcessfully added scores at height: #{:blockchain_block.height(block)}")
+        {:ok, multi_score_result}
+      {:error, reason} ->
+        Logger.error("Failed to add scores at height: #{:blockchain_block.height(block)}")
+        {:error, reason}
+    end
+  end
+
+  defp commit_block(block, ledger, height) do
+    Repo.transaction(fn() ->
+      {:ok, inserted_block} = block |> Block.map() |> Query.Block.create()
+      add_transactions(block, ledger, height)
+      add_account_transactions(block)
+      commit_account_balances(block, ledger)
+      update_account_fee(ledger)
+      update_hotspot_score(ledger, height)
+      # NOTE: move this elsewhere...
+      BlockChannel.broadcast_change(inserted_block)
+    end)
   end
 
   defp commit_account_balances(block, ledger) do
@@ -68,13 +78,36 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
+  defp commit_scores(ledger, height) do
+    ledger
+    |> :blockchain_ledger_v1.active_gateways()
+    |> Map.to_list()
+    |> Enum.reduce([],
+      fn({addr, gw}, acc) ->
+        changeset = History.changeset(%History{}, %{
+          height: height,
+          name: to_string(:erlang.element(2, :erl_angry_purple_tiger.animal_name(:libp2p_crypto.bin_to_b58(addr)))),
+          score: :erlang.element(2, :blockchain_ledger_v1.gateway_score(addr, ledger)),
+          alpha: :blockchain_ledger_gateway_v1.alpha(gw),
+          beta: :blockchain_ledger_gateway_v1.beta(gw),
+          delta: (height - :blockchain_ledger_gateway_v1.delta(gw))
+        })
+        [changeset | acc]
+      end)
+      |> Enum.with_index()
+      |> Enum.reduce(Ecto.Multi.new(),
+        fn ({changeset, index}, multi) ->
+          Ecto.Multi.insert(multi, Integer.to_string(index), changeset)
+        end)
+        |> Repo.transaction()
+  end
+
   defp update_account_fee(ledger) do
     {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
     Query.Account.update_all_fee(fee)
   end
 
-  defp update_hotspot_score(block, ledger) do
-    height = :blockchain_block.height(block)
+  defp update_hotspot_score(ledger, height) do
     :ok = Query.Hotspot.all()
           |> Enum.each(
             fn(hotspot) ->
@@ -94,29 +127,29 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all transactions
   #==================================================================
-  defp add_transactions(block, ledger) do
+  defp add_transactions(block, ledger, height) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
       txns ->
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, block, ledger)
-            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, block, ledger)
+            :blockchain_txn_coinbase_v1 -> insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
+            :blockchain_txn_payment_v1 -> insert_transaction(:blockchain_txn_payment_v1, txn, height)
             :blockchain_txn_add_gateway_v1 ->
-              insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, ledger)
+              insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
               upsert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
             :blockchain_txn_gen_gateway_v1 ->
-              insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, ledger)
+              insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
               upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
-            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger)
-            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger)
+            :blockchain_txn_poc_request_v1 -> insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height)
+            :blockchain_txn_poc_receipts_v1 -> insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height)
             :blockchain_txn_assert_location_v1 ->
-              insert_transaction(:blockchain_txn_assert_location_v1, txn, block, ledger)
+              insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
-            :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block, ledger)
-            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, block, ledger)
+            :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
+            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height)
             _ ->
               :ok
           end
@@ -181,8 +214,7 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Insert individual transactions
   #==================================================================
-  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
     {:ok, _coinbase_entry} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
 
@@ -202,14 +234,12 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
 
@@ -220,8 +250,7 @@ defmodule BlockchainAPI.Committer do
       end)
   end
 
-  defp insert_transaction(:blockchain_txn_payment_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
     {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
 
@@ -252,20 +281,17 @@ defmodule BlockchainAPI.Committer do
     AccountChannel.broadcast_change(payer_account_entry)
   end
 
-  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
     {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_assert_location_v1, txn))
   end
 
-  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, block, _ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
 
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(:genesis, txn))
@@ -278,8 +304,7 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger) do
-    height = :blockchain_block.height(block)
+  defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height) do
     time = :blockchain_block.time(block)
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
 
@@ -302,10 +327,9 @@ defmodule BlockchainAPI.Committer do
       })
   end
 
-  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger) do
+  defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height) do
     ## TODO: Split this function into smaller helper functions
 
-    height = :blockchain_block.height(block)
     time = :blockchain_block.time(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
@@ -363,7 +387,7 @@ defmodule BlockchainAPI.Committer do
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
     {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways)
+    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways, height)
     txn_path0 = :blockchain_txn_poc_receipts_v1.path(txn)
     txn_path = txn_path0 |> Enum.map(fn(element) -> :blockchain_poc_path_element_v1.challengee(element) end)
 

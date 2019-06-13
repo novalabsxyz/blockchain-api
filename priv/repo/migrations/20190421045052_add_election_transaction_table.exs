@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Repo.Migrations.AddElectionTransactionTable do
   use Ecto.Migration
 
-  def up do
+  def change do
     create table(:election_transactions) do
       add :proof, :binary, null: true
       add :delay, :integer, null: false
@@ -12,10 +12,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddElectionTransactionTable do
     end
 
     create unique_index(:election_transactions, [:hash], name: :unique_election_hash)
-  end
-
-  def down do
-    drop table(:election_transactions)
   end
 
 end

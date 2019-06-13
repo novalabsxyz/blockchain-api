@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
   import Honeydew.EctoPollQueue.Migration
   import BlockchainAPI.Schema.PendingPayment, only: [submit_payment_queue: 0]
 
-  def up do
+  def change do
     create table(:pending_payments) do
       add :status, :string, null: false, default: "pending"
       add :nonce, :bigint, null: false, default: 0
@@ -23,10 +23,6 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
 
     create unique_index(:pending_payments, [:payer, :hash, :status], name: :unique_pending_payment)
     honeydew_indexes(:pending_payments, submit_payment_queue())
-  end
-
-  def down do
-    drop table(:pending_payments)
   end
 
 end
