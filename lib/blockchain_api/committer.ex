@@ -405,9 +405,12 @@ defmodule BlockchainAPI.Committer do
           false ->
             raise BlockchainAPI.CommitError, message: "Path: #{inspect(path)} does not match txn_path: #{inspect(txn_path)}"
           true ->
+            deltas = :blockchain_txn_poc_receipts_v1.deltas(txn)
+
             txn_path0
+            |> Enum.with_index()
             |> Enum.map(
-              fn(element) when element != :undefined ->
+              fn({element, index}) when element != :undefined ->
                 challengee = element |> :blockchain_poc_path_element_v1.challengee()
                 res = challengee |> :blockchain_ledger_v1.find_gateway_info(ledger)
 
@@ -419,8 +422,17 @@ defmodule BlockchainAPI.Committer do
                     challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
                     challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
                     is_primary = challengee == target
-                    {:ok, path_element_entry} = POCPathElement.map(poc_receipt_txn_entry.hash, challengee_loc, challengee_owner, is_primary, element)
-                                                |> Query.POCPathElement.create()
+
+                    delta = Enum.at(deltas, index)
+
+                    {:ok, path_element_entry} =
+                      POCPathElement.map(poc_receipt_txn_entry.hash,
+                        challengee,
+                        challengee_loc,
+                        challengee_owner,
+                        is_primary,
+                        poc_result(delta))
+                      |> Query.POCPathElement.create()
 
                     case :blockchain_poc_path_element_v1.receipt(element) do
                       :undefined ->
@@ -603,4 +615,14 @@ end
         end
     end
   end
+
+  defp poc_result(nil), do: "untested"
+  defp poc_result({_, {0, 0}}), do: "untested"
+  defp poc_result({_, {a, b}}) do
+    case a > b do
+      true -> "success"
+      false -> "failure"
+    end
+  end
+
 end
