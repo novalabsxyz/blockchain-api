@@ -10,6 +10,14 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
     |> Repo.all()
   end
 
+  def get_balance(address) do
+    SecurityTransaction
+    |> where([ct], ct.payee == ^address)
+    |> order_by([ct], [desc: ct.id])
+    |> limit(1)
+    |> Repo.one()
+  end
+
   def get!(hash) do
     SecurityTransaction
     |> where([ct], ct.hash == ^hash)
