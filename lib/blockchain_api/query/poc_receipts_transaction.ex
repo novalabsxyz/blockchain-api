@@ -81,17 +81,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
                     #NOTE: The path always seems to end up in reverse order
                     |> Enum.reverse()
 
-    # NOTE: We only mark a path as success if the last element in the path
-    # had a success result. That would imply that the whole path was a success.
-    last_element_result = path_elements
-                          |> Enum.map(fn(element) -> element.result end)
-                          |> List.last()
-
-    success =
-      case last_element_result do
-        "success" -> true
-        _ -> false
-      end
+    success = Enum.all?(path_elements, fn(elem) -> elem.result == "success" end)
 
     %{
       id: entry.id,
@@ -112,12 +102,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       fn(element) ->
         witnesses = encode_witnesses(element.poc_witness)
         receipt = encode_receipts(element.poc_receipt)
-        result = result(receipt, witnesses)
         {lat, lng} = Util.h3_to_lat_lng(element.challengee_loc)
         %{
           witnesses: witnesses,
           receipt: receipt,
-          result: to_string(result),
+          result: to_string(element.result),
           address: Util.bin_to_string(element.challengee),
           owner: Util.bin_to_string(element.challengee_owner),
           lat: lat,
@@ -158,14 +147,6 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           time: System.convert_time_unit(witness.timestamp, :nanosecond, :millisecond)
         }
       end)
-  end
-
-  defp result(receipt, witnesses) do
-    # NOTE: We mark a failure if and only if there is no receipt AND no witnesses
-    case {receipt, witnesses} do
-      {rx, []} when map_size(rx) == 0 -> :failure
-      {_, _} -> :success
-    end
   end
 
   defp path_query() do

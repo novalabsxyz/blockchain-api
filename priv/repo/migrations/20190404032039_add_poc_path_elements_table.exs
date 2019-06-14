@@ -8,6 +8,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocPathElementsTable do
       add :challengee_loc, :string, null: true
       add :primary, :boolean, null: false
       add :challengee_owner, :binary, null: false
+      add :result, :string, null: false, default: "untested"
 
       timestamps()
     end
