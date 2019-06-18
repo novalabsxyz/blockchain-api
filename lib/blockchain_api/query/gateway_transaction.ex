@@ -65,7 +65,8 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
       gateway: Util.bin_to_string(map.gateway),
       gateway_hash: Util.bin_to_string(map.gateway_hash),
       location_hash: Util.bin_to_string(map.location_hash),
-      owner: Util.bin_to_string(map.owner)
+      owner: Util.bin_to_string(map.owner),
+      score: Decimal.from_float(map.score) |> Decimal.round(4) |> Decimal.to_float()
     }
   end
 end
