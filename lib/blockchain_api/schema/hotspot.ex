@@ -63,7 +63,6 @@ defmodule BlockchainAPI.Schema.Hotspot do
   end
 
   def encode_model(hotspot) do
-    score = Decimal.from_float(hotspot.score) |> Decimal.round(4) |> Decimal.to_float()
     {lat, lng} = Util.h3_to_lat_lng(hotspot.location)
 
     hotspot
@@ -73,7 +72,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
       owner: Util.bin_to_string(hotspot.owner),
       lat: lat,
       lng: lng,
-      score: score
+      score: Util.rounder(hotspot.score)
     })
   end
 

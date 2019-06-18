@@ -15,6 +15,12 @@ defmodule BlockchainAPI.Util do
     ElectionTransaction
   }
 
+  def rounder(val) do
+    Decimal.from_float(val)
+    |> Decimal.round(4)
+    |> Decimal.to_float()
+  end
+
   def bin_to_string(nil), do: nil
   def bin_to_string(bin) do
     bin
