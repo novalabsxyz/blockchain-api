@@ -15,9 +15,9 @@ defmodule BlockchainAPI.Util do
     ElectionTransaction
   }
 
-  def rounder(val) do
-    Decimal.from_float(val)
-    |> Decimal.round(4)
+  def rounder(value, precision) do
+    Decimal.from_float(value)
+    |> Decimal.round(precision)
     |> Decimal.to_float()
   end
 

@@ -72,7 +72,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
       owner: Util.bin_to_string(hotspot.owner),
       lat: lat,
       lng: lng,
-      score: Util.rounder(hotspot.score)
+      score: Util.rounder(hotspot.score, 4)
     })
   end
 
