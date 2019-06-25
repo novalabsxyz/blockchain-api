@@ -34,7 +34,7 @@ reset-dev-db:
 
 # Prod targets
 release:
-	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release --env=prod
+	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release --env=prod --no-tar
 
 reset-prod-db:
 	PORT=4001 MIX_ENV=prod $(MIX) ecto.reset

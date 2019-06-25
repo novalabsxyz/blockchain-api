@@ -22,7 +22,8 @@ defmodule BlockchainAPI.Committer do
     Schema.POCWitness,
     Schema.ElectionTransaction,
     Schema.ConsensusMember,
-    Schema.History
+    Schema.History,
+    Schema.Reward
   }
 
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
@@ -53,7 +54,7 @@ defmodule BlockchainAPI.Committer do
     Repo.transaction(fn() ->
       {:ok, inserted_block} = block |> Block.map() |> Query.Block.create()
       add_transactions(block, ledger, height)
-      add_account_transactions(block)
+      add_account_transactions(block, ledger, height)
       commit_account_balances(block, ledger)
       update_account_fee(ledger)
       update_hotspot_score(ledger, height)
@@ -114,11 +115,6 @@ defmodule BlockchainAPI.Committer do
               case :blockchain_ledger_v1.gateway_score(hotspot.address, ledger) do
                 {:error, _} -> :ok
                 {:ok, score} ->
-                  {:ok, name} = :erl_angry_purple_tiger.animal_name(:libp2p_crypto.pubkey_to_b58(:libp2p_crypto.bin_to_pubkey(hotspot.address)))
-                  {:ok, gwinfo} = :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger)
-                  alpha = :blockchain_ledger_gateway_v1.alpha(gwinfo)
-                  beta = :blockchain_ledger_gateway_v1.beta(gwinfo)
-                  Logger.debug("Hotspot: #{name}, Score: #{score}, Alpha: #{alpha}, Beta: #{beta}")
                   Query.Hotspot.update!(hotspot, %{score: score, score_update_height: height})
               end
             end)
@@ -160,7 +156,7 @@ defmodule BlockchainAPI.Committer do
   #==================================================================
   # Add all account transactions
   #==================================================================
-  defp add_account_transactions(block) do
+  defp add_account_transactions(block, ledger, height) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
@@ -173,6 +169,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
             :blockchain_txn_gen_gateway_v1 -> insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
             :blockchain_txn_security_coinbase_v1 -> insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
+            :blockchain_txn_consensus_group_v1 -> insert_account_transaction(:blockchain_txn_consensus_group_v1, txn, ledger, height)
             _ -> :ok
           end
         end)
@@ -593,6 +590,32 @@ end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
 
+  defp insert_account_transaction(:blockchain_txn_consensus_group_v1, _txn, ledger, height) do
+    fin = height
+    chain = :blockchain_worker.blockchain()
+    case fin > 30 do
+      false -> :ok
+      true ->
+        start = fin - 30
+        txns_for_epoch = :blockchain_txn_consensus_group_v1.get_txns_for_epoch(start, fin, chain)
+        reward_vars = :blockchain_txn_consensus_group_v1.get_reward_vars(ledger)
+        consensus_changesets = reward_changesets("consensus", height, :blockchain_txn_consensus_group_v1, :consensus_members_rewards, [ledger, reward_vars])
+        securities_changesets = reward_changesets("security", height, :blockchain_txn_consensus_group_v1, :securities_rewards, [ledger, reward_vars])
+        witness_changesets = reward_changesets("witness", height, :blockchain_txn_consensus_group_v1, :poc_witnesses_rewards, [txns_for_epoch, reward_vars])
+        challenger_changesets = reward_changesets("challenger", height, :blockchain_txn_consensus_group_v1, :poc_challengers_rewards, [txns_for_epoch, reward_vars])
+        challengee_changesets = reward_changesets("challengee", height, :blockchain_txn_consensus_group_v1, :poc_challengees_rewards, [txns_for_epoch, reward_vars])
+        reward_changesets = [consensus_changesets, securities_changesets, witness_changesets, challenger_changesets, challengee_changesets]
+        reward_changesets
+        |> List.flatten()
+        |> Enum.with_index()
+        |> Enum.reduce(Ecto.Multi.new(),
+          fn ({changeset, index}, multi) ->
+            Ecto.Multi.insert(multi, Integer.to_string(index), changeset)
+          end)
+          |> Repo.transaction()
+    end
+  end
+
   defp upsert_hotspot(txn_mod, txn, ledger) do
     try do
       hotspot = txn |> txn_mod.gateway() |> Query.Hotspot.get!()
@@ -623,6 +646,18 @@ end
       true -> "success"
       false -> "failure"
     end
+  end
+
+  defp reward_changesets(type, height, mod, fun, args) do
+    Kernel.apply(mod, fun, args)
+    |> Enum.reduce([],
+      fn({addr, amount}, acc) ->
+        [Reward.changeset(%Reward{}, %{
+          block_height: height,
+          type: type,
+          amount: amount,
+          account_address: addr}) | acc]
+      end)
   end
 
 end
