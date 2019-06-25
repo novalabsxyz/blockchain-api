@@ -2,7 +2,10 @@
 
 MIX=$(shell which mix)
 
-all: set_rebar deps compile
+all: set_rebar set_hex deps compile
+
+set_hex:
+	mix local.hex --force
 
 set_rebar:
 	mix local.rebar rebar3 ./rebar3 --force
@@ -18,7 +21,7 @@ clean:
 
 # Dev targets
 devrelease:
-	MIX_ENV=dev $(MIX) do release.clean, release --env=dev
+	MIX_ENV=dev $(MIX) distillery.release --env=dev
 
 dev-start:
 	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api start
@@ -34,7 +37,7 @@ reset-dev-db:
 
 # Prod targets
 release:
-	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) do release.clean, release --env=prod --no-tar
+	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) distillery.release --env=prod
 
 reset-prod-db:
 	PORT=4001 MIX_ENV=prod $(MIX) ecto.reset
@@ -57,4 +60,3 @@ test:
 
 reset-test-db:
 	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
-
