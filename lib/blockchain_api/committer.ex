@@ -599,11 +599,11 @@ end
         start = fin - 30
         txns_for_epoch = :blockchain_txn_consensus_group_v1.get_txns_for_epoch(start, fin, chain)
         reward_vars = :blockchain_txn_consensus_group_v1.get_reward_vars(ledger)
-        consensus_changesets = reward_changesets("consensus", height, :blockchain_txn_consensus_group_v1, :consensus_members_rewards, [ledger, reward_vars])
-        securities_changesets = reward_changesets("security", height, :blockchain_txn_consensus_group_v1, :securities_rewards, [ledger, reward_vars])
-        witness_changesets = reward_changesets("witness", height, :blockchain_txn_consensus_group_v1, :poc_witnesses_rewards, [txns_for_epoch, reward_vars])
-        challenger_changesets = reward_changesets("challenger", height, :blockchain_txn_consensus_group_v1, :poc_challengers_rewards, [txns_for_epoch, reward_vars])
-        challengee_changesets = reward_changesets("challengee", height, :blockchain_txn_consensus_group_v1, :poc_challengees_rewards, [txns_for_epoch, reward_vars])
+        consensus_changesets = reward_changesets(%{type: "consensus", height: height, mod: :blockchain_txn_consensus_group_v1, func: :consensus_members_rewards, args: [ledger, reward_vars]})
+        securities_changesets = reward_changesets(%{type: "security", height: height, mod: :blockchain_txn_consensus_group_v1, func: :securities_rewards, args: [ledger, reward_vars]})
+        witness_changesets = reward_changesets(%{type: "witness", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_witnesses_rewards, args: [txns_for_epoch, reward_vars]})
+        challenger_changesets = reward_changesets(%{type: "challenger", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengers_rewards, args: [txns_for_epoch, reward_vars]})
+        challengee_changesets = reward_changesets(%{type: "challengee", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengees_rewards, args: [txns_for_epoch, reward_vars]})
         reward_changesets = [consensus_changesets, securities_changesets, witness_changesets, challenger_changesets, challengee_changesets]
         reward_changesets
         |> List.flatten()
@@ -648,13 +648,13 @@ end
     end
   end
 
-  defp reward_changesets(type, height, mod, fun, args) do
-    Kernel.apply(mod, fun, args)
+  defp reward_changesets(map) do
+    Kernel.apply(map.mod, map.func, map.args)
     |> Enum.reduce([],
       fn({addr, amount}, acc) ->
         [Reward.changeset(%Reward{}, %{
-          block_height: height,
-          type: type,
+          block_height: map.height,
+          type: map.type,
           amount: amount,
           account_address: addr}) | acc]
       end)
