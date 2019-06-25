@@ -7,10 +7,10 @@
 |> Path.wildcard()
 |> Enum.map(&Code.eval_file(&1))
 
-use Mix.Releases.Config,
-    # This sets the default release built by `mix release`
+use Distillery.Releases.Config,
+    # This sets the default release built by `mix distillery.release`
     default_release: :default,
-    # This sets the default environment used by `mix release`
+    # This sets the default environment used by `mix distillery.release`
     default_environment: Mix.env()
 
 # For a full list of config options for both releases
@@ -31,7 +31,7 @@ environment :dev do
   # dev mode.
   set dev_mode: true
   set include_erts: false
-  set cookie: :"8VFkPrWsNYTxbNTGpx0GX8VPr%sOo`_k=k<wpL6{&U<K`Nz~XoMvQ:CT9JYjSHl9"
+  set cookie: :"3LZE[B!jg;PjXe$^E&QjHR^yK&BIHqa.}7/zp2})dm}Cek9B|I9X8i2e:{LKABQn"
   set commands: [
     peer: "rel/commands/peer",
     genesis: "rel/commands/genesis",
@@ -43,7 +43,7 @@ end
 environment :prod do
   set include_erts: true
   set include_src: false
-  set cookie: :"P([Y>}gWxjmgP(zBsX;4UEF9JDm{,%)cRxZBn/1wMU/h<]qduyQb~p)%B=]jDo>f"
+  set cookie: :"q0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2oeY"
   set vm_args: "rel/vm.args"
   set commands: [
     peer: "rel/commands/peer",
@@ -55,7 +55,7 @@ end
 
 # You may define one or more releases in this file.
 # If you have not set a default release, or selected one
-# when running `mix release`, the first release in the file
+# when running `mix distillery.release`, the first release in the file
 # will be used by default
 
 release :blockchain_api do
