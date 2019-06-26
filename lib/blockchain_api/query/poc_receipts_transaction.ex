@@ -211,9 +211,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       preload: [poc_path_elements: ^path_query],
       left_join: t in Transaction,
       on: rx.hash == t.hash,
+      left_join: h in Hotspot,
+      on: rx.challenger == h.address,
       order_by: [desc: rx.id],
       where: rx.id == ^id,
-      select: %{challenge: rx, height: t.block_height}
+      select: %{challenge: rx, height: t.block_height, hotspot: h}
     )
   end
 
