@@ -4,7 +4,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddRewardsTable do
   def change do
     create table(:rewards) do
       add :type, :string, null: false
-      add :account_address, :binary, null: false
+      add :account_address, :binary, null: true
+      add :gateway_address, :binary, null: true
       add :amount, :bigint, null: false
 
       add :block_height, references(:blocks, on_delete: :nothing, column: :height), null: false

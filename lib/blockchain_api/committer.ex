@@ -590,7 +590,7 @@ end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
 
-  defp insert_account_transaction(:blockchain_txn_consensus_group_v1, _txn, ledger, height) do
+  defp insert_account_transaction(:blockchain_txn_consensus_group_v1, txn, ledger, height) do
     fin = height
     chain = :blockchain_worker.blockchain()
     case fin > 30 do
@@ -599,13 +599,13 @@ end
         start = fin - 30
         txns_for_epoch = :blockchain_txn_consensus_group_v1.get_txns_for_epoch(start, fin, chain)
         reward_vars = :blockchain_txn_consensus_group_v1.get_reward_vars(ledger)
-        consensus_changesets = reward_changesets(%{type: "consensus", height: height, mod: :blockchain_txn_consensus_group_v1, func: :consensus_members_rewards, args: [ledger, reward_vars]})
-        securities_changesets = reward_changesets(%{type: "security", height: height, mod: :blockchain_txn_consensus_group_v1, func: :securities_rewards, args: [ledger, reward_vars]})
-        witness_changesets = reward_changesets(%{type: "witness", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_witnesses_rewards, args: [txns_for_epoch, reward_vars]})
-        challenger_changesets = reward_changesets(%{type: "challenger", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengers_rewards, args: [txns_for_epoch, reward_vars]})
-        challengee_changesets = reward_changesets(%{type: "challengee", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengees_rewards, args: [txns_for_epoch, reward_vars]})
-        reward_changesets = [consensus_changesets, securities_changesets, witness_changesets, challenger_changesets, challengee_changesets]
-        reward_changesets
+        consensus_changesets = reward_changesets(%{type: "consensus", height: height, mod: :blockchain_txn_consensus_group_v1, func: :consensus_members_rewards, args: [ledger, reward_vars]}, txn, ledger)
+        securities_changesets = reward_changesets(%{type: "security", height: height, mod: :blockchain_txn_consensus_group_v1, func: :securities_rewards, args: [ledger, reward_vars]}, txn, ledger)
+        witness_changesets = reward_changesets(%{type: "witness", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_witnesses_rewards, args: [txns_for_epoch, reward_vars]}, txn, ledger)
+        challenger_changesets = reward_changesets(%{type: "challenger", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengers_rewards, args: [txns_for_epoch, reward_vars]}, txn, ledger)
+        challengee_changesets = reward_changesets(%{type: "challengee", height: height, mod: :blockchain_txn_consensus_group_v1, func: :poc_challengees_rewards, args: [txns_for_epoch, reward_vars]}, txn, ledger)
+        changesets = [consensus_changesets, securities_changesets, witness_changesets, challenger_changesets, challengee_changesets]
+        changesets
         |> List.flatten()
         |> Enum.with_index()
         |> Enum.reduce(Ecto.Multi.new(),
@@ -648,16 +648,28 @@ end
     end
   end
 
-  defp reward_changesets(map) do
+  defp reward_changesets(map, _txn, ledger) do
     Kernel.apply(map.mod, map.func, map.args)
     |> Enum.reduce([],
-      fn({addr, amount}, acc) ->
-        [Reward.changeset(%Reward{}, %{
-          block_height: map.height,
-          type: map.type,
-          amount: amount,
-          account_address: addr}) | acc]
+      fn
+        ({{:owner, account_address}, amount}, acc) ->
+          reward_changeset = Reward.changeset(%Reward{}, %{block_height: map.height, type: map.type, amount: amount, account_address: account_address})
+          [reward_changeset | acc]
+        ({{:gateway, gateway_address}, amount}, acc) ->
+          owner = get_owner(gateway_address, ledger)
+          reward_changeset = Reward.changeset(%Reward{}, %{block_height: map.height, type: map.type, amount: amount, account_address: owner, gateway_address: gateway_address})
+          [reward_changeset | acc]
       end)
+  end
+
+  defp get_owner(gateway_address, ledger) do
+    case :blockchain_ledger_v1.find_gateway_info(gateway_address, ledger) do
+      {:error, reason} ->
+        Logger.error("failed to get gateway owner #{inspect(reason)}")
+        nil
+      {:ok, gw_info} ->
+        :blockchain_ledger_gateway_v1.owner_address(gw_info)
+    end
   end
 
 end
