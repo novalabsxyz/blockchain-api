@@ -1,4 +1,5 @@
 defmodule BlockchainAPI.Util do
+  use Timex
 
   alias BlockchainAPI.Schema.{
     PaymentTransaction,
@@ -128,4 +129,9 @@ defmodule BlockchainAPI.Util do
         :blockchain_ledger_entry_v1.nonce(entry)
     end
   end
+
+  def current_time() do
+    Timex.now() |> Timex.to_unix()
+  end
+
 end

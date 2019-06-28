@@ -5,7 +5,9 @@ defmodule BlockchainAPIWeb.ChallengeView do
   def render("index.json", data) do
     %{
       totalOngoing: data.total_ongoing,
-      totalCompleted: data.total_completed,
+      issued: data.issued,
+      successful: data.successful,
+      failed: data.failed,
       data: render_many(data.challenges, ChallengeView, "challenge.json"),
     }
   end

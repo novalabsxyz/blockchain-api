@@ -8,13 +8,15 @@ defmodule BlockchainAPIWeb.ChallengeController do
   def index(conn, params) do
     challenges = Query.POCReceiptsTransaction.challenges(params)
     ongoing = Query.POCRequestTransaction.ongoing(params)
-    completed = Query.POCReceiptsTransaction.completed(params)
+    aggregated = Query.POCReceiptsTransaction.challenges_twenty_four_hrs(params)
 
     render(conn,
       "index.json",
       challenges: challenges,
       total_ongoing: ongoing,
-      total_completed: completed
+      issued: aggregated.issued,
+      successful: aggregated.successful,
+      failed: aggregated.failed
     )
   end
 
