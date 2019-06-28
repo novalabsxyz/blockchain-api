@@ -9,7 +9,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Repo,
     Schema.POCReceiptsTransaction,
     Schema.POCPathElement,
-    Schema.Transaction
+    Schema.Transaction,
+    Schema.Hotspot
   }
 
   def show!(id) do
@@ -74,7 +75,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     entries |> Enum.map(&encode_entry/1)
   end
 
-  defp encode_entry(%{challenge: entry, height: height}) do
+  defp encode_entry(%{challenge: entry, height: height, hotspot: hotspot}) do
 
     path_elements = entry.poc_path_elements
                     |> encode_path_elements()
@@ -82,11 +83,28 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
                     |> Enum.reverse()
 
     success = Enum.all?(path_elements, fn(elem) -> elem.result == "success" end)
+    {lat, lng} = Util.h3_to_lat_lng(entry.challenger_loc)
 
     %{
       id: entry.id,
       challenger: Util.bin_to_string(entry.challenger),
+      challenger_lat: lat,
+      challenger_lng: lng,
       challenger_owner: Util.bin_to_string(entry.challenger_owner),
+      challenger_location: %{
+        long: %{
+          street: hotspot.long_street,
+          city: hotspot.long_city,
+          state: hotspot.long_state,
+          country: hotspot.long_country
+        },
+        short: %{
+          street: hotspot.short_street,
+          city: hotspot.short_city,
+          state: hotspot.short_state,
+          country: hotspot.short_country
+        }
+      },
       hash: Util.bin_to_string(entry.hash),
       onion: Util.bin_to_string(entry.onion),
       signature: Util.bin_to_string(entry.signature),
@@ -99,7 +117,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   defp encode_path_elements([]), do: []
   defp encode_path_elements(path_elements) do
     Enum.map(path_elements,
-      fn(element) ->
+      fn(%{element: element, hotspot: hotspot}) ->
         witnesses = encode_witnesses(element.poc_witness)
         receipt = encode_receipts(element.poc_receipt)
         {lat, lng} = Util.h3_to_lat_lng(element.challengee_loc)
@@ -111,6 +129,20 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           owner: Util.bin_to_string(element.challengee_owner),
           lat: lat,
           lng: lng,
+          location: %{
+            long: %{
+              street: hotspot.long_street,
+              city: hotspot.long_city,
+              state: hotspot.long_state,
+              country: hotspot.long_country
+            },
+            short: %{
+              street: hotspot.short_street,
+              city: hotspot.short_city,
+              state: hotspot.short_state,
+              country: hotspot.short_country
+            }
+          },
           primary: element.primary
         }
       end)
@@ -153,7 +185,10 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     from(
       path in POCPathElement,
       preload: [:poc_receipt, :poc_witness],
-      order_by: [desc: path.id]
+      left_join: h in Hotspot,
+      on: path.challengee == h.address,
+      order_by: [desc: path.id],
+      select: %{element: path, hotspot: h}
     )
   end
 
@@ -163,8 +198,10 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       preload: [poc_path_elements: ^path_query],
       left_join: t in Transaction,
       on: rx.hash == t.hash,
+      left_join: h in Hotspot,
+      on: rx.challenger == h.address,
       order_by: [desc: rx.id],
-      select: %{challenge: rx, height: t.block_height}
+      select: %{challenge: rx, height: t.block_height, hotspot: h}
     )
   end
 
@@ -174,9 +211,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       preload: [poc_path_elements: ^path_query],
       left_join: t in Transaction,
       on: rx.hash == t.hash,
+      left_join: h in Hotspot,
+      on: rx.challenger == h.address,
       order_by: [desc: rx.id],
       where: rx.id == ^id,
-      select: %{challenge: rx, height: t.block_height}
+      select: %{challenge: rx, height: t.block_height, hotspot: h}
     )
   end
 
