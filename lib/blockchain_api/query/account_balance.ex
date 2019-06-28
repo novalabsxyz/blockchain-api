@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Query.AccountBalance do
   import Ecto.Query, warn: false
   use Timex
 
-  alias BlockchainAPI.{Repo, Schema.AccountBalance}
+  alias BlockchainAPI.{Repo, Util, Schema.AccountBalance}
 
   def get_latest!(address) do
     AccountBalance
@@ -32,17 +32,17 @@ defmodule BlockchainAPI.Query.AccountBalance do
   #==================================================================
   defp get_account_balances_daily(address) do
     start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    query_account_balance(address, start, current_time())
+    query_account_balance(address, start, Util.current_time())
   end
 
   defp get_account_balances_weekly(address) do
     start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
-    query_account_balance(address, start, current_time())
+    query_account_balance(address, start, Util.current_time())
   end
 
   defp get_account_balances_monthly(address) do
     start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
-    query_account_balance(address, start, current_time())
+    query_account_balance(address, start, Util.current_time())
   end
 
   defp query_account_balance(address, start, finish) do
@@ -59,10 +59,6 @@ defmodule BlockchainAPI.Query.AccountBalance do
     )
 
     query |> Repo.all
-  end
-
-  defp current_time() do
-    Timex.now() |> Timex.to_unix()
   end
 
   defp sample_daily_account_balance(address) do
@@ -110,9 +106,9 @@ defmodule BlockchainAPI.Query.AccountBalance do
 
   defp interval_filter(address, range, fun, shift) do
     hr_shift = 3600*shift
-    offset= rem(current_time(), hr_shift)
-    now = div(current_time() - offset, hr_shift)
-    then = div(current_time() - (offset + (hr_shift * length(Enum.to_list(range)))), hr_shift)
+    offset= rem(Util.current_time(), hr_shift)
+    now = div(Util.current_time() - offset, hr_shift)
+    then = div(Util.current_time() - (offset + (hr_shift * length(Enum.to_list(range)))), hr_shift)
 
     map = Range.new(then, now)
           |> Enum.map(fn key -> {key, []} end)
