@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Util do
     PendingGateway,
     PendingCoinbase,
     PendingPayment,
-    ElectionTransaction
+    ElectionTransaction,
+    RewardsTransaction
   }
 
   def rounder(value, precision) do
@@ -114,6 +115,9 @@ defmodule BlockchainAPI.Util do
   end
   def clean_txn_struct(%{poc_receipts: poc_receipts, height: height, time: time}) when is_map(poc_receipts) do
     Map.merge(POCReceiptsTransaction.encode_model(poc_receipts), %{type: "poc_receipts", height: height, time: time})
+  end
+  def clean_txn_struct(%{rewards: rewards, height: height, time: time}) when is_map(rewards) do
+    Map.merge(RewardsTransaction.encode_model(rewards), %{type: "rewards", height: height, time: time})
   end
   def clean_txn_struct(%{height: _height, time: _time}), do: nil
   def clean_txn_struct(map) when map == %{}, do: nil

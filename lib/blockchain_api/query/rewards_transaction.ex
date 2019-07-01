@@ -9,4 +9,10 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
     |> RewardsTransaction.changeset(attrs)
     |> Repo.insert()
   end
+
+  def get!(hash) do
+    RewardsTransaction
+    |> where([rewards_txn], rewards_txn.hash == ^hash)
+    |> Repo.one!
+  end
 end
