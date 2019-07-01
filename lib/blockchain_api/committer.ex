@@ -23,7 +23,8 @@ defmodule BlockchainAPI.Committer do
     Schema.ElectionTransaction,
     Schema.ConsensusMember,
     Schema.History,
-    Schema.RewardsTransaction
+    Schema.RewardsTransaction,
+    Schema.RewardTxn
   }
 
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
@@ -308,7 +309,16 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_rewards_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_rewards_v1, txn))
-    {:ok, _} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
+    {:ok, rewards_txn} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
+
+    txn
+    |> :blockchain_txn_rewards_v1.rewards()
+    |> Enum.each(
+      fn(reward_txn) ->
+        RewardTxn.map(rewards_txn.hash, reward_txn)
+        |> Query.RewardTxn.create()
+      end)
+
   end
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height) do
