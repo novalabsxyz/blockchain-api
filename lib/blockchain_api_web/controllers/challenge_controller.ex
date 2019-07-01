@@ -10,13 +10,21 @@ defmodule BlockchainAPIWeb.ChallengeController do
     ongoing = Query.POCRequestTransaction.ongoing(params)
     aggregated = Query.POCReceiptsTransaction.challenges_twenty_four_hrs(params)
 
+    {issued, successful, failed} =
+      case aggregated do
+        map when map_size(map) > 0 ->
+          {map.issued, map.successful, map.failed}
+        _ ->
+          {0, 0, 0}
+      end
+
     render(conn,
       "index.json",
       challenges: challenges,
       total_ongoing: ongoing,
-      issued: aggregated.issued,
-      successful: aggregated.successful,
-      failed: aggregated.failed
+      issued: issued,
+      successful: successful,
+      failed: failed
     )
   end
 
