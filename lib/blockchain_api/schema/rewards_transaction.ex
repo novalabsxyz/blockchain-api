@@ -2,13 +2,14 @@ defmodule BlockchainAPI.Schema.RewardsTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.RewardsTransaction, Schema.RewardTxn}
-  @fields [:id, :hash, :fee]
+  @fields [:id, :hash, :fee, :epoch]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
   schema "rewards_transactions" do
     field :hash, :binary, null: false
     field :fee, :integer, null: false
+    field :epoch, :integer, null: false
 
     has_many :reward_txns, RewardTxn, foreign_key: :rewards_hash, references: :hash
 
@@ -18,8 +19,8 @@ defmodule BlockchainAPI.Schema.RewardsTransaction do
   @doc false
   def changeset(rewards, attrs) do
     rewards
-    |> cast(attrs, [:hash, :fee])
-    |> validate_required([:hash, :fee])
+    |> cast(attrs, [:hash, :fee, :epoch])
+    |> validate_required([:hash, :fee, :epoch])
     |> foreign_key_constraint(:hash)
   end
 
@@ -43,7 +44,8 @@ defmodule BlockchainAPI.Schema.RewardsTransaction do
   def map(rewards_txn) do
     %{
       fee: :blockchain_txn_rewards_v1.fee(rewards_txn),
-      hash: :blockchain_txn_rewards_v1.hash(rewards_txn)
+      hash: :blockchain_txn_rewards_v1.hash(rewards_txn),
+      epoch: :blockchain_txn_rewards_v1.epoch(rewards_txn)
     }
   end
 end
