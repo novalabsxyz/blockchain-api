@@ -22,7 +22,7 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
     gateway
     |> cast(attrs, [:hash, :owner, :gateway, :fee, :amount, :status])
     |> validate_required([:hash, :owner, :gateway, :fee, :amount, :status])
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
     |> unique_constraint(:gateway)
   end
 

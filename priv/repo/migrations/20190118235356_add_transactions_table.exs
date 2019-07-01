@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
       timestamps()
     end
 
-    create unique_index(:transactions, [:hash], name: :unique_txn_hash)
+    # create unique_index(:transactions, [:hash], name: :unique_txn_hash)
   end
 
 end

@@ -23,7 +23,7 @@ defmodule BlockchainAPI.Schema.PaymentTransaction do
     payment
     |> cast(attrs, [:hash, :amount, :payee, :payer, :fee, :nonce, :status])
     |> validate_required([:hash, :amount, :payee, :payer, :fee, :nonce, :status])
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
   end
 

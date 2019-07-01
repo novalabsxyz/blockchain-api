@@ -29,7 +29,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     poc_request
     |> cast(attrs, @fields)
     |> validate_required(@fields)
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:challenger)
   end
 

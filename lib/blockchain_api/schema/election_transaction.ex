@@ -22,7 +22,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
     election
     |> cast(attrs, @fields)
     |> validate_required([:hash, :delay, :election_height])
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
   end
 
   def encode_model(election) do

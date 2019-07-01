@@ -23,7 +23,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
     location
     |> cast(attrs, [:hash, :gateway, :owner, :location, :nonce, :fee, :status])
     |> validate_required([:hash, :gateway, :owner, :location, :nonce, :fee, :status])
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:gateway)
   end
 

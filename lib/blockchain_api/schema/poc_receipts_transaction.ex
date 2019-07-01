@@ -42,7 +42,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     poc_receipts
     |> cast(attrs, @fields)
     |> validate_required(@fields)
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:challenger)
     |> foreign_key_constraint(:poc_request_transactions_id)
   end

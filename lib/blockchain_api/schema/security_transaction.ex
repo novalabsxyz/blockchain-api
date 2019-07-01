@@ -20,7 +20,7 @@ defmodule BlockchainAPI.Schema.SecurityTransaction do
     security
     |> cast(attrs, [:hash, :amount, :payee, :hash, :status])
     |> validate_required([:hash, :amount, :payee, :hash, :status])
-    |> foreign_key_constraint(:hash)
+    # |> foreign_key_constraint(:hash)
   end
 
   def encode_model(security) do
