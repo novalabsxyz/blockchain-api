@@ -22,7 +22,8 @@ defmodule BlockchainAPI.Committer do
     Schema.POCWitness,
     Schema.ElectionTransaction,
     Schema.ConsensusMember,
-    Schema.History
+    Schema.History,
+    Schema.RewardsTransaction
   }
 
   alias BlockchainAPIWeb.{BlockChannel, AccountChannel}
@@ -150,6 +151,7 @@ defmodule BlockchainAPI.Committer do
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
             :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
             :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height)
+            :blockchain_txn_rewards_v1 -> insert_transaction(:blockchain_txn_rewards_v1, txn, height)
             _ ->
               :ok
           end
@@ -302,6 +304,11 @@ defmodule BlockchainAPI.Committer do
       _ ->
         {:ok, _} = Query.LocationTransaction.create(LocationTransaction.map(:blockchain_txn_gen_gateway_v1, txn))
     end
+  end
+
+  defp insert_transaction(:blockchain_txn_rewards_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_rewards_v1, txn))
+    {:ok, _} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height) do
@@ -509,7 +516,8 @@ defmodule BlockchainAPI.Committer do
               end)
         end
     end
-end
+  end
+
 
   #==================================================================
   # Insert account transactions
