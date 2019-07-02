@@ -23,6 +23,12 @@ defmodule BlockchainAPI.Query.Account do
     |> Repo.one!
   end
 
+  def get(address) do
+    Account
+    |> where([a], a.address == ^address)
+    |> Repo.one()
+  end
+
   def update!(account, attrs \\ %{}) do
     account
     |> Account.changeset(attrs)
@@ -37,12 +43,6 @@ defmodule BlockchainAPI.Query.Account do
 
   def list_all() do
     Account |> Repo.all()
-  end
-
-  def update_all_fee(fee) do
-    Account
-    |> select([:address, :fee])
-    |> Repo.update_all(set: [fee: fee, updated_at: NaiveDateTime.utc_now()])
   end
 
   def get_pending_transactions(address) do

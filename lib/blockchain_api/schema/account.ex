@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Schema.Account do
   @derive {Phoenix.Param, key: :address}
   @derive {Jason.Encoder, only: @fields}
   schema "accounts" do
-    field :name, :string
+    field :name, :string, null: true
     field :balance, :integer, null: false
     field :address, :binary, null: false
     field :fee, :integer, null: false, default: 0
