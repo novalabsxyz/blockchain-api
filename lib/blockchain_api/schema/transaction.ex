@@ -76,8 +76,6 @@ defmodule BlockchainAPI.Schema.Transaction do
   end
 
   def map(:blockchain_txn_rewards_v1, txn) do
-    hash = :blockchain_txn_rewards_v1.hash(txn)
-    IO.inspect("#{inspect(hash)}", label: "rewards_txn_hash")
     %{type: "rewards", hash: :blockchain_txn_rewards_v1.hash(txn)}
   end
 end

@@ -226,14 +226,12 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                       |> Query.Transaction.get_location!()
                       |> LocationTransaction.encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
-              "consensus_reward" ->
-                res = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
-                      |> RewardTxn.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "securities_reward" ->
-                res = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
-                      |> RewardTxn.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
+              "consensus_reward" -> merge_reward_entry(entry, acc)
+              "securities_reward" -> merge_reward_entry(entry, acc)
+              "poc_challengees_reward" -> merge_reward_entry(entry, acc)
+              "poc_challengers_reward" -> merge_reward_entry(entry, acc)
+              "poc_witnesses_reward" -> merge_reward_entry(entry, acc)
+              _ -> acc
             end
           "pending" ->
             case entry.txn_type do
@@ -274,4 +272,10 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       end)
       |> Enum.reverse()
   end
+
+  defp merge_reward_entry(entry, acc) do
+    res = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type) |> RewardTxn.encode_model()
+    [Map.merge(res, %{id: entry.id}) | acc]
+  end
+
 end

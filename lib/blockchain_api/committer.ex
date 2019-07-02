@@ -599,13 +599,7 @@ defmodule BlockchainAPI.Committer do
                      [changeset | acc]
                    end)
 
-    IO.inspect(changesets, label: "changesets")
-
-    Repo.transaction(
-      fn() ->
-        Enum.each(changesets, &Repo.insert!(&1, []))
-      end
-    )
+    Repo.transaction(fn() -> Enum.each(changesets, &Repo.insert!(&1, [])) end)
   end
 
 
