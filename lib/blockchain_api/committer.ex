@@ -176,6 +176,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
             :blockchain_txn_gen_gateway_v1 -> insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
             :blockchain_txn_security_coinbase_v1 -> insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
+            :blockchain_txn_rewards_v1 -> insert_account_transaction(:blockchain_txn_rewards_v1, txn)
             _ -> :ok
           end
         end)
@@ -610,6 +611,26 @@ defmodule BlockchainAPI.Committer do
     end
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn))
   end
+
+  defp insert_account_transaction(:blockchain_txn_rewards_v1, txn) do
+    changesets = txn
+                 |> :blockchain_txn_rewards_v1.rewards()
+                 |> Enum.reduce([],
+                   fn(reward_txn, acc) ->
+                     changeset = AccountTransaction.changeset(%AccountTransaction{},
+                       AccountTransaction.map_cleared(:blockchain_txn_reward_v1, :blockchain_txn_rewards_v1.hash(txn), reward_txn))
+                     [changeset | acc]
+                   end)
+
+    IO.inspect(changesets, label: "changesets")
+
+    Repo.transaction(
+      fn() ->
+        Enum.each(changesets, &Repo.insert!(&1, []))
+      end
+    )
+  end
+
 
   defp upsert_hotspot(txn_mod, txn, ledger) do
     try do

@@ -13,6 +13,11 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
   def get!(hash) do
     RewardsTransaction
     |> where([rewards_txn], rewards_txn.hash == ^hash)
+    |> preload([:reward_txns])
     |> Repo.one!
+  end
+
+  def list(_params) do
+    from(r in RewardsTransaction, preload: [:reward_txns]) |> Repo.all()
   end
 end

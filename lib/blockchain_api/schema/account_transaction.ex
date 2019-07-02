@@ -94,6 +94,18 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
+  def map_cleared(:blockchain_txn_reward_v1, hash, txn) do
+    map = %{
+      account_address: :blockchain_txn_reward_v1.account(txn),
+      txn_type: "#{Atom.to_string(:blockchain_txn_reward_v1.type(txn))}_reward",
+      txn_status: "cleared",
+      txn_hash: hash
+    }
+
+    IO.inspect(map, label: "map")
+    map
+  end
+
 
   def map_pending(:blockchain_txn_coinbase_v1, txn) do
     %{
