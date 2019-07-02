@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
     Schema.Hotspot,
-    Schema.SecurityTransaction
+    Schema.SecurityTransaction,
+    Schema.RewardTxn
   }
 
   def create(attrs \\ %{}) do
@@ -224,6 +225,14 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                 res = entry.txn_hash
                       |> Query.Transaction.get_location!()
                       |> LocationTransaction.encode_model()
+                [Map.merge(res, %{id: entry.id}) | acc]
+              "consensus_reward" ->
+                res = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
+                      |> RewardTxn.encode_model()
+                [Map.merge(res, %{id: entry.id}) | acc]
+              "securities_reward" ->
+                res = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
+                      |> RewardTxn.encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
             end
           "pending" ->

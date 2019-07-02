@@ -58,7 +58,7 @@ defmodule BlockchainAPI.Schema.RewardTxn do
       account: :blockchain_txn_reward_v1.account(reward_txn),
       gateway: gateway,
       amount: :blockchain_txn_reward_v1.amount(reward_txn),
-      type: Atom.to_string(:blockchain_txn_reward_v1.type(reward_txn))
+      type: "#{Atom.to_string(:blockchain_txn_reward_v1.type(reward_txn))}_reward"
     }
   end
 
