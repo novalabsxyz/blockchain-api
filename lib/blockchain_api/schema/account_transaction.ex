@@ -19,7 +19,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     account_transaction
     |> cast(attrs, [:account_address, :txn_hash, :txn_type, :txn_status])
     |> validate_required([:account_address, :txn_hash, :txn_type, :txn_status])
-    |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
+    # |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
   end
 
   def encode_model(account_transaction) do
