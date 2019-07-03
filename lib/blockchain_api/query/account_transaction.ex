@@ -274,9 +274,9 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   defp merge_reward_entry(entry, acc) do
-    e = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
-
-    res = RewardTxn.encode_model(e) |> Map.put(:height, e.block_height)
+    reward = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
+    res = RewardTxn.encode_model(reward)
+          |> Map.merge(%{height: reward.block_height, time: reward.block_time})
 
     [Map.merge(res, %{id: entry.id}) | acc]
   end
