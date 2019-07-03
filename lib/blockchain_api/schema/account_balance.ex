@@ -20,7 +20,7 @@ defmodule BlockchainAPI.Schema.AccountBalance do
     account_balance
     |> cast(attrs, [:account_address, :block_height, :block_time, :balance, :delta])
     |> validate_required([:account_address, :block_height, :block_time, :balance, :delta])
-    |> unique_constraint(:unique_account_height_balance, name: :unique_account_height_balance)
+    # |> unique_constraint(:unique_account_height_balance, name: :unique_account_height_balance)
   end
 
   def encode_model(account_balance) do

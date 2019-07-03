@@ -42,7 +42,7 @@ defmodule BlockchainAPI.FakeRewarder do
           :ok ->
             Logger.info("Rewarding ok")
           {:error, reason} ->
-            Logger.info("Reason: #{Atom.to_string(reason)}")
+            Logger.error("Reason: #{Atom.to_string(reason)}")
         end
         {:noreply, Map.put(state, :reward_height, block_height)}
       false ->

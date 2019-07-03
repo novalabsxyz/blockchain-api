@@ -74,4 +74,8 @@ defmodule BlockchainAPI.Schema.Transaction do
   def map(:blockchain_txn_poc_receipts_v1, txn) do
     %{type: "poc_receipts", hash: :blockchain_txn_poc_receipts_v1.hash(txn)}
   end
+
+  def map(:blockchain_txn_rewards_v1, txn) do
+    %{type: "rewards", hash: :blockchain_txn_rewards_v1.hash(txn)}
+  end
 end

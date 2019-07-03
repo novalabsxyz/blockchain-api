@@ -19,7 +19,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     account_transaction
     |> cast(attrs, [:account_address, :txn_hash, :txn_type, :txn_status])
     |> validate_required([:account_address, :txn_hash, :txn_type, :txn_status])
-    |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
+    # |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
   end
 
   def encode_model(account_transaction) do
@@ -94,6 +94,15 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
+  def map_cleared(:blockchain_txn_reward_v1, hash, txn) do
+    %{
+      account_address: :blockchain_txn_reward_v1.account(txn),
+      txn_type: "#{Atom.to_string(:blockchain_txn_reward_v1.type(txn))}_reward",
+      txn_status: "cleared",
+      txn_hash: hash
+    }
+  end
+
 
   def map_pending(:blockchain_txn_coinbase_v1, txn) do
     %{
