@@ -35,5 +35,6 @@ defmodule BlockchainAPIWeb.Router do
 
   scope "/", BlockchainAPIWeb do
     get "/", HealthCheckController, :index
+    get "/*path", FourOhFourController, :index
   end
 end
