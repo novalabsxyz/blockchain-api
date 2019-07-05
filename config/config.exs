@@ -14,7 +14,7 @@ config :blockchain_api,
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "OOLfw0Ez2rPqx6IOAsgbvj+5SxUhPuZ1zm6mHP0t2ETXk/8gT0guAres57j9LffB",
-  render_errors: [view: BlockchainAPIWeb.ErrorView, accepts: ~w(json)],
+  render_errors: [view: BlockchainAPIWeb.ErrorView, format: "json", accepts: ~w(json)],
   pubsub: [name: BlockchainAPI.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
