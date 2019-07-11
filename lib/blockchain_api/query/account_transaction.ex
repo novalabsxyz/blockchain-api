@@ -14,7 +14,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.LocationTransaction,
     Schema.Hotspot,
     Schema.SecurityTransaction,
-    Schema.RewardTxn
+    Schema.RewardTxn,
+    Schema.HotspotActivity
   }
 
   def create(attrs \\ %{}) do
@@ -93,6 +94,17 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   def get_gateways(address, _params \\ %{}) do
+    current_height = Query.Block.get_latest_height()
+
+    status_query = from(
+      ha in HotspotActivity,
+      group_by: ha.gateway,
+      select: %{
+        gateway: ha.gateway,
+        challenge_height: max(ha.poc_req_txn_block_height)
+      }
+    )
+
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
@@ -105,6 +117,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       where: at.txn_hash == gt.hash,
       left_join: lt in LocationTransaction,
       on: gt.gateway == lt.gateway,
+      left_join: s in subquery(status_query),
+      on: s.gateway == gt.gateway,
       distinct: hotspot.address,
       order_by: [desc: lt.nonce, desc: hotspot.id],
       select: %{
@@ -125,7 +139,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         short_street: hotspot.short_street,
         short_state: hotspot.short_state,
         short_country: hotspot.short_country,
-        score: hotspot.score
+        score: hotspot.score,
+        status: fragment("CASE WHEN ? - ? < 35 THEN 'online' ELSE 'offline' END", ^current_height, s.challenge_height)
       })
 
     query

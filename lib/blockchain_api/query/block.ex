@@ -59,6 +59,11 @@ defmodule BlockchainAPI.Query.Block do
     Repo.all(query)
   end
 
+  def get_latest_height() do
+    query = from b in Block, select: max(b.height)
+    Repo.one(query)
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
