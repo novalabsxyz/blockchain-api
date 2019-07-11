@@ -15,8 +15,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.Hotspot,
     Schema.SecurityTransaction,
     Schema.RewardTxn,
-    Schema.HotspotActivity,
-    Schema.Block
+    Schema.HotspotActivity
   }
 
   def create(attrs \\ %{}) do
@@ -95,6 +94,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   def get_gateways(address, _params \\ %{}) do
+    current_height = Query.Block.get_latest_height()
+
     status_query = from(
       ha in HotspotActivity,
       group_by: ha.gateway,
@@ -103,10 +104,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         challenge_height: max(ha.poc_req_txn_block_height)
       }
     )
-
-    %Block{height: current_height} =
-      from(b in Block, order_by: [desc: :height], limit: 1)
-      |> Repo.one()
 
     query = from(
       at in AccountTransaction,
