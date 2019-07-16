@@ -461,6 +461,8 @@ defmodule BlockchainAPI.Committer do
                           poc_score_delta: rx_score_delta
                         })
 
+                        _ = rapid_decline(rx_gateway)
+
                     end
 
                     element
@@ -635,4 +637,21 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
+  defp rapid_decline(challengee) do
+    challenge_results = Query.POCPathElement.get_last_ten(challengee)
+    case length(challenge_results) == 10 do
+      false -> :ok
+      true ->
+        case Enum.any?(challenge_results, fn(res) -> res == "success" end) do
+          true -> :ok
+          false ->
+            case Enum.count(challenge_results, fn(res) -> res == "failure" end) do
+              c when c >= 4 ->
+                  Query.HotspotActivity.create(%{gateway: challengee, rapid_decline: true})
+              _ ->
+                :ok
+            end
+        end
+    end
+  end
 end

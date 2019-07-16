@@ -96,7 +96,8 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       poc_witness_challenge_id: entry.poc_witness_challenge_id,
       poc_rx_challenge_id: entry.poc_rx_challenge_id,
       poc_score: entry.poc_score,
-      poc_score_delta: entry.poc_score_delta
+      poc_score_delta: entry.poc_score_delta,
+      rapid_decline: entry.rapid_decline
     }
   end
 end
