@@ -382,7 +382,7 @@ defmodule BlockchainAPI.Committer do
     secret = :blockchain_txn_poc_receipts_v1.secret(txn)
     entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
     {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways, last_challenge)
+    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways, last_challenge, old_ledger)
     txn_path0 = :blockchain_txn_poc_receipts_v1.path(txn)
     txn_path = txn_path0 |> Enum.map(fn(element) -> :blockchain_poc_path_element_v1.challengee(element) end)
 
