@@ -8,7 +8,19 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     Schema.POCRequestTransaction
   }
 
-  @fields [
+  @required_fields [
+    :poc_request_transactions_id,
+    :challenger,
+    :challenger_loc,
+    :hash,
+    :signature,
+    :fee,
+    :onion,
+    :challenger_owner
+  ]
+
+  @encoded_fields [
+    :id,
     :poc_request_transactions_id,
     :challenger,
     :challenger_loc,
@@ -20,7 +32,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
   ]
 
   @derive {Phoenix.Param, key: :hash}
-  @derive {Jason.Encoder, only: @fields}
+  @derive {Jason.Encoder, only: @required_fields}
   schema "poc_receipts_transactions" do
     field :poc_request_transactions_id, :integer, null: false
     field :challenger, :binary, null: false
@@ -40,8 +52,8 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
   @doc false
   def changeset(poc_receipts, attrs) do
     poc_receipts
-    |> cast(attrs, @fields)
-    |> validate_required(@fields)
+    |> cast(attrs, @required_fields)
+    |> validate_required(@required_fields)
     |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:challenger)
     |> foreign_key_constraint(:poc_request_transactions_id)
@@ -51,7 +63,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     {lat, lng} = Util.h3_to_lat_lng(poc_receipts.challenger_loc)
 
     poc_receipts
-    |> Map.take(@fields)
+    |> Map.take(@encoded_fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(poc_receipts.hash),
       challenger: Util.bin_to_string(poc_receipts.challenger),
