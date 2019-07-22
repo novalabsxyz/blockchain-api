@@ -17,6 +17,10 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
       add :poc_score, :float, null: true
       add :poc_score_delta, :float, null: true
       add :rapid_decline, :boolean, null: true, default: :false
+      add :in_consensus, :boolean, null: true, default: :false
+      add :election_id, :integer, null: true
+      add :election_block_height, :bigint, null: true
+      add :election_txn_block_height, :bigint, null: true
 
       timestamps()
     end

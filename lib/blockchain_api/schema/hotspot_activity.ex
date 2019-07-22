@@ -18,7 +18,11 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     :poc_rx_challenge_id,
     :poc_score,
     :poc_score_delta,
-    :rapid_decline
+    :rapid_decline,
+    :in_consensus,
+    :election_id,
+    :election_block_height,
+    :election_txn_block_height
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -37,6 +41,10 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :poc_score, :float, null: true
     field :poc_score_delta, :float, null: true
     field :rapid_decline, :boolean, null: true
+    field :in_consensus, :boolean, null: true, default: :false
+    field :election_id, :integer, null: true
+    field :election_block_height, :integer, null: true
+    field :election_txn_block_height, :integer, null: true
 
     timestamps()
   end
