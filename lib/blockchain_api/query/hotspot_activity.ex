@@ -101,7 +101,12 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       in_consensus: entry.in_consensus,
       election_id: entry.election_id,
       election_txn_block_height: entry.election_txn_block_height,
-      election_block_height: entry.election_block_height
+      election_block_height: entry.election_block_height,
+      election_txn_block_time: entry.election_txn_block_time,
+      reward_type: entry.reward_type,
+      reward_amount: entry.reward_amount,
+      reward_block_height: entry.reward_block_height,
+      reward_block_time: entry.reward_block_time
     }
   end
 end

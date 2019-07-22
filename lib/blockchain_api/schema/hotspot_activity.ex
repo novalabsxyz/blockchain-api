@@ -22,7 +22,12 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     :in_consensus,
     :election_id,
     :election_block_height,
-    :election_txn_block_height
+    :election_txn_block_height,
+    :election_txn_block_time,
+    :reward_type,
+    :reward_amount,
+    :reward_block_height,
+    :reward_block_time
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -45,6 +50,11 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :election_id, :integer, null: true
     field :election_block_height, :integer, null: true
     field :election_txn_block_height, :integer, null: true
+    field :election_txn_block_time, :integer, null: true
+    field :reward_type, :string, null: true
+    field :reward_amount, :integer, null: true
+    field :reward_block_height, :integer, null: true
+    field :reward_block_time, :integer, null: true
 
     timestamps()
   end
