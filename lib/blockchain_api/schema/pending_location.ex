@@ -41,7 +41,8 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
-    |> unique_constraint(:unique_pending_location, name: :unique_pending_location)
+    # XXX: Tmp disable this
+    # |> unique_constraint(:unique_pending_location, name: :unique_pending_location)
   end
 
   def encode_model(pending_location) do
