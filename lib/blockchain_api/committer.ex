@@ -251,11 +251,28 @@ defmodule BlockchainAPI.Committer do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
 
+    members = :blockchain_txn_consensus_group_v1.members(txn)
+
     :ok = Enum.each(
-      :blockchain_txn_consensus_group_v1.members(txn),
+      members,
       fn(member) ->
         {:ok, _member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
       end)
+
+    :ok = Enum.each(
+      members,
+      fn(member0) ->
+        {:ok, _activity_entry} =
+          Query.HotspotActivity.create(%{
+            gateway: member0,
+            in_consensus: true,
+            election_id: election_entry.id,
+            election_block_height: :blockchain_txn_consensus_group_v1.height(txn),
+            election_txn_block_height: height
+          })
+      end
+    )
+
   end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
@@ -334,17 +351,6 @@ defmodule BlockchainAPI.Committer do
     challengees = for element <- :blockchain_txn_poc_receipts_v1.path(txn), do: :blockchain_poc_path_element_v1.challengee(element)
     {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
     new_chain = :blockchain.ledger(ledger, :blockchain_worker.blockchain())
-    # chain_ledger = :blockchain.ledger(new_chain)
-    # {:ok, _chain_height} = :blockchain.height(new_chain)
-    # {:ok, _chain_ledger_height} = :blockchain_ledger_v1.current_height(chain_ledger)
-    # {:ok, _lagging_ledger_height} = :blockchain_ledger_v1.current_height(:blockchain_ledger_v1.mode(:delayed, ledger))
-
-    # Logger.info("poc_receipt_txn_entry:
-    # block_height: #{height},
-    # chain_height: #{chain_height},
-    # chain_ledger_height: #{chain_ledger_height},
-    # event_ledger_height: #{event_ledger_height},
-    # lagging_ledger_height: #{lagging_ledger_height}")
 
     ## recalculate target
     {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
