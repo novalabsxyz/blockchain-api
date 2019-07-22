@@ -170,8 +170,8 @@ defmodule BlockchainAPI.Committer do
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
             :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
-            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height)
-            :blockchain_txn_rewards_v1 -> insert_transaction(:blockchain_txn_rewards_v1, txn, height)
+            :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, :blockchain_block.time(block))
+            :blockchain_txn_rewards_v1 -> insert_transaction(:blockchain_txn_rewards_v1, txn, height, :blockchain_block.time(block))
             _ ->
               :ok
           end
@@ -247,33 +247,6 @@ defmodule BlockchainAPI.Committer do
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height) do
-    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
-    {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
-
-    members = :blockchain_txn_consensus_group_v1.members(txn)
-
-    :ok = Enum.each(
-      members,
-      fn(member) ->
-        {:ok, _member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
-      end)
-
-    :ok = Enum.each(
-      members,
-      fn(member0) ->
-        {:ok, _activity_entry} =
-          Query.HotspotActivity.create(%{
-            gateway: member0,
-            in_consensus: true,
-            election_id: election_entry.id,
-            election_block_height: :blockchain_txn_consensus_group_v1.height(txn),
-            election_txn_block_height: height
-          })
-      end
-    )
-
-  end
 
   defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
@@ -302,17 +275,63 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_rewards_v1, txn, height) do
+  defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
+    {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
+
+    members = :blockchain_txn_consensus_group_v1.members(txn)
+
+    :ok = Enum.each(
+      members,
+      fn(member) ->
+        {:ok, _member_entry} = Query.ConsensusMember.create(ConsensusMember.map(election_entry.id, member))
+      end)
+
+    :ok = Enum.each(
+      members,
+      fn(member0) ->
+        {:ok, _activity_entry} =
+          Query.HotspotActivity.create(%{
+            gateway: member0,
+            in_consensus: true,
+            election_id: election_entry.id,
+            election_block_height: :blockchain_txn_consensus_group_v1.height(txn),
+            election_txn_block_height: height,
+            election_txn_block_time: time
+          })
+      end
+    )
+  end
+
+  defp insert_transaction(:blockchain_txn_rewards_v1, txn, height, time) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_rewards_v1, txn))
     {:ok, rewards_txn} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
 
-    txn
-    |> :blockchain_txn_rewards_v1.rewards()
-    |> Enum.each(
-      fn(reward_txn) ->
-        RewardTxn.map(rewards_txn.hash, reward_txn)
-        |> Query.RewardTxn.create()
-      end)
+    rewards = :blockchain_txn_rewards_v1.rewards(txn)
+
+    :ok = rewards
+          |> Enum.each(
+            fn(reward_txn) ->
+              RewardTxn.map(rewards_txn.hash, reward_txn)
+              |> Query.RewardTxn.create()
+            end)
+
+    :ok = rewards
+          |> Enum.each(
+            fn(reward) ->
+              case :blockchain_txn_reward_v1.type(reward) do
+                :securities -> :ok
+                type ->
+                  {:ok, _activity_entry} =
+                    Query.HotspotActivity.create(%{
+                      gateway: :blockchain_txn_reward_v1.gateway(reward),
+                      reward_type: to_string(type),
+                      reward_amount: :blockchain_txn_reward_v1.amount(reward),
+                      reward_block_height: height,
+                      reward_block_time: time
+                    })
+              end
+            end)
 
   end
 

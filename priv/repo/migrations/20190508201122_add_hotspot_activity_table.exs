@@ -21,6 +21,11 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotActivityTable do
       add :election_id, :integer, null: true
       add :election_block_height, :bigint, null: true
       add :election_txn_block_height, :bigint, null: true
+      add :election_txn_block_time, :integer, null: true
+      add :reward_type, :string, null: true
+      add :reward_amount, :bigint, null: true
+      add :reward_block_height, :bigint, null: true
+      add :reward_block_time, :integer, null: true
 
       timestamps()
     end
