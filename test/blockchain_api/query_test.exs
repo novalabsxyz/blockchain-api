@@ -153,21 +153,24 @@ defmodule BlockchainAPI.QueryTest do
   end
 
   describe "location_transactions" do
-    alias BlockchainAPI.Schema.LocationTransaction
+    alias BlockchainAPI.Schema.{GatewayTransaction, LocationTransaction}
 
+    @valid_gw_attrs %{hash: "some hash", gateway: "some gateway", owner: "some owner"}
     @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner"}
     @invalid_attrs %{hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
 
     def gateway_location_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+      assert {:ok, %GatewayTransaction{} = gateway} = Query.GatewayTransaction.create(attrs)
       assert {:ok, %LocationTransaction{} = gateway_location} = Query.LocationTransaction.create(attrs)
       gateway_location
     end
 
     test "list_location_transactions/0 returns all assert_location_transactions" do
       gateway_location = gateway_location_fixture(@valid_attrs)
-      assert Query.LocationTransaction.list(@default_params).entries == [gateway_location]
+      [l] = Query.LocationTransaction.list(@query_params)
+      assert l == gateway_location
     end
 
     test "get_location!/1 returns the gateway_location with given hash" do
