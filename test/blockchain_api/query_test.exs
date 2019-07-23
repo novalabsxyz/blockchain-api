@@ -78,7 +78,7 @@ defmodule BlockchainAPI.QueryTest do
     def coinbase_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:ok, %CoinbaseTransaction{} = coinbase} = Query.CoinbaseTransaction.create(transaction.hash, attrs)
+      assert {:ok, %CoinbaseTransaction{} = coinbase} = Query.CoinbaseTransaction.create(attrs)
       coinbase
     end
 
@@ -101,7 +101,7 @@ defmodule BlockchainAPI.QueryTest do
     test "create_coinbase/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:error, %Ecto.Changeset{}} = Query.CoinbaseTransaction.create(transaction.hash, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.CoinbaseTransaction.create(@invalid_attrs)
     end
 
   end
@@ -115,7 +115,7 @@ defmodule BlockchainAPI.QueryTest do
     def payment_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:ok, %PaymentTransaction{} = payment} = Query.PaymentTransaction.create(transaction.hash, attrs)
+      assert {:ok, %PaymentTransaction{} = payment} = Query.PaymentTransaction.create(attrs)
       payment
     end
 
@@ -141,7 +141,7 @@ defmodule BlockchainAPI.QueryTest do
     test "create_payment/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:error, %Ecto.Changeset{}} = Query.PaymentTransaction.create(transaction.hash, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.PaymentTransaction.create(@invalid_attrs)
     end
   end
 
@@ -154,7 +154,7 @@ defmodule BlockchainAPI.QueryTest do
     def gateway_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:ok, %GatewayTransaction{} = gateway} = Query.GatewayTransaction.create(transaction.hash, attrs)
+      assert {:ok, %GatewayTransaction{} = gateway} = Query.GatewayTransaction.create(attrs)
       gateway
     end
 
@@ -177,7 +177,7 @@ defmodule BlockchainAPI.QueryTest do
     test "create_gateway/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:error, %Ecto.Changeset{}} = Query.GatewayTransaction.create(transaction.hash, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.GatewayTransaction.create(@invalid_attrs)
     end
   end
 
@@ -190,7 +190,7 @@ defmodule BlockchainAPI.QueryTest do
     def gateway_location_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:ok, %LocationTransaction{} = gateway_location} = Query.LocationTransaction.create(transaction.hash, attrs)
+      assert {:ok, %LocationTransaction{} = gateway_location} = Query.LocationTransaction.create(attrs)
       gateway_location
     end
 
@@ -217,7 +217,7 @@ defmodule BlockchainAPI.QueryTest do
     test "create_location/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
-      assert {:error, %Ecto.Changeset{}} = Query.LocationTransaction.create(transaction.hash, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Query.LocationTransaction.create(@invalid_attrs)
     end
 
   end
