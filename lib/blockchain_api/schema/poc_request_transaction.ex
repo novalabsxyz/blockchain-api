@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
   }
 
   @fields [:challenger, :owner, :location, :hash, :signature, :fee, :onion]
+  @encoded_fields @fields ++ [:id]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -37,7 +38,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     {lat, lng} = Util.h3_to_lat_lng(poc_request.location)
 
     poc_request
-    |> Map.take(@fields)
+    |> Map.take(@encoded_fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(poc_request.hash),
       challenger: Util.bin_to_string(poc_request.challenger),
