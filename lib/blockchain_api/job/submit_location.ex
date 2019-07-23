@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Job.SubmitLocation do
   require Logger
 
   def run(id) do
-    Logger.debug("running job for #{inspect(id)}")
+    Logger.debug("running pending_location job: #{inspect(id)}")
 
     pending_location = PendingLocation.get_by_id!(id)
     txn = pending_location.txn |> :blockchain_txn.deserialize()

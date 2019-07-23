@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Job.SubmitPayment do
   require Logger
 
   def run(id) do
-    Logger.debug("running job for #{inspect(id)}")
+    Logger.debug("running pending_payment job: #{inspect(id)}")
 
     pending_payment = PendingPayment.get_by_id!(id)
     txn = pending_payment.txn |> :blockchain_txn.deserialize()
