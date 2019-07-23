@@ -17,6 +17,9 @@ defmodule BlockchainAPI.Util do
     RewardsTransaction
   }
 
+  def rounder(nil, _) do
+    nil
+  end
   def rounder(value, precision) do
     Decimal.from_float(value)
     |> Decimal.round(precision)

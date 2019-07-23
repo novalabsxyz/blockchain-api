@@ -20,12 +20,14 @@ defmodule BlockchainAPI.BlockTest do
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      assert Query.Block.list(@default_params).entries == [block]
+      [b] = Query.Block.list(%{"limit" => 1})
+      assert b.height == block.height and b.time == block.time
     end
 
     test "get_block!/1 returns the block with given id" do
       block = block_fixture()
-      assert Query.Block.get!(block.height) == block
+      b = Query.Block.get!(block.height)
+      assert b.height == block.height and b.time == block.time
     end
 
     test "create_block/1 with valid data creates a block" do
