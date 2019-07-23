@@ -8,41 +8,7 @@ defmodule BlockchainAPI.QueryTest do
   @block_invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}
   @transaction_valid_attrs %{hash: "some hash", type: "some type"}
   @transaction_invalid_attrs %{hash: nil, type: nil}
-
-  describe "blocks" do
-
-    def block_fixture(attrs \\ %{}) do
-      {:ok, block} =
-        attrs
-        |> Enum.into(@block_valid_attrs)
-        |> Query.Block.create()
-
-      block
-    end
-
-    test "list_blocks/0 returns all blocks" do
-      block = block_fixture()
-      assert Query.Block.list(@default_params).entries == [block]
-    end
-
-    test "get_block!/1 returns the block with given id" do
-      block = block_fixture()
-      assert Query.Block.get!(block.height) == block
-    end
-
-    test "create_block/1 with valid data creates a block" do
-      assert {:ok, %Block{} = block} = Query.Block.create(@block_valid_attrs)
-      assert block.hash == "some hash"
-      assert block.height == 42
-      assert block.round == 42
-      assert block.time == 42
-    end
-
-    test "create_block/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Query.Block.create(@block_invalid_attrs)
-    end
-
-  end
+  @query_params %{}
 
   describe "transactions" do
 
@@ -84,7 +50,8 @@ defmodule BlockchainAPI.QueryTest do
 
     test "list_coinbase_transactions/0 returns all coinbase_transactions" do
       coinbase = coinbase_fixture(@valid_attrs)
-      assert Query.CoinbaseTransaction.list(@default_params).entries == [coinbase]
+      [c] = Query.CoinbaseTransaction.list(@query_params)
+      assert c == coinbase
     end
 
     test "get_coinbase!/1 returns the coinbase with given hash" do
@@ -121,7 +88,8 @@ defmodule BlockchainAPI.QueryTest do
 
     test "list_payment_transactions/0 returns all payment_transactions" do
       payment = payment_fixture(@valid_attrs)
-      assert Query.PaymentTransaction.list(@default_params).entries == [payment]
+      [p] = Query.PaymentTransaction.list(@query_params)
+      assert p == payment
     end
 
     test "get_payment!/1 returns the payment with given hash" do
@@ -160,7 +128,8 @@ defmodule BlockchainAPI.QueryTest do
 
     test "list_gateway_transactions/0 returns all add_gateway_transactions" do
       gateway = gateway_fixture(@valid_attrs)
-      assert Query.GatewayTransaction.list(@default_params).entries == [gateway]
+      [g] = Query.GatewayTransaction.list(@query_params)
+      assert g == gateway
     end
 
     test "get_gateway!/1 returns the gateway with given hash" do
