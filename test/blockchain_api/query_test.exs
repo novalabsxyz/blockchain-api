@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.QueryTest do
   use BlockchainAPI.DataCase
 
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.{Util, Query}
   alias BlockchainAPI.Schema.{Block, Transaction}
 
   @block_valid_attrs %{hash: "some hash", height: 42, round: 42, time: 42}
@@ -129,7 +129,9 @@ defmodule BlockchainAPI.QueryTest do
     test "list_gateway_transactions/0 returns all add_gateway_transactions" do
       gateway = gateway_fixture(@valid_attrs)
       [g] = Query.GatewayTransaction.list(@query_params)
-      assert g == gateway
+      assert (g.owner == Util.bin_to_string(gateway.owner) and
+        g.gateway == Util.bin_to_string(gateway.gateway) and
+        g.gateway_hash == Util.bin_to_string(gateway.hash))
     end
 
     test "get_gateway!/1 returns the gateway with given hash" do
