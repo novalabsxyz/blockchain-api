@@ -32,8 +32,9 @@ defmodule BlockchainAPIWeb.Router do
 
     get "/history", HistoryController, :index
 
-    get "/pending_gateways", PendingGatewayController, [:show, :index]
-    get "/pending_locations", PendingLocationController, [:show, :index]
+    get "/pending_gateways", PendingGatewayController, :show
+    get "/pending_locations", PendingLocationController, :show
+    get "/pending_payments", PendingPaymentController, :show
 
   end
 
