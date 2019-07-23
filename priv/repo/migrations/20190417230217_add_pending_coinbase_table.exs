@@ -17,7 +17,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingCoinbaseTable do
       timestamps()
     end
 
-    create unique_index(:pending_coinbases, [:hash], name: :unique_pending_coinbase)
+    create unique_index(:pending_coinbases, [:payee, :hash, :status, :submit_height], name: :unique_pending_coinbase)
     honeydew_indexes(:pending_coinbases, submit_coinbase_queue())
   end
 

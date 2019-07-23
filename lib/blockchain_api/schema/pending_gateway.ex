@@ -39,6 +39,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     |> cast(attrs, @fields)
     |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
+    |> unique_constraint(:unique_pending_owner_gateway, name: :unique_pending_gateway_owner)
     |> unique_constraint(:unique_pending_gateway, name: :unique_pending_gateway)
   end
 

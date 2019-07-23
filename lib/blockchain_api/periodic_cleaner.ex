@@ -40,27 +40,21 @@ defmodule BlockchainAPI.PeriodicCleaner do
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
         |> Enum.map(
           fn(pp) ->
-            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error,
-              pending_txn_submission_height: #{inspect(pp.submit_height)},
-              chain_height: #{inspect(chain_height)}")
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error, pending_txn_submission_height: #{inspect(pp.submit_height)}, chain_height: #{inspect(chain_height)}")
             Query.PendingPayment.update!(pp, %{status: "error"})
           end)
         Query.PendingGateway.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
         |> Enum.map(
           fn(pp) ->
-            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error,
-              pending_txn_submission_height: #{inspect(pp.submit_height)},
-              chain_height: #{inspect(chain_height)}")
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error, pending_txn_submission_height: #{inspect(pp.submit_height)}, chain_height: #{inspect(chain_height)}")
             Query.PendingGateway.update!(pp, %{status: "error"})
           end)
         Query.PendingLocation.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
         |> Enum.map(
           fn(pp) ->
-            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error,
-              pending_txn_submission_height: #{inspect(pp.submit_height)},
-              chain_height: #{inspect(chain_height)}")
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error, pending_txn_submission_height: #{inspect(pp.submit_height)}, chain_height: #{inspect(chain_height)}")
             Query.PendingLocation.update!(pp, %{status: "error"})
           end)
     end

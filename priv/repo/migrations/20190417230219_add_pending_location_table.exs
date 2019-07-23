@@ -21,7 +21,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
       timestamps()
     end
 
-    # create unique_index(:pending_locations, [:owner, :gateway, :hash, :status], name: :unique_pending_location)
+    create unique_index(:pending_locations, [:owner, :gateway, :nonce], name: :unique_pending_owner_gateway_nonce)
+    create unique_index(:pending_locations, [:owner, :gateway, :submit_height, :hash, :status], name: :unique_pending_location)
     honeydew_indexes(:pending_locations, submit_location_queue())
   end
 

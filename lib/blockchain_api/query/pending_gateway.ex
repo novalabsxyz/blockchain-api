@@ -22,6 +22,17 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> Repo.one!()
   end
 
+  def get(owner, gateway) do
+    from(
+      pg in PendingGateway,
+      where: pg.owner == ^owner,
+      where: pg.gateway == ^gateway,
+      select: pg
+    )
+    |> Repo.one()
+    |> format_one()
+  end
+
   def update!(pg, attrs \\ %{}) do
     pg
     |> PendingGateway.changeset(attrs)
@@ -52,7 +63,12 @@ defmodule BlockchainAPI.Query.PendingGateway do
   #==================================================================
   defp format(entries) do
     entries
-    |> Enum.map(fn(t) -> Map.merge(t, %{type: "gateway"}) end)
+    |> Enum.map(&format_one/1)
+  end
+
+  defp format_one(nil), do: %{}
+  defp format_one(entry) do
+    Map.merge(entry, %{type: "gateway"})
   end
 
 end

@@ -47,11 +47,28 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> format()
   end
 
+  def get(owner, gateway, nonce) do
+    from(
+      pl in PendingLocation,
+      where: pl.owner == ^owner,
+      where: pl.gateway == ^gateway,
+      where: pl.nonce == ^nonce,
+      select: pl
+    )
+    |> Repo.one()
+    |> format_one()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
   defp format(entries) do
     entries
-    |> Enum.map(fn(t) -> Map.merge(t, %{type: "location"}) end)
+    |> Enum.map(&format_one/1)
+  end
+
+  defp format_one(nil), do: %{}
+  defp format_one(entry) do
+    Map.merge(entry, %{type: "location"})
   end
 end
