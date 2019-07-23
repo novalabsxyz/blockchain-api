@@ -60,6 +60,17 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> format()
   end
 
+  def get(payer, nonce) do
+    from(
+      pp in PendingPayment,
+      where: pp.payer == ^payer,
+      where: pp.nonce == ^nonce,
+      select: pp
+    )
+    |> Repo.one()
+    |> format_one()
+  end
+
   def delete!(pp) do
     pp |> Repo.delete!()
   end
@@ -69,7 +80,12 @@ defmodule BlockchainAPI.Query.PendingPayment do
   #==================================================================
   defp format(entries) do
     entries
-    |> Enum.map(fn(t) -> Map.merge(t, %{type: "payment"}) end)
+    |> Enum.map(&format_one/1)
+  end
+
+  defp format_one(nil), do: %{}
+  defp format_one(entry) do
+    Map.merge(entry, %{type: "payment"})
   end
 
 end

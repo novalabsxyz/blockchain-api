@@ -99,7 +99,7 @@ defmodule BlockchainAPI.Application do
 
   defp queue_args(schema) do
     # NOTE: Check for new jobs every 5s, this query is frequent but quite inexpensive
-    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 5)
+    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 2)
     [schema: schema, repo: Repo, poll_interval: poll_interval]
   end
 

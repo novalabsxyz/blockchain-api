@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Job.SubmitCoinbase do
   require Logger
 
   def run(id) do
-    Logger.debug("running job for #{inspect(id)}")
+    Logger.debug("running pending_coinbase job: #{inspect(id)}")
 
     pending_coinbase = PendingCoinbase.get_by_id!(id)
     txn = pending_coinbase.txn |> :blockchain_txn.deserialize()

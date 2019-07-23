@@ -21,7 +21,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
       timestamps()
     end
 
-    create unique_index(:pending_payments, [:payer, :hash, :status], name: :unique_pending_payment)
+    create unique_index(:pending_payments, [:payer, :nonce], name: :unique_pending_payment_nonce)
+    create unique_index(:pending_payments, [:payer, :hash, :status, :submit_height], name: :unique_pending_payment)
     honeydew_indexes(:pending_payments, submit_payment_queue())
   end
 

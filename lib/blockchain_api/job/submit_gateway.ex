@@ -4,7 +4,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
   require Logger
 
   def run(id) do
-    Logger.debug("running job for #{inspect(id)}")
+    Logger.debug("running pending_gateway job: #{inspect(id)}")
 
     pending_gateway = PendingGateway.get_by_id!(id)
     txn = pending_gateway.txn |> :blockchain_txn.deserialize()

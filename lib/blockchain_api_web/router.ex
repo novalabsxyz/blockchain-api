@@ -31,6 +31,11 @@ defmodule BlockchainAPIWeb.Router do
     resources "/challenges", ChallengeController, only: [:index, :show], param: "id"
 
     get "/history", HistoryController, :index
+
+    get "/pending_gateways", PendingGatewayController, :show
+    get "/pending_locations", PendingLocationController, :show
+    get "/pending_payments", PendingPaymentController, :show
+
   end
 
   scope "/", BlockchainAPIWeb do
