@@ -10,7 +10,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     :owner,
     :gateway,
     :fee,
-    :amount,
+    :staking_fee,
     :txn,
     :submit_height
   ]
@@ -24,7 +24,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
-    field :amount, :integer, null: false, default: 0
+    field :staking_fee, :integer, null: false, default: 0
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
 
@@ -70,7 +70,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
       owner: :blockchain_txn_add_gateway_v1.owner(txn),
       gateway: :blockchain_txn_add_gateway_v1.gateway(txn),
       fee: :blockchain_txn_add_gateway_v1.fee(txn),
-      amount: :blockchain_txn_add_gateway_v1.amount(txn),
+      staking_fee: :blockchain_txn_add_gateway_v1.staking_fee(txn),
       txn: :blockchain_txn.serialize(txn),
       submit_height: submit_height
     }

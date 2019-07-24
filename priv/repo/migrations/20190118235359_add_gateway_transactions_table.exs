@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
       add :owner, :binary, null: false
       add :gateway, :binary, null: false
       add :fee, :bigint, null: false, default: 0
-      add :amount, :bigint, null: false, default: 0
+      add :staking_fee, :bigint, null: false, default: 0
       add :status, :string, null: false, default: "cleared"
 
       add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
