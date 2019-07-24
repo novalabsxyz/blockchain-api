@@ -1,13 +1,14 @@
 defmodule BlockchainAPI.Schema.POCRequestTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util,
+  alias BlockchainAPI.{
+    Query,
     Schema.POCRequestTransaction,
-    Schema.POCReceiptsTransaction
+    Schema.POCReceiptsTransaction,
+    Util
   }
 
   @fields [:challenger, :owner, :location, :hash, :signature, :fee, :onion]
-  @encoded_fields @fields ++ [:id]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -38,7 +39,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     {lat, lng} = Util.h3_to_lat_lng(poc_request.location)
 
     poc_request
-    |> Map.take(@encoded_fields)
+    |> Map.take(@fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(poc_request.hash),
       challenger: Util.bin_to_string(poc_request.challenger),
@@ -46,7 +47,8 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
       onion: Util.bin_to_string(poc_request.onion),
       owner: Util.bin_to_string(poc_request.owner),
       lat: lat,
-      lng: lng
+      lng: lng,
+      challenge_id: Query.POCRequestTransaction.challenge(poc_request).id
     })
   end
 
