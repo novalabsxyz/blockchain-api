@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
-    field :staking_fee, :integer, null: false, default: 0
+    field :staking_fee, :integer, null: false, default: 1
 
     timestamps()
   end
