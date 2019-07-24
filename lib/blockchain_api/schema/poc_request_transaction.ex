@@ -37,6 +37,11 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
 
   def encode_model(poc_request) do
     {lat, lng} = Util.h3_to_lat_lng(poc_request.location)
+    challenge_id =
+      case Query.POCRequestTransaction.challenge(poc_request) do
+        nil -> nil
+        challenge -> Map.get(challenge, :id)
+      end
 
     poc_request
     |> Map.take(@fields)
@@ -48,7 +53,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
       owner: Util.bin_to_string(poc_request.owner),
       lat: lat,
       lng: lng,
-      challenge_id: Query.POCRequestTransaction.challenge(poc_request).id
+      challenge_id: challenge_id
     })
   end
 
