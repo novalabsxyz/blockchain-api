@@ -62,4 +62,4 @@ reset-test-db:
 	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
 
 ci:
-	PORT=4002 MIX_ENV=test $(MIX) test --trace
+	PORT=4002 MIX_ENV=test $(MIX) local.hex --force; $(MIX) test --trace
