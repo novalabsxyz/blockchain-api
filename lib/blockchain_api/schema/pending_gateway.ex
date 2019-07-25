@@ -24,7 +24,7 @@ defmodule BlockchainAPI.Schema.PendingGateway do
     field :gateway, :binary, null: false
     field :owner, :binary, null: false
     field :fee, :integer, null: false, default: 0
-    field :staking_fee, :integer, null: false, default: 0
+    field :staking_fee, :integer, null: false, default: 1
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
 

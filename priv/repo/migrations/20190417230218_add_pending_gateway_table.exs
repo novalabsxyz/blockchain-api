@@ -8,6 +8,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
       add :status, :string, null: false, default: "pending"
       add :gateway, :binary, null: false
       add :fee, :bigint, null: false, default: 0
+      add :staking_fee, :bigint, null: false, default: 1
       add :amount, :bigint, null: false, default: 0
       add :hash, :binary, null: false
       add :txn, :binary, null: false

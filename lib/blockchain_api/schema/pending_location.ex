@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     :status,
     :nonce,
     :fee,
+    :staking_fee,
     :owner,
     :location,
     :gateway,
@@ -28,6 +29,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "pending"
     field :txn, :binary, null: false
+    field :staking_fee, :integer, null: false, default: 1
     field :submit_height, :integer, null: false, default: 0
 
     honeydew_fields(@submit_location_queue)
@@ -73,6 +75,7 @@ defmodule BlockchainAPI.Schema.PendingLocation do
       location: Util.h3_to_string(:blockchain_txn_assert_location_v1.location(txn)),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       owner: :blockchain_txn_assert_location_v1.owner(txn),
+      staking_fee: :blockchain_txn_assert_location_v1.staking_fee(txn),
       status: "pending",
       txn: :blockchain_txn.serialize(txn),
       submit_height: submit_height
