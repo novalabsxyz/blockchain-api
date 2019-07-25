@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Schema.RewardTxn do
     :account,
     :gateway,
     :amount,
-    :type
+    :type,
+    :unique_hash
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -22,6 +23,7 @@ defmodule BlockchainAPI.Schema.RewardTxn do
     field :amount, :integer, null: false
     field :rewards_hash, :binary, null: false
     field :type, :string, null: false
+    field :unique_hash, :binary, null: false
 
     belongs_to :rewards_transactions, RewardsTransaction, define_field: false, foreign_key: :hash
 
@@ -55,6 +57,7 @@ defmodule BlockchainAPI.Schema.RewardTxn do
 
     %{
       rewards_hash: rewards_hash,
+      unique_hash: rewards_hash <> :blockchain_txn_reward_v1.hash(reward_txn),
       account: :blockchain_txn_reward_v1.account(reward_txn),
       gateway: gateway,
       amount: :blockchain_txn_reward_v1.amount(reward_txn),

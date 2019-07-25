@@ -23,8 +23,16 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
   end
 
   def encode_model(account_transaction) do
+
+    hash = account_transaction.txn_hash
+    txn_hash =
+      case byte_size(hash) == 64 do
+        true -> Base.encode64(hash)
+        false -> Util.bin_to_string(hash)
+      end
+
     %{Map.take(account_transaction, @fields) |
-      txn_hash: Util.bin_to_string(account_transaction.txn_hash),
+      txn_hash: txn_hash,
       account_address: Util.bin_to_string(account_transaction.account_address)
     }
   end
@@ -99,7 +107,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       account_address: :blockchain_txn_reward_v1.account(txn),
       txn_type: "#{Atom.to_string(:blockchain_txn_reward_v1.type(txn))}_reward",
       txn_status: "cleared",
-      txn_hash: hash
+      txn_hash: hash <> :blockchain_txn_reward_v1.hash(txn)
     }
   end
 
