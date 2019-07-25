@@ -12,4 +12,15 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
     |> Repo.one()
   end
 
+  def get!(hash) do
+    DataCreditTransaction
+    |> where([ct], ct.hash == ^hash)
+    |> Repo.one!
+  end
+
+  def create(attrs \\ %{}) do
+    %DataCreditTransaction{}
+    |> DataCreditTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
 end
