@@ -16,15 +16,15 @@ defmodule BlockchainAPI.Schema.DataCreditTransaction do
   end
 
   @doc false
-  def changeset(security, attrs) do
-    security
+  def changeset(data_credit, attrs) do
+    data_credit
     |> cast(attrs, [:hash, :amount, :payee, :status])
     |> validate_required([:hash, :amount, :payee, :status])
     |> foreign_key_constraint(:hash)
   end
 
   def encode_model(data_credit) do
-    security
+    data_credit
     |> Map.take(@fields)
     |> Map.merge(%{
       payee: Util.bin_to_string(data_credit.payee),
@@ -33,7 +33,7 @@ defmodule BlockchainAPI.Schema.DataCreditTransaction do
     })
   end
 
-  defimpl Jason.Encoder, for: SecurityTransaction do
+  defimpl Jason.Encoder, for: DataCreditTransaction do
     def encode(data_credit, opts) do
       data_credit
       |> DataCreditTransaction.encode_model()
