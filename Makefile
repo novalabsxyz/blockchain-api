@@ -60,3 +60,6 @@ test:
 
 reset-test-db:
 	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
+
+ci:
+	PORT=4002 MIX_ENV=test NO_ESCRIPT=1 $(MIX) local.hex --force; $(MIX) local.rebar --force; $(MIX) deps.get; $(MIX) test --trace
