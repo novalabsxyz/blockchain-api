@@ -287,7 +287,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                           end)
                           |> Enum.reverse()
 
-    rewards = Enum.filter(
+    grouped_rewards = Enum.filter(
       formatted_entries,
       fn(e) ->
         e.type == "consensus_reward" or
@@ -296,12 +296,17 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         e.type == "poc_challengers_reward" or
         e.type == "poc_witnesses_reward"
       end)
-
-    reward_lists = rewards
-                   |> Enum.group_by(fn(x) -> x.height end)
-                   |> Map.values()
-
-    rewards1 = Enum.reduce(reward_lists, [], fn(l, acc1) -> [ %{type: "reward", height: hd(l).height, items: l} | acc1 ] end)
+      |> Enum.group_by(fn(x) -> x.height end)
+      |> Map.values()
+      |> Enum.reduce(
+        [],
+        fn(l, acc1) ->
+          case l do
+            [] -> acc1
+            list ->
+              [ %{type: "reward", height: hd(list).height, items: l} | acc1 ]
+          end
+        end)
 
     no_rewards = Enum.reject(
       formatted_entries,
@@ -313,9 +318,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         e.type == "poc_witnesses_reward"
       end)
 
-    total = Enum.sort_by(no_rewards ++ rewards1, fn(x) -> x.height end) |> Enum.reverse()
-
-    total
+    Enum.sort_by(no_rewards ++ grouped_rewards, fn(x) -> x.height end) |> Enum.reverse()
 
   end
 
