@@ -14,8 +14,8 @@ defmodule BlockchainAPI.Util do
     PendingPayment,
     POCReceiptsTransaction,
     POCRequestTransaction,
-    RewardsTransaction
-    SecurityTransaction,
+    RewardsTransaction,
+    SecurityTransaction
   }
 
   def rounder(nil, _) do
