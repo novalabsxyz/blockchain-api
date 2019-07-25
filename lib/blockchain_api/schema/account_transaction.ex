@@ -56,7 +56,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
   def map_cleared(:blockchain_txn_dc_coinbase_v1, txn) do
     %{
       account_address: :blockchain_txn_dc_coinbase_v1.payee(txn),
-      txn_type: "dc",
+      txn_type: "data_credit",
       txn_status: "cleared",
       txn_hash: :blockchain_txn_dc_coinbase_v1.hash(txn)
     }

@@ -8,7 +8,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Repo,
     Schema.AccountTransaction,
     Schema.CoinbaseTransaction,
-    Schema.DCTransaction,
+    Schema.DataCreditTransaction,
     Schema.GatewayTransaction,
     Schema.Hotspot,
     Schema.HotspotActivity,
@@ -232,10 +232,10 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                       |> Query.Transaction.get_security!()
                       |> SecurityTransaction.encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
-              "dc" ->
+              "data_credit" ->
                 res = entry.txn_hash
-                      |> Query.Transaction.get_dc!()
-                      |> DCTransaction..encode_model()
+                      |> Query.Transaction.get_data_credit!()
+                      |> DataCreditTransaction..encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
               "gateway" ->
                 res = entry.txn_hash

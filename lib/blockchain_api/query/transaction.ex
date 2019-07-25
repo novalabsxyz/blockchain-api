@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Repo,
     Schema.Block,
     Schema.CoinbaseTransaction,
-    Schema.DCTransaction,
+    Schema.DataCreditTransaction,
     Schema.ElectionTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
@@ -28,8 +28,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == coinbase_transaction.hash,
       left_join: security_transaction in SecurityTransaction,
       on: transaction.hash == security_transaction.hash,
-      left_join: dc_transaction in DCTransaction,
-      on: transaction.hash == dc_transaction.hash,
+      left_join: data_credit_transaction in DataCreditTransaction,
+      on: transaction.hash == data_credit_transaction.hash,
       left_join: election_transaction in ElectionTransaction,
       on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -65,8 +65,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == coinbase_transaction.hash,
       left_join: security_transaction in SecurityTransaction,
       on: transaction.hash == security_transaction.hash,
-      left_join: dc_transaction in DCTransaction,
-      on: transaction.hash == dc_transaction.hash,
+      left_join: data_credit_transaction in DataCreditTransaction,
+      on: transaction.hash == data_credit_transaction.hash,
       left_join: election_transaction in ElectionTransaction,
       on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -92,7 +92,7 @@ defmodule BlockchainAPI.Query.Transaction do
         height: block.height,
         coinbase: coinbase_transaction,
         security: security_transaction,
-        dc: dc_transaction,
+        data_credit: data_credit_transaction,
         election: election_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
@@ -185,20 +185,20 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Repo.one!()
   end
 
-  def get_dc!(txn_hash) do
+  def get_data_credit!(txn_hash) do
     from(
       transaction in Transaction,
       where: transaction.hash == ^txn_hash,
       left_join: block in Block,
       on: transaction.block_height == block.height,
-      left_join: dc_transaction in DCTransaction,
-      on: transaction.hash == dc_transaction.hash,
+      left_join: data_credit_transaction in DataCreditTransaction,
+      on: transaction.hash == data_credit_transaction.hash,
       select: %{
         height: block.height,
         time: block.time,
-        payee: dc_transaction.payee,
-        amount: dc_transaction.amount,
-        hash: dc_transaction.hash,
+        payee: data_credit_transaction.payee,
+        amount: data_credit_transaction.amount,
+        hash: data_credit_transaction.hash,
       }
     )
     |> Repo.one!()

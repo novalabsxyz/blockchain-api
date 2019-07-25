@@ -1,12 +1,12 @@
-defmodule BlockchainAPI.Schema.DCTransaction do
+defmodule BlockchainAPI.Schema.DataCreditTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.DCTransaction}
+  alias BlockchainAPI.{Util, Schema.DataCreditTransaction}
   @fields [:id, :hash, :amount, :payee, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
-  schema "dc_transactions" do
+  schema "data_credit_transactions" do
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "cleared"
     field :amount, :integer, null: false
@@ -23,29 +23,29 @@ defmodule BlockchainAPI.Schema.DCTransaction do
     |> foreign_key_constraint(:hash)
   end
 
-  def encode_model(dc) do
+  def encode_model(data_credit) do
     security
     |> Map.take(@fields)
     |> Map.merge(%{
-      payee: Util.bin_to_string(dc.payee),
-      hash: Util.bin_to_string(dc.hash),
-      type: "dc"
+      payee: Util.bin_to_string(data_credit.payee),
+      hash: Util.bin_to_string(data_credit.hash),
+      type: "data_credit"
     })
   end
 
   defimpl Jason.Encoder, for: SecurityTransaction do
-    def encode(dc, opts) do
-      dc
-      |> DCTransaction.encode_model()
+    def encode(data_credit, opts) do
+      data_credit
+      |> DataCreditTransaction.encode_model()
       |> Jason.Encode.map(opts)
     end
   end
 
-  def map(dc) do
+  def map(data_credit) do
     %{
-      payee: :blockchain_txn_dc_coinbase_v1.payee(dc),
-      amount: :blockchain_txn_dc_coinbase_v1.amount(dc),
-      hash: :blockchain_txn_dc_coinbase_v1.hash(dc)
+      payee: :blockchain_txn_dc_coinbase_v1.payee(data_credit),
+      amount: :blockchain_txn_dc_coinbase_v1.amount(data_credit),
+      hash: :blockchain_txn_dc_coinbase_v1.hash(data_credit)
     }
   end
 end

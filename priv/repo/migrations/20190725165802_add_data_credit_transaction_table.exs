@@ -1,8 +1,8 @@
-defmodule BlockchainAPI.Repo.Migrations.AddDcTransactionTable do
+defmodule BlockchainAPI.Repo.Migrations.AddDataCreditTransactionTable do
   use Ecto.Migration
 
   def change do
-    create table(:dc_transactions) do
+    create table(:data_credit_transactions) do
       add :amount, :bigint, null: false
       add :payee, :binary, null: false
       add :status, :string, null: false, default: "cleared"
@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddDcTransactionTable do
       timestamps()
     end
 
-    create unique_index(:dc_transactions, [:hash], name: :unique_dc_hash)
+    create unique_index(:data_credit_transactions, [:hash], name: :unique_data_credit_hash)
 
   end
 end

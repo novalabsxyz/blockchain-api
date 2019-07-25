@@ -10,7 +10,7 @@ defmodule BlockchainAPI.Committer do
     Schema.Block,
     Schema.CoinbaseTransaction,
     Schema.ConsensusMember,
-    Schema.DCTransaction,
+    Schema.DataCreditTransaction,
     Schema.ElectionTransaction,
     Schema.GatewayTransaction,
     Schema.History,
@@ -215,7 +215,7 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_dc_coinbase_v1, txn))
-    {:ok, _} = Query.DCTransaction.create(DCTransaction.map(txn))
+    {:ok, _} = Query.DataCreditTransaction.create(DataCreditTransaction.map(txn))
   end
 
 

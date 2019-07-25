@@ -1,11 +1,11 @@
-defmodule BlockchainAPI.Query.DCTransaction do
+defmodule BlockchainAPI.Query.DataCreditTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.DCTransaction}
+  alias BlockchainAPI.{Repo, Schema.DataCreditTransaction}
 
   def get_balance(address) do
-    DCTransaction
+    DataCreditCTransaction
     |> where([ct], ct.payee == ^address)
     |> order_by([ct], [desc: ct.id])
     |> limit(1)
