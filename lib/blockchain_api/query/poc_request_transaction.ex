@@ -38,4 +38,10 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
     |> POCRequestTransaction.changeset(attrs)
     |> Repo.insert()
   end
+
+  def get_challenge(poc_request) do
+    poc_request
+    |> Repo.preload(:poc_receipts_transactions)
+    |> Map.get(:poc_receipts_transactions)
+  end
 end

@@ -20,7 +20,6 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
   ]
 
   @encoded_fields [
-    :id,
     :poc_request_transactions_id,
     :challenger,
     :challenger_loc,
@@ -65,6 +64,7 @@ defmodule BlockchainAPI.Schema.POCReceiptsTransaction do
     poc_receipts
     |> Map.take(@encoded_fields)
     |> Map.merge(%{
+      challenge_id: poc_receipts.id,
       hash: Util.bin_to_string(poc_receipts.hash),
       challenger: Util.bin_to_string(poc_receipts.challenger),
       challenger_owner: Util.bin_to_string(poc_receipts.challenger_owner),
