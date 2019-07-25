@@ -4,18 +4,19 @@ defmodule BlockchainAPI.Query.Transaction do
 
   alias BlockchainAPI.{
     Repo,
-    Util,
     Schema.Block,
-    Schema.Transaction,
-    Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
+    Schema.DCTransaction,
+    Schema.ElectionTransaction,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
-    Schema.POCRequestTransaction,
+    Schema.PaymentTransaction,
     Schema.POCReceiptsTransaction,
+    Schema.POCRequestTransaction,
+    Schema.RewardsTransaction,
     Schema.SecurityTransaction,
-    Schema.ElectionTransaction,
-    Schema.RewardsTransaction
+    Schema.Transaction,
+    Util
   }
 
   def list(_params) do
@@ -27,6 +28,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == coinbase_transaction.hash,
       left_join: security_transaction in SecurityTransaction,
       on: transaction.hash == security_transaction.hash,
+      left_join: dc_transaction in DCTransaction,
+      on: transaction.hash == dc_transaction.hash,
       left_join: election_transaction in ElectionTransaction,
       on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -42,6 +45,7 @@ defmodule BlockchainAPI.Query.Transaction do
         gateway_transaction,
         location_transaction,
         security_transaction,
+        dc_transaction,
         election_transaction
       ])
 
@@ -61,6 +65,8 @@ defmodule BlockchainAPI.Query.Transaction do
       on: transaction.hash == coinbase_transaction.hash,
       left_join: security_transaction in SecurityTransaction,
       on: transaction.hash == security_transaction.hash,
+      left_join: dc_transaction in DCTransaction,
+      on: transaction.hash == dc_transaction.hash,
       left_join: election_transaction in ElectionTransaction,
       on: transaction.hash == election_transaction.hash,
       left_join: payment_transaction in PaymentTransaction,
@@ -86,6 +92,7 @@ defmodule BlockchainAPI.Query.Transaction do
         height: block.height,
         coinbase: coinbase_transaction,
         security: security_transaction,
+        dc: dc_transaction,
         election: election_transaction,
         payment: payment_transaction,
         gateway: gateway_transaction,
@@ -173,6 +180,25 @@ defmodule BlockchainAPI.Query.Transaction do
         payee: security_transaction.payee,
         amount: security_transaction.amount,
         hash: security_transaction.hash,
+      }
+    )
+    |> Repo.one!()
+  end
+
+  def get_dc!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: dc_transaction in DCTransaction,
+      on: transaction.hash == dc_transaction.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payee: dc_transaction.payee,
+        amount: dc_transaction.amount,
+        hash: dc_transaction.hash,
       }
     )
     |> Repo.one!()
