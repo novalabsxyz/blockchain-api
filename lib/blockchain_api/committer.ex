@@ -22,7 +22,6 @@ defmodule BlockchainAPI.Committer do
     Schema.POCWitness,
     Schema.ElectionTransaction,
     Schema.ConsensusMember,
-    Schema.History,
     Schema.RewardsTransaction,
     Schema.RewardTxn
   }
@@ -39,15 +38,6 @@ defmodule BlockchainAPI.Committer do
         Logger.error("Failed to commit block at height: #{:blockchain_block.height(block)}")
         {:error, reason}
     end
-
-    case commit_scores(ledger, height) do
-      {:ok, multi_score_result}  ->
-        {:ok, multi_score_result}
-      {:error, reason} ->
-        Logger.error("Failed to add scores at height: #{:blockchain_block.height(block)}")
-        {:error, reason}
-    end
-    Logger.info("Successfully committed block at height: #{:blockchain_block.height(block)} to db!")
   end
 
   defp commit_block(block, ledger, height) do
@@ -76,30 +66,6 @@ defmodule BlockchainAPI.Committer do
         Logger.error("Failed to commit account_balances at height: #{:blockchain_block.height(block)} to db!")
         {:error, reason}
     end
-  end
-
-  defp commit_scores(ledger, height) do
-    ledger
-    |> :blockchain_ledger_v1.active_gateways()
-    |> Map.to_list()
-    |> Enum.reduce([],
-      fn({addr, gw}, acc) ->
-        changeset = History.changeset(%History{}, %{
-          height: height,
-          name: to_string(:erlang.element(2, :erl_angry_purple_tiger.animal_name(:libp2p_crypto.bin_to_b58(addr)))),
-          score: :erlang.element(2, :blockchain_ledger_v1.gateway_score(addr, ledger)),
-          alpha: :blockchain_ledger_gateway_v1.alpha(gw),
-          beta: :blockchain_ledger_gateway_v1.beta(gw),
-          delta: (height - :blockchain_ledger_gateway_v1.delta(gw))
-        })
-        [changeset | acc]
-      end)
-      |> Enum.with_index()
-      |> Enum.reduce(Ecto.Multi.new(),
-        fn ({changeset, index}, multi) ->
-          Ecto.Multi.insert(multi, Integer.to_string(index), changeset)
-        end)
-        |> Repo.transaction()
   end
 
   defp insert_or_update_all_account(ledger) do

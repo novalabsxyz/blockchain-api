@@ -2,10 +2,9 @@ defmodule BlockchainAPI.QueryTest do
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.{Util, Query}
-  alias BlockchainAPI.Schema.{Block, Transaction}
+  alias BlockchainAPI.Schema.Transaction
 
   @block_valid_attrs %{hash: "some hash", height: 42, round: 42, time: 42}
-  @block_invalid_attrs %{hash: nil, height: nil, round: nil, time: nil}
   @transaction_valid_attrs %{hash: "some hash", type: "some type"}
   @transaction_invalid_attrs %{hash: nil, type: nil}
   @query_params %{}
@@ -155,7 +154,6 @@ defmodule BlockchainAPI.QueryTest do
   describe "location_transactions" do
     alias BlockchainAPI.Schema.{GatewayTransaction, LocationTransaction}
 
-    @valid_gw_attrs %{hash: "some hash", gateway: "some gateway", owner: "some owner"}
     @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner"}
     @invalid_attrs %{hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
 
@@ -197,10 +195,7 @@ defmodule BlockchainAPI.QueryTest do
   end
 
   describe "accounts" do
-    alias BlockchainAPI.Schema.Account
-
     @valid_attrs %{address: "some address", balance: 42, fee: 42, nonce: 42}
-    @invalid_attrs %{address: nil, balance: nil, fee: nil, nonce: nil}
 
     def account_fixture(attrs \\ %{}) do
       {:ok, account} = Query.Account.create(attrs)
