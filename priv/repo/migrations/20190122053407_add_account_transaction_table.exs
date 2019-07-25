@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTransactionTable do
       timestamps()
     end
 
-    # create unique_index(:account_transactions, [:account_address, :txn_hash, :txn_status, :txn_type], name: :unique_account_txn)
+    create unique_index(:account_transactions, [:account_address, :txn_hash, :txn_status, :txn_type], name: :unique_account_txn)
 
   end
 

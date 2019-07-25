@@ -210,82 +210,113 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   defp format(entries) do
-    entries
-    |> Enum.reduce([],
-      fn(entry, acc) ->
-        case entry.txn_status do
-          "cleared" ->
-            case entry.txn_type do
-              "payment" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_payment!()
-                      |> PaymentTransaction.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "coinbase" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_coinbase!()
-                      |> CoinbaseTransaction.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "security" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_security!()
-                      |> SecurityTransaction.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "gateway" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_gateway!()
-                      |> GatewayTransaction.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "location" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_location!()
-                      |> LocationTransaction.encode_model()
-                [Map.merge(res, %{id: entry.id}) | acc]
-              "consensus_reward" -> merge_reward_entry(entry, acc)
-              "securities_reward" -> merge_reward_entry(entry, acc)
-              "poc_challengees_reward" -> merge_reward_entry(entry, acc)
-              "poc_challengers_reward" -> merge_reward_entry(entry, acc)
-              "poc_witnesses_reward" -> merge_reward_entry(entry, acc)
-              _ -> acc
-            end
-          "pending" ->
-            case entry.txn_type do
-              "payment" ->
-                try do
-                  res = Query.PendingPayment.get!(entry.txn_hash)
-                  [Map.merge(res, %{id: entry.id}) | acc]
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    acc
-                end
-              "coinbase" ->
-                try do
-                  res = Query.PendingCoinbase.get!(entry.txn_hash)
-                  [Map.merge(res, %{id: entry.id}) | acc]
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    acc
-                end
-              "gateway" ->
-                try do
-                  res = Query.PendingGateway.get!(entry.txn_hash)
-                  [Map.merge(res, %{id: entry.id}) | acc]
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    acc
-                end
-              "location" ->
-                try do
-                  res = Query.PendingLocation.get!(entry.txn_hash)
-                  [Map.merge(res, %{id: entry.id}) | acc]
-                rescue
-                  _error in Ecto.NoResultsError ->
-                    acc
-                end
-            end
-        end
+    formatted_entries = entries
+                        |> Enum.reduce([],
+                          fn(entry, acc) ->
+                            case entry.txn_status do
+                              "cleared" ->
+                                case entry.txn_type do
+                                  "payment" ->
+                                    res = entry.txn_hash
+                                          |> Query.Transaction.get_payment!()
+                                          |> PaymentTransaction.encode_model()
+                                    [Map.merge(res, %{id: entry.id}) | acc]
+                                  "coinbase" ->
+                                    res = entry.txn_hash
+                                          |> Query.Transaction.get_coinbase!()
+                                          |> CoinbaseTransaction.encode_model()
+                                    [Map.merge(res, %{id: entry.id}) | acc]
+                                  "security" ->
+                                    res = entry.txn_hash
+                                          |> Query.Transaction.get_security!()
+                                          |> SecurityTransaction.encode_model()
+                                    [Map.merge(res, %{id: entry.id}) | acc]
+                                  "gateway" ->
+                                    res = entry.txn_hash
+                                          |> Query.Transaction.get_gateway!()
+                                          |> GatewayTransaction.encode_model()
+                                    [Map.merge(res, %{id: entry.id}) | acc]
+                                  "location" ->
+                                    res = entry.txn_hash
+                                          |> Query.Transaction.get_location!()
+                                          |> LocationTransaction.encode_model()
+                                    [Map.merge(res, %{id: entry.id}) | acc]
+                                  "consensus_reward" -> merge_reward_entry(entry, acc)
+                                  "securities_reward" -> merge_reward_entry(entry, acc)
+                                  "poc_challengees_reward" -> merge_reward_entry(entry, acc)
+                                  "poc_challengers_reward" -> merge_reward_entry(entry, acc)
+                                  "poc_witnesses_reward" -> merge_reward_entry(entry, acc)
+                                  _ -> acc
+                                end
+                                "pending" ->
+                                case entry.txn_type do
+                                  "payment" ->
+                                    try do
+                                      res = Query.PendingPayment.get!(entry.txn_hash)
+                                      [Map.merge(res, %{id: entry.id}) | acc]
+                                    rescue
+                                      _error in Ecto.NoResultsError ->
+                                        acc
+                                    end
+                                  "coinbase" ->
+                                    try do
+                                      res = Query.PendingCoinbase.get!(entry.txn_hash)
+                                      [Map.merge(res, %{id: entry.id}) | acc]
+                                    rescue
+                                      _error in Ecto.NoResultsError ->
+                                        acc
+                                    end
+                                  "gateway" ->
+                                    try do
+                                      res = Query.PendingGateway.get!(entry.txn_hash)
+                                      [Map.merge(res, %{id: entry.id}) | acc]
+                                    rescue
+                                      _error in Ecto.NoResultsError ->
+                                        acc
+                                    end
+                                  "location" ->
+                                    try do
+                                      res = Query.PendingLocation.get!(entry.txn_hash)
+                                      [Map.merge(res, %{id: entry.id}) | acc]
+                                    rescue
+                                      _error in Ecto.NoResultsError ->
+                                        acc
+                                    end
+                                end
+                            end
+                          end)
+                          |> Enum.reverse()
+
+    rewards = Enum.filter(
+      formatted_entries,
+      fn(e) ->
+        e.type == "consensus_reward" or
+        e.type == "securities_reward" or
+        e.type == "poc_challengees_reward" or
+        e.type == "poc_challengers_reward" or
+        e.type == "poc_witnesses_reward"
       end)
-      |> Enum.reverse()
+
+    reward_lists = rewards
+                   |> Enum.group_by(fn(x) -> x.height end)
+                   |> Map.values()
+
+    rewards1 = Enum.reduce(reward_lists, [], fn(l, acc1) -> [ %{type: "reward", height: hd(l).height, items: l} | acc1 ] end)
+
+    no_rewards = Enum.reject(
+      formatted_entries,
+      fn(e) ->
+        e.type == "consensus_reward" or
+        e.type == "securities_reward" or
+        e.type == "poc_challengees_reward" or
+        e.type == "poc_challengers_reward" or
+        e.type == "poc_witnesses_reward"
+      end)
+
+    total = Enum.sort_by(no_rewards ++ rewards1, fn(x) -> x.height end) |> Enum.reverse()
+
+    total
+
   end
 
   defp merge_reward_entry(entry, acc) do
