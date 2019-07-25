@@ -2,6 +2,8 @@
 
 An API for the helium blockchain
 
+[![Build status](https://badge.buildkite.com/1c819cef9216a66d6b7132c8b085d36bb915f141d1fd3337e3.svg)](https://buildkite.com/helium/blockchain-api)
+
 ## Local Installation
 
 In order to run locally, a number of dependencies must be met.
