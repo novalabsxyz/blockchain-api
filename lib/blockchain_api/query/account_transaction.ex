@@ -235,7 +235,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
               "data_credit" ->
                 res = entry.txn_hash
                       |> Query.Transaction.get_data_credit!()
-                      |> DataCreditTransaction..encode_model()
+                      |> DataCreditTransaction.encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
               "gateway" ->
                 res = entry.txn_hash

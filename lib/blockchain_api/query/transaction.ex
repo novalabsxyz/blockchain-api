@@ -45,7 +45,7 @@ defmodule BlockchainAPI.Query.Transaction do
         gateway_transaction,
         location_transaction,
         security_transaction,
-        dc_transaction,
+        data_credit_transaction,
         election_transaction
       ])
 

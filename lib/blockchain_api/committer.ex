@@ -23,9 +23,9 @@ defmodule BlockchainAPI.Committer do
     Schema.POCRequestTransaction,
     Schema.POCWitness,
     Schema.RewardsTransaction,
-    Schema.RewardTxn
+    Schema.RewardTxn,
     Schema.SecurityTransaction,
-    Schema.Transaction,
+    Schema.Transaction
   }
 
   alias BlockchainAPIWeb.BlockChannel
