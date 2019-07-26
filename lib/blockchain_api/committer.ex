@@ -13,7 +13,6 @@ defmodule BlockchainAPI.Committer do
     Schema.DataCreditTransaction,
     Schema.ElectionTransaction,
     Schema.GatewayTransaction,
-    Schema.History,
     Schema.Hotspot,
     Schema.LocationTransaction,
     Schema.PaymentTransaction,
