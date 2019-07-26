@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
   alias BlockchainAPI.{Repo, Schema.DataCreditTransaction}
 
   def get_balance(address) do
-    DataCreditCTransaction
+    DataCreditTransaction
     |> where([ct], ct.payee == ^address)
     |> order_by([ct], [desc: ct.id])
     |> limit(1)
