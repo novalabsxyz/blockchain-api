@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.LocationTransaction}
-  @fields [:id, :hash, :fee, :staking_fee, :gateway, :location, :nonce, :owner, :height, :time]
+  @fields [:id, :hash, :fee, :staking_fee, :gateway, :location, :nonce, :owner, :payer, :height, :time]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -12,6 +12,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
     field :location, :string, null: false
     field :nonce, :integer, null: false, default: 0
     field :owner, :binary, null: false
+    field :payer, :binary, null: true
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "cleared"
     field :staking_fee, :integer, null: false, default: 1
@@ -22,8 +23,8 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   @doc false
   def changeset(location, attrs) do
     location
-    |> cast(attrs, [:hash, :gateway, :owner, :location, :nonce, :fee, :staking_fee, :status])
-    |> validate_required([:hash, :gateway, :owner, :location, :nonce, :fee, :status])
+    |> cast(attrs, [:hash, :gateway, :owner, :payer, :location, :nonce, :fee, :staking_fee, :status])
+    |> validate_required([:hash, :gateway, :owner, :payer, :location, :nonce, :fee, :status])
     |> foreign_key_constraint(:hash)
     |> foreign_key_constraint(:gateway)
   end
@@ -31,12 +32,20 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   def encode_model(location) do
     {lat, lng} = Util.h3_to_lat_lng(location.location)
 
+    payer =
+      case location.payer do
+        :undefined -> nil
+        <<>> -> nil
+        p -> Util.bin_to_string(p)
+      end
+
     location
     |> Map.take(@fields)
     |> Map.merge(%{
       owner: Util.bin_to_string(location.owner),
       hash: Util.bin_to_string(location.hash),
       gateway: Util.bin_to_string(location.gateway),
+      payer: payer,
       lat: lat,
       lng: lng,
       type: "location"
@@ -64,6 +73,7 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
   def map(:blockchain_txn_assert_location_v1, txn) do
     %{
       owner: :blockchain_txn_assert_location_v1.owner(txn),
+      payer: :blockchain_txn_assert_location_v1.payer(txn),
       gateway: :blockchain_txn_assert_location_v1.gateway(txn),
       nonce: :blockchain_txn_assert_location_v1.nonce(txn),
       fee: :blockchain_txn_assert_location_v1.fee(txn),

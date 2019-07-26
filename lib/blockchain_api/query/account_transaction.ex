@@ -128,6 +128,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         gateway_hash: gt.hash,
         gateway_fee: gt.fee,
         owner: gt.owner,
+        payer: gt.payer,
         location: lt.location,
         location_fee: lt.fee,
         location_nonce: lt.nonce,

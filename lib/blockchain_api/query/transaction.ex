@@ -239,6 +239,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: gateway_transaction.hash,
         gateway: gateway_transaction.gateway,
         owner: gateway_transaction.owner,
+        payer: gateway_transaction.payer,
         fee: gateway_transaction.fee,
         staking_fee: gateway_transaction.staking_fee,
       }
@@ -260,6 +261,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: location_transaction.hash,
         gateway: location_transaction.gateway,
         owner: location_transaction.owner,
+        payer: location_transaction.payer,
         fee: location_transaction.fee,
         location: location_transaction.location,
       }

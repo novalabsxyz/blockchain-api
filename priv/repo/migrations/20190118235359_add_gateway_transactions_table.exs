@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
     create table(:gateway_transactions) do
       add :owner, :binary, null: false
       add :gateway, :binary, null: false
+      add :payer, :binary, null: true # payer can be undefined or empty binary in core
       add :fee, :bigint, null: false, default: 0
       add :staking_fee, :bigint, null: false, default: 1
       add :status, :string, null: false, default: "cleared"
