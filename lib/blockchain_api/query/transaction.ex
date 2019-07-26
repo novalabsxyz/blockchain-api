@@ -214,7 +214,7 @@ defmodule BlockchainAPI.Query.Transaction do
         gateway: gateway_transaction.gateway,
         owner: gateway_transaction.owner,
         fee: gateway_transaction.fee,
-        amount: gateway_transaction.amount,
+        staking_fee: gateway_transaction.staking_fee,
       }
     )
     |> Repo.one!()
