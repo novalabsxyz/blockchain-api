@@ -2,19 +2,20 @@ defmodule BlockchainAPI.Util do
   use Timex
 
   alias BlockchainAPI.Schema.{
-    PaymentTransaction,
     CoinbaseTransaction,
-    SecurityTransaction,
-    LocationTransaction,
-    GatewayTransaction,
-    POCRequestTransaction,
-    POCReceiptsTransaction,
-    PendingLocation,
-    PendingGateway,
-    PendingCoinbase,
-    PendingPayment,
+    DataCreditTransaction,
     ElectionTransaction,
-    RewardsTransaction
+    GatewayTransaction,
+    LocationTransaction,
+    PaymentTransaction,
+    PendingCoinbase,
+    PendingGateway,
+    PendingLocation,
+    PendingPayment,
+    POCReceiptsTransaction,
+    POCRequestTransaction,
+    RewardsTransaction,
+    SecurityTransaction
   }
 
   def rounder(nil, _) do
@@ -102,6 +103,9 @@ defmodule BlockchainAPI.Util do
   end
   def clean_txn_struct(%{security: security, height: height, time: time}) when is_map(security) do
     Map.merge(SecurityTransaction.encode_model(security), %{type: "security", height: height, time: time})
+  end
+  def clean_txn_struct(%{data_credit: data_credit, height: height, time: time}) when is_map(data_credit) do
+    Map.merge(DataCreditTransaction.encode_model(data_credit), %{type: "data_credit", height: height, time: time})
   end
   def clean_txn_struct(%{election: election, height: height, time: time}) when is_map(election) do
     Map.merge(ElectionTransaction.encode_model(election), %{type: "election", height: height, time: time})

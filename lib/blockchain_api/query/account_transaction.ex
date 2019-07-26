@@ -4,18 +4,19 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   @default_limit 100
 
   alias BlockchainAPI.{
-    Repo,
-    Util,
     Query,
+    Repo,
     Schema.AccountTransaction,
-    Schema.PaymentTransaction,
     Schema.CoinbaseTransaction,
+    Schema.DataCreditTransaction,
     Schema.GatewayTransaction,
-    Schema.LocationTransaction,
     Schema.Hotspot,
-    Schema.SecurityTransaction,
+    Schema.HotspotActivity,
+    Schema.LocationTransaction,
+    Schema.PaymentTransaction,
     Schema.RewardTxn,
-    Schema.HotspotActivity
+    Schema.SecurityTransaction,
+    Util
   }
 
   def create(attrs \\ %{}) do
@@ -230,6 +231,11 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                 res = entry.txn_hash
                       |> Query.Transaction.get_security!()
                       |> SecurityTransaction.encode_model()
+                [Map.merge(res, %{id: entry.id}) | acc]
+              "data_credit" ->
+                res = entry.txn_hash
+                      |> Query.Transaction.get_data_credit!()
+                      |> DataCreditTransaction.encode_model()
                 [Map.merge(res, %{id: entry.id}) | acc]
               "gateway" ->
                 res = entry.txn_hash

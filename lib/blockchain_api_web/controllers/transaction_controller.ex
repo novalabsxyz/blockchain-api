@@ -10,6 +10,7 @@ defmodule BlockchainAPIWeb.TransactionController do
     POCRequestView,
     POCReceiptsView,
     SecurityView,
+    DataCreditView,
     ElectionView,
     RewardsView
   }
@@ -59,6 +60,11 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(SecurityView)
         |> render("show.json", security: security)
+      "data_credit" ->
+        data_credit = Query.DataCreditTransaction.get!(bin_hash)
+        conn
+        |> put_view(DataCreditView)
+        |> render("show.json", data_credit: data_credit)
       "election" ->
         election = Query.ElectionTransaction.get!(bin_hash)
         conn

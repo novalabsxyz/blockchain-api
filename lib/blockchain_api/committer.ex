@@ -2,28 +2,29 @@ defmodule BlockchainAPI.Committer do
   @moduledoc false
 
   alias BlockchainAPI.{
-    Repo,
     Query,
+    Repo,
     Schema.Account,
-    Schema.Block,
-    Schema.Transaction,
-    Schema.GatewayTransaction,
-    Schema.PaymentTransaction,
-    Schema.LocationTransaction,
-    Schema.CoinbaseTransaction,
-    Schema.SecurityTransaction,
-    Schema.POCRequestTransaction,
-    Schema.AccountTransaction,
     Schema.AccountBalance,
+    Schema.AccountTransaction,
+    Schema.Block,
+    Schema.CoinbaseTransaction,
+    Schema.ConsensusMember,
+    Schema.DataCreditTransaction,
+    Schema.ElectionTransaction,
+    Schema.GatewayTransaction,
     Schema.Hotspot,
-    Schema.POCReceiptsTransaction,
+    Schema.LocationTransaction,
+    Schema.PaymentTransaction,
     Schema.POCPathElement,
     Schema.POCReceipt,
+    Schema.POCReceiptsTransaction,
+    Schema.POCRequestTransaction,
     Schema.POCWitness,
-    Schema.ElectionTransaction,
-    Schema.ConsensusMember,
     Schema.RewardsTransaction,
-    Schema.RewardTxn
+    Schema.RewardTxn,
+    Schema.SecurityTransaction,
+    Schema.Transaction
   }
 
   alias BlockchainAPIWeb.BlockChannel
@@ -132,6 +133,7 @@ defmodule BlockchainAPI.Committer do
               # also upsert hotspot
               upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
             :blockchain_txn_security_coinbase_v1 -> insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
+            :blockchain_txn_dc_coinbase_v1 -> insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height)
             :blockchain_txn_consensus_group_v1 -> insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, :blockchain_block.time(block))
             :blockchain_txn_rewards_v1 -> insert_transaction(:blockchain_txn_rewards_v1, txn, height, :blockchain_block.time(block))
             _ ->
@@ -157,6 +159,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_assert_location_v1 -> insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
             :blockchain_txn_gen_gateway_v1 -> insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
             :blockchain_txn_security_coinbase_v1 -> insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
+            :blockchain_txn_dc_coinbase_v1 -> insert_account_transaction(:blockchain_txn_dc_coinbase_v1, txn)
             :blockchain_txn_rewards_v1 -> insert_account_transaction(:blockchain_txn_rewards_v1, txn)
             _ -> :ok
           end
@@ -207,6 +210,11 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
+  end
+
+  defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height) do
+    {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_dc_coinbase_v1, txn))
+    {:ok, _} = Query.DataCreditTransaction.create(DataCreditTransaction.map(txn))
   end
 
 
@@ -559,6 +567,11 @@ defmodule BlockchainAPI.Committer do
   defp insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn) do
     # This can only appear in the genesis block
     {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_security_coinbase_v1, txn))
+  end
+
+  defp insert_account_transaction(:blockchain_txn_dc_coinbase_v1, txn) do
+    # This can only appear in the genesis block
+    {:ok, _} = Query.AccountTransaction.create(AccountTransaction.map_cleared(:blockchain_txn_dc_coinbase_v1, txn))
   end
 
   defp insert_account_transaction(:blockchain_txn_assert_location_v1, txn) do
