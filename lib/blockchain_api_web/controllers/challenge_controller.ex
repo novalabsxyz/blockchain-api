@@ -13,13 +13,14 @@ defmodule BlockchainAPIWeb.ChallengeController do
     finish = Util.current_time()
     {successful, failed} =
       challenges
-      |> Enum.reduce({0, 0}, fn %{success: success}, {successful, failed} ->
-        if challenge.time >= start && challenge.time <= finish && success
-          {successful + 1, failed}
-        else if challenge.time >= start && challenge.time <= finish
-          {successful, failed + 1}
-        else
-          {successful, failed}
+      |> Enum.reduce({0, 0}, fn %{success: success, time: time}, {successful, failed} ->
+        cond do
+          time >= start && time <= finish && success ->
+            {successful + 1, failed}
+          time >= start && time <= finish ->
+            {successful, failed + 1}
+          true ->
+            {successful, failed}
         end
       end)
     issued = successful + failed
