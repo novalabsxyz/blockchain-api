@@ -154,7 +154,7 @@ defmodule BlockchainAPI.QueryTest do
   describe "location_transactions" do
     alias BlockchainAPI.Schema.{GatewayTransaction, LocationTransaction}
 
-    @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner"}
+    @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner", payer: "some payer"}
     @invalid_attrs %{hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
 
     def gateway_location_fixture(attrs \\ %{}) do

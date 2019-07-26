@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddLocationTransactionsTable do
   def change do
     create table(:location_transactions) do
       add :owner, :binary, null: false
+      add :payer, :binary, null: true # payer can be undefined or empty binary
       add :location, :binary, null: false
       add :nonce, :bigint, null: false, default: 0
       add :fee, :bigint, null: false, default: 0
