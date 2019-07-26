@@ -33,9 +33,10 @@ defmodule BlockchainAPI.Committer do
   def commit(block, ledger, height) do
     case commit_block(block, ledger, height) do
       {:ok, term} ->
+        Logger.info("Success! Commit block: #{height}")
         {:ok, term}
       {:error, reason} ->
-        Logger.error("Failed to commit block at height: #{:blockchain_block.height(block)}")
+        Logger.error("Failure! Commit block: #{height}. Reason: #{inspect(reason)}")
         {:error, reason}
     end
   end
@@ -101,11 +102,6 @@ defmodule BlockchainAPI.Committer do
               case :blockchain_ledger_v1.gateway_score(hotspot.address, ledger) do
                 {:error, _} -> :ok
                 {:ok, score} ->
-                  {:ok, name} = :erl_angry_purple_tiger.animal_name(:libp2p_crypto.pubkey_to_b58(:libp2p_crypto.bin_to_pubkey(hotspot.address)))
-                  {:ok, gwinfo} = :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger)
-                  alpha = :blockchain_ledger_gateway_v1.alpha(gwinfo)
-                  beta = :blockchain_ledger_gateway_v1.beta(gwinfo)
-                  Logger.debug("Hotspot: #{name}, Score: #{score}, Alpha: #{alpha}, Beta: #{beta}")
                   Query.Hotspot.update!(hotspot, %{score: score, score_update_height: height})
               end
             end)
