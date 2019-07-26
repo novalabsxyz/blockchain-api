@@ -27,6 +27,8 @@ defmodule BlockchainAPI.Util do
     |> Decimal.to_float()
   end
 
+  def bin_to_string(<<>>), do: nil
+  def bin_to_string(:undefined), do: nil
   def bin_to_string(nil), do: nil
   def bin_to_string(bin) do
     bin

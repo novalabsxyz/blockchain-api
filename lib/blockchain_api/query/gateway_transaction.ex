@@ -62,20 +62,12 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
   end
 
   defp encoded_gateway_map(map) do
-    payer =
-      case map.payer do
-        nil -> nil
-        :undefined -> nil
-        <<>> -> nil
-        p -> Util.bin_to_string(p)
-      end
-
     %{map |
       gateway: Util.bin_to_string(map.gateway),
       gateway_hash: Util.bin_to_string(map.gateway_hash),
       location_hash: Util.bin_to_string(map.location_hash),
       owner: Util.bin_to_string(map.owner),
-      payer: payer,
+      payer: Util.bin_to_string(map.payer),
       score: Util.rounder(map.score, 4)
     }
   end

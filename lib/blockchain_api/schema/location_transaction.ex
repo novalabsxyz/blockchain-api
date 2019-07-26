@@ -31,21 +31,13 @@ defmodule BlockchainAPI.Schema.LocationTransaction do
 
   def encode_model(location) do
     {lat, lng} = Util.h3_to_lat_lng(location.location)
-
-    payer =
-      case location.payer do
-        :undefined -> nil
-        <<>> -> nil
-        p -> Util.bin_to_string(p)
-      end
-
     location
     |> Map.take(@fields)
     |> Map.merge(%{
       owner: Util.bin_to_string(location.owner),
       hash: Util.bin_to_string(location.hash),
       gateway: Util.bin_to_string(location.gateway),
-      payer: payer,
+      payer: Util.bin_to_string(location.payer),
       lat: lat,
       lng: lng,
       type: "location"

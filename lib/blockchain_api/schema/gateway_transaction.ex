@@ -28,21 +28,13 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
   end
 
   def encode_model(gateway) do
-
-    payer =
-      case gateway.payer do
-        :undefined -> nil
-        <<>> -> nil
-        p -> Util.bin_to_string(p)
-      end
-
     gateway
     |> Map.take(@fields)
     |> Map.merge(%{
       owner: Util.bin_to_string(gateway.owner),
       hash: Util.bin_to_string(gateway.hash),
       gateway: Util.bin_to_string(gateway.gateway),
-      payer: payer,
+      payer: Util.bin_to_string(gateway.payer),
       type: "gateway"
     })
   end
