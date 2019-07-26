@@ -66,6 +66,22 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.insert()
   end
 
+  def aggregate_challenges(challenges) do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+    challenges
+    |> Enum.reduce({0, 0}, fn %{success: success, time: time}, {successful, failed} ->
+      cond do
+        time >= start && time <= finish && success ->
+          {successful + 1, failed}
+        time >= start && time <= finish ->
+          {successful, failed + 1}
+        true ->
+          {successful, failed}
+      end
+    end)
+  end
+
   defp encode([]), do: []
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
