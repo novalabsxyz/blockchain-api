@@ -280,7 +280,7 @@ defmodule BlockchainAPI.Query.Transaction do
 
   defp format_blocks(entries) do
     entries
-    |> Enum.map(fn map -> :maps.filter(fn _, v -> v != nil end, map) end)
+    |> Enum.map(fn map -> :maps.filter(fn _, v -> not is_nil(v) end, map) end)
     |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
     |> Enum.reject(&is_nil/1)
     |> Enum.reverse
