@@ -170,6 +170,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       gateway_hash: Util.bin_to_string(map.gateway_hash),
       location_hash: Util.bin_to_string(map.location_hash),
       owner: Util.bin_to_string(map.owner),
+      payer: Util.bin_to_string(map.payer),
       score: Util.rounder(map.score, 4)
     }
   end
