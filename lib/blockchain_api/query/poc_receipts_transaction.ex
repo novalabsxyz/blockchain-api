@@ -54,13 +54,6 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> encode()
   end
 
-  def challenges_twenty_four_hrs(_params) do
-    path_query()
-    |> receipt_query_twenty_four_hrs()
-    |> Repo.all()
-    |> encode_twenty_four_hrs()
-  end
-
   def get!(hash) do
     POCReceiptsTransaction
     |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
@@ -73,23 +66,20 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.insert()
   end
 
-  defp encode_twenty_four_hrs([]), do: []
-  defp encode_twenty_four_hrs(entries) do
-    issued = length(entries)
-    successful = entries
-                 |> Enum.map(&is_successful/1)
-                 |> Enum.count(fn x -> x == true end)
-    failed = issued - successful
-    %{issued: issued, successful: successful, failed: failed}
-  end
-
-  defp is_successful(%{challenge: entry}) do
-    path_elements = entry.poc_path_elements
-                    |> encode_path_elements()
-                    #NOTE: The path always seems to end up in reverse order
-                    |> Enum.reverse()
-
-    Enum.all?(path_elements, fn(elem) -> elem.result == "success" end)
+  def aggregate_challenges(challenges) do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+    challenges
+    |> Enum.reduce({0, 0}, fn %{success: success, time: time}, {successful, failed} ->
+      cond do
+        time >= start && time <= finish && success ->
+          {successful + 1, failed}
+        time >= start && time <= finish ->
+          {successful, failed + 1}
+        true ->
+          {successful, failed}
+      end
+    end)
   end
 
   defp encode([]), do: []
@@ -250,24 +240,5 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     query
     |> where([poc_rx], poc_rx.id < ^before)
     |> limit(^limit)
-  end
-
-  defp receipt_query_twenty_four_hrs(path_query) do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Util.current_time()
-    from(
-      rx in POCReceiptsTransaction,
-      preload: [poc_path_elements: ^path_query],
-      left_join: t in Transaction,
-      on: rx.hash == t.hash,
-      left_join: b in Block,
-      on: t.block_height == b.height,
-      where: b.time >= ^start,
-      where: b.time <= ^finish,
-      left_join: h in Hotspot,
-      on: rx.challenger == h.address,
-      order_by: [desc: rx.id],
-      select: %{challenge: rx, height: t.block_height, hotspot: h, block: b}
-    )
   end
 end
