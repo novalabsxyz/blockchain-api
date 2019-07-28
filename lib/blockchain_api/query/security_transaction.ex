@@ -11,11 +11,15 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
   end
 
   def get_balance(address) do
-    SecurityTransaction
-    |> where([ct], ct.payee == ^address)
-    |> order_by([ct], [desc: ct.id])
-    |> limit(1)
-    |> Repo.one()
+    res = SecurityTransaction
+          |> where([ct], ct.payee == ^address)
+          |> order_by([ct], [desc: ct.id])
+          |> limit(1)
+          |> Repo.one()
+    case res do
+      nil -> 0
+      s -> s.amount
+    end
   end
 
   def get!(hash) do
