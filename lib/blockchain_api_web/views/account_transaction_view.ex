@@ -4,7 +4,8 @@ defmodule BlockchainAPIWeb.AccountTransactionView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.account_transactions, AccountTransactionView, "account_transaction.json"),
+      data:
+        render_many(data.account_transactions, AccountTransactionView, "account_transaction.json")
     }
   end
 
@@ -15,5 +16,4 @@ defmodule BlockchainAPIWeb.AccountTransactionView do
   def render("account_transaction.json", %{account_transaction: txn}) do
     txn
   end
-
 end

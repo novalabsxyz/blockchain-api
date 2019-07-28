@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.POCRequestView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.poc_request_transactions, POCRequestView, "poc_request.json"),
+      data: render_many(data.poc_request_transactions, POCRequestView, "poc_request.json")
     }
   end
 

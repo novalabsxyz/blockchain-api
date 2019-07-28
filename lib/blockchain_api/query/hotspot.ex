@@ -9,14 +9,14 @@ defmodule BlockchainAPI.Query.Hotspot do
 
   def list(_params) do
     Hotspot
-    |> order_by([h], [desc: h.id])
+    |> order_by([h], desc: h.id)
     |> Repo.all()
   end
 
   def get!(address) do
     Hotspot
     |> where([h], h.address == ^address)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -33,7 +33,7 @@ defmodule BlockchainAPI.Query.Hotspot do
 
   def all() do
     Hotspot
-    |> order_by([h], [desc: h.id])
+    |> order_by([h], desc: h.id)
     |> Repo.all()
   end
 
@@ -55,34 +55,35 @@ defmodule BlockchainAPI.Query.Hotspot do
     quote do
       fragment(
         "levenshtein(LOWER(?), LOWER(?))",
-        (unquote(str1)),
-        (unquote(str2))
+        unquote(str1),
+        unquote(str2)
       )
     end
   end
 
   defp search(query_string, threshold) do
     query_string = String.downcase(query_string)
+
     query =
       from(
         hotspot in Hotspot,
         where:
-        levenshtein(hotspot.short_city, ^query_string, ^threshold) or
-        levenshtein(hotspot.long_city, ^query_string, ^threshold) or
-        levenshtein(hotspot.short_street, ^query_string, ^threshold) or
-        levenshtein(hotspot.long_street, ^query_string, ^threshold) or
-        levenshtein(hotspot.short_state, ^query_string, ^threshold) or
-        levenshtein(hotspot.long_state, ^query_string, ^threshold) or
-        levenshtein(hotspot.short_country, ^query_string, ^threshold) or
-        levenshtein(hotspot.long_country, ^query_string, ^threshold) or
-        ilike(hotspot.short_city, ^"%#{query_string}%") or
-        ilike(hotspot.long_city, ^"%#{query_string}%") or
-        ilike(hotspot.short_street, ^"%#{query_string}%") or
-        ilike(hotspot.long_street, ^"%#{query_string}%") or
-        ilike(hotspot.short_state, ^"%#{query_string}%") or
-        ilike(hotspot.long_state, ^"%#{query_string}%") or
-        ilike(hotspot.short_country, ^"%#{query_string}%") or
-        ilike(hotspot.long_country, ^"%#{query_string}%"),
+          levenshtein(hotspot.short_city, ^query_string, ^threshold) or
+            levenshtein(hotspot.long_city, ^query_string, ^threshold) or
+            levenshtein(hotspot.short_street, ^query_string, ^threshold) or
+            levenshtein(hotspot.long_street, ^query_string, ^threshold) or
+            levenshtein(hotspot.short_state, ^query_string, ^threshold) or
+            levenshtein(hotspot.long_state, ^query_string, ^threshold) or
+            levenshtein(hotspot.short_country, ^query_string, ^threshold) or
+            levenshtein(hotspot.long_country, ^query_string, ^threshold) or
+            ilike(hotspot.short_city, ^"%#{query_string}%") or
+            ilike(hotspot.long_city, ^"%#{query_string}%") or
+            ilike(hotspot.short_street, ^"%#{query_string}%") or
+            ilike(hotspot.long_street, ^"%#{query_string}%") or
+            ilike(hotspot.short_state, ^"%#{query_string}%") or
+            ilike(hotspot.long_state, ^"%#{query_string}%") or
+            ilike(hotspot.short_country, ^"%#{query_string}%") or
+            ilike(hotspot.long_country, ^"%#{query_string}%"),
         select: %{
           long_city: hotspot.long_city,
           short_city: hotspot.short_city,
@@ -98,24 +99,26 @@ defmodule BlockchainAPI.Query.Hotspot do
   end
 
   defp format(entries) do
-    city_counts = entries
-                  |> Enum.group_by(fn(entry) -> entry.long_city end)
-                  |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, length(v)) end)
+    city_counts =
+      entries
+      |> Enum.group_by(fn entry -> entry.long_city end)
+      |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, length(v)) end)
 
     entries
-    |> Enum.reduce([], fn(entry, acc) ->
+    |> Enum.reduce([], fn entry, acc ->
       [Map.merge(entry, %{:count => Map.get(city_counts, entry.long_city, 0)}) | acc]
     end)
     # TODO: The location returned uniquely is pretty much pointless
     # Ideally we'd want to use h3 and figure out a bounding box depending on the search criteria
     # And return something in the middle of that city.
-    |> Enum.uniq_by(&(&1.long_city))
-    |> Enum.map(fn(%{location: loc}=entry) ->
+    |> Enum.uniq_by(& &1.long_city)
+    |> Enum.map(fn %{location: loc} = entry ->
       {lat, lng} = Util.h3_to_lat_lng(loc)
+
       entry
       |> Map.delete(:location)
       |> Map.merge(%{lat: lat, lng: lng})
     end)
-    |> Enum.sort_by(&(&1.count), &>=/2)
+    |> Enum.sort_by(& &1.count, &>=/2)
   end
 end

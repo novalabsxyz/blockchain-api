@@ -8,16 +8,18 @@ defmodule BlockchainAPIWeb.LocationController do
   def index(conn, params) do
     txns = Query.LocationTransaction.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       location_transactions: txns
     )
   end
 
   def show(conn, %{"hash" => hash}) do
-    location = hash
-               |> Util.string_to_bin()
-               |> Query.LocationTransaction.get!()
+    location =
+      hash
+      |> Util.string_to_bin()
+      |> Query.LocationTransaction.get!()
 
     render(conn, "show.json", location: location)
   end

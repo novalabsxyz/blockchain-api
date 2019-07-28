@@ -13,7 +13,10 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
     field :delay, :integer, null: false
     field :election_height, :integer, null: false
 
-    has_many :consensus_members, ConsensusMember, foreign_key: :election_transactions_id, references: :id
+    has_many :consensus_members, ConsensusMember,
+      foreign_key: :election_transactions_id,
+      references: :id
+
     timestamps()
   end
 

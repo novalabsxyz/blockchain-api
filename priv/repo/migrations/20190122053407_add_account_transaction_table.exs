@@ -12,7 +12,5 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountTransactionTable do
     end
 
     # create unique_index(:account_transactions, [:account_address, :txn_hash, :txn_status, :txn_type], name: :unique_account_txn)
-
   end
-
 end

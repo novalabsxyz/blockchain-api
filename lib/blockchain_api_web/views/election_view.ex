@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.ElectionView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.election_transactions, ElectionView, "election.json"),
+      data: render_many(data.election_transactions, ElectionView, "election.json")
     }
   end
 

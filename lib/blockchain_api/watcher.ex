@@ -5,9 +5,9 @@ defmodule BlockchainAPI.Watcher do
   @me __MODULE__
   require Logger
 
-  #==================================================================
+  # ==================================================================
   # API
-  #==================================================================
+  # ==================================================================
   def start_link(args) do
     GenServer.start_link(@me, args, name: @me)
   end
@@ -20,9 +20,9 @@ defmodule BlockchainAPI.Watcher do
     GenServer.call(@me, :height, :infinity)
   end
 
-  #==================================================================
+  # ==================================================================
   # GenServer Callbacks
-  #==================================================================
+  # ==================================================================
   @impl true
   def init(args) do
     :ok = :blockchain_event.add_handler(self())
@@ -31,11 +31,13 @@ defmodule BlockchainAPI.Watcher do
       case Keyword.get(args, :env) do
         :test ->
           %{chain: nil}
+
         :dev ->
           genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
           load_chain(genesis_file)
+
         :prod ->
-          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod" , "genesis"])
+          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod", "genesis"])
           load_chain(genesis_file)
       end
 
@@ -51,6 +53,7 @@ defmodule BlockchainAPI.Watcher do
   def handle_call(:height, _from, state = %{chain: nil}) do
     {:reply, 0, state}
   end
+
   def handle_call(:height, _from, state = %{chain: chain}) do
     {:ok, height} = :blockchain.height(chain)
     {:reply, height, state}
@@ -67,7 +70,8 @@ defmodule BlockchainAPI.Watcher do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain}) when chain != nil do
+  def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain})
+      when chain != nil do
     {:ok, block} = :blockchain.get_block(hash, chain)
     add_block(block, chain, ledger)
     {:noreply, state}
@@ -78,11 +82,12 @@ defmodule BlockchainAPI.Watcher do
     {:noreply, state}
   end
 
-  #==================================================================
+  # ==================================================================
   # Private Functions
-  #==================================================================
+  # ==================================================================
   defp add_block(block, chain, ledger) do
     height = :blockchain_block.height(block)
+
     try do
       Query.Block.get!(height)
     rescue
@@ -91,6 +96,7 @@ defmodule BlockchainAPI.Watcher do
           [nil] ->
             # nothing in the db yet
             Committer.commit(block, ledger, height)
+
           [last_known_height] ->
             case height > last_known_height do
               true ->
@@ -100,6 +106,7 @@ defmodule BlockchainAPI.Watcher do
                   h = :blockchain_block.height(b)
                   Committer.commit(b, ledger, h)
                 end)
+
               false ->
                 :ok
             end
@@ -110,11 +117,14 @@ defmodule BlockchainAPI.Watcher do
   defp load_chain(genesis_file) do
     case File.read(genesis_file) do
       {:ok, genesis_block} ->
-        :ok = genesis_block
-              |> :blockchain_block.deserialize()
-              |> :blockchain_worker.integrate_genesis_block()
+        :ok =
+          genesis_block
+          |> :blockchain_block.deserialize()
+          |> :blockchain_worker.integrate_genesis_block()
+
         chain = :blockchain_worker.blockchain()
         %{chain: chain}
+
       {:error, _reason} ->
         %{chain: nil}
     end

@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.LocationTransaction do
   def get!(hash) do
     LocationTransaction
     |> where([lt], lt.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do

@@ -8,7 +8,7 @@ defmodule BlockchainAPIWeb.ChallengeView do
       issued: data.issued,
       successful: data.successful,
       failed: data.failed,
-      data: render_many(data.challenges, ChallengeView, "challenge.json"),
+      data: render_many(data.challenges, ChallengeView, "challenge.json")
     }
   end
 

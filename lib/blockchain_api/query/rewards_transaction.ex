@@ -14,7 +14,7 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
     RewardsTransaction
     |> where([rewards_txn], rewards_txn.hash == ^hash)
     |> preload([:reward_txns])
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def list(_params) do

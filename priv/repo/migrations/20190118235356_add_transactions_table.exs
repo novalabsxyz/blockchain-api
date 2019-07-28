@@ -14,5 +14,4 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
 
     create unique_index(:transactions, [:hash], name: :unique_txn_hash)
   end
-
 end

@@ -22,5 +22,4 @@ defmodule BlockchainAPI.Repo.Migrations.AddHotspotTable do
 
     create unique_index(:hotspots, [:address], name: :unique_hotspots)
   end
-
 end

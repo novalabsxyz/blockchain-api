@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.CoinbaseView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.coinbase_transactions, CoinbaseView, "coinbase.json"),
+      data: render_many(data.coinbase_transactions, CoinbaseView, "coinbase.json")
     }
   end
 
@@ -15,5 +15,4 @@ defmodule BlockchainAPIWeb.CoinbaseView do
   def render("coinbase.json", %{coinbase: coinbase}) do
     coinbase
   end
-
 end

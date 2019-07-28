@@ -10,7 +10,6 @@ defmodule BlockchainAPI.QueryTest do
   @query_params %{}
 
   describe "transactions" do
-
     def transaction_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
       assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, attrs)
@@ -30,7 +29,9 @@ defmodule BlockchainAPI.QueryTest do
 
     test "create_transaction/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:error, %Ecto.Changeset{} = transaction} = Query.Transaction.create(block.height, @transaction_invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_invalid_attrs)
     end
   end
 
@@ -42,7 +43,10 @@ defmodule BlockchainAPI.QueryTest do
 
     def coinbase_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:ok, %CoinbaseTransaction{} = coinbase} = Query.CoinbaseTransaction.create(attrs)
       coinbase
     end
@@ -66,21 +70,33 @@ defmodule BlockchainAPI.QueryTest do
 
     test "create_coinbase/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:error, %Ecto.Changeset{}} = Query.CoinbaseTransaction.create(@invalid_attrs)
     end
-
   end
 
   describe "payment_transactions" do
     alias BlockchainAPI.Schema.PaymentTransaction
 
-    @valid_attrs %{hash: "some hash", amount: 42, fee: 42, nonce: 42, payee: "some payee", payer: "some payer"}
+    @valid_attrs %{
+      hash: "some hash",
+      amount: 42,
+      fee: 42,
+      nonce: 42,
+      payee: "some payee",
+      payer: "some payer"
+    }
     @invalid_attrs %{hash: nil, amount: nil, fee: nil, nonce: nil, payee: nil, payer: nil}
 
     def payment_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:ok, %PaymentTransaction{} = payment} = Query.PaymentTransaction.create(attrs)
       payment
     end
@@ -107,7 +123,10 @@ defmodule BlockchainAPI.QueryTest do
 
     test "create_payment/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:error, %Ecto.Changeset{}} = Query.PaymentTransaction.create(@invalid_attrs)
     end
   end
@@ -120,7 +139,10 @@ defmodule BlockchainAPI.QueryTest do
 
     def gateway_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:ok, %GatewayTransaction{} = gateway} = Query.GatewayTransaction.create(attrs)
       gateway
     end
@@ -128,9 +150,10 @@ defmodule BlockchainAPI.QueryTest do
     test "list_gateway_transactions/0 returns all add_gateway_transactions" do
       gateway = gateway_fixture(@valid_attrs)
       [g] = Query.GatewayTransaction.list(@query_params)
-      assert (g.owner == Util.bin_to_string(gateway.owner) and
-        g.gateway == Util.bin_to_string(gateway.gateway) and
-        g.gateway_hash == Util.bin_to_string(gateway.hash))
+
+      assert g.owner == Util.bin_to_string(gateway.owner) and
+               g.gateway == Util.bin_to_string(gateway.gateway) and
+               g.gateway_hash == Util.bin_to_string(gateway.hash)
     end
 
     test "get_gateway!/1 returns the gateway with given hash" do
@@ -146,7 +169,10 @@ defmodule BlockchainAPI.QueryTest do
 
     test "create_gateway/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:error, %Ecto.Changeset{}} = Query.GatewayTransaction.create(@invalid_attrs)
     end
   end
@@ -154,14 +180,28 @@ defmodule BlockchainAPI.QueryTest do
   describe "location_transactions" do
     alias BlockchainAPI.Schema.{GatewayTransaction, LocationTransaction}
 
-    @valid_attrs %{hash: "some hash", fee: 42, gateway: "some gateway", location: "some location", nonce: 42, owner: "some owner", payer: "some payer"}
+    @valid_attrs %{
+      hash: "some hash",
+      fee: 42,
+      gateway: "some gateway",
+      location: "some location",
+      nonce: 42,
+      owner: "some owner",
+      payer: "some payer"
+    }
     @invalid_attrs %{hash: nil, fee: nil, gateway: nil, location: nil, nonce: nil, owner: nil}
 
     def gateway_location_fixture(attrs \\ %{}) do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:ok, %GatewayTransaction{} = gateway} = Query.GatewayTransaction.create(attrs)
-      assert {:ok, %LocationTransaction{} = gateway_location} = Query.LocationTransaction.create(attrs)
+
+      assert {:ok, %LocationTransaction{} = gateway_location} =
+               Query.LocationTransaction.create(attrs)
+
       gateway_location
     end
 
@@ -188,10 +228,12 @@ defmodule BlockchainAPI.QueryTest do
 
     test "create_location/1 with invalid data returns error changeset" do
       {:ok, block} = Query.Block.create(@block_valid_attrs)
-      assert {:ok, %Transaction{} = transaction} = Query.Transaction.create(block.height, @transaction_valid_attrs)
+
+      assert {:ok, %Transaction{} = transaction} =
+               Query.Transaction.create(block.height, @transaction_valid_attrs)
+
       assert {:error, %Ecto.Changeset{}} = Query.LocationTransaction.create(@invalid_attrs)
     end
-
   end
 
   describe "accounts" do
@@ -214,8 +256,5 @@ defmodule BlockchainAPI.QueryTest do
       account = account_fixture(@valid_attrs)
       assert Query.Account.get!(account.address) == account
     end
-
   end
-
-
 end

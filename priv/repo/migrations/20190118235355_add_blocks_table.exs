@@ -16,5 +16,4 @@ defmodule BlockchainAPI.Repo.Migrations.AddBlocksTable do
     # This helps in the creating the composite index for account_balances table
     create unique_index(:blocks, [:time], name: :unique_block_time)
   end
-
 end

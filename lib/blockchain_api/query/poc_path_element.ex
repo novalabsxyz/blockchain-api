@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.POCPathElement do
   def get!(challengee) do
     POCPathElement
     |> where([poc_path_element], poc_path_element.challengee == ^challengee)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -24,7 +24,7 @@ defmodule BlockchainAPI.Query.POCPathElement do
   def get_last_ten(challengee) do
     POCPathElement
     |> where([poc_path_element], poc_path_element.challengee == ^challengee)
-    |> order_by([poc_path_element], [desc: poc_path_element.id])
+    |> order_by([poc_path_element], desc: poc_path_element.id)
     |> select([poc_path_element], poc_path_element.result)
     |> limit(10)
     |> Repo.all()

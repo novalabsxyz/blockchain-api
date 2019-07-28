@@ -11,8 +11,7 @@ use Mix.Config
 # file or create a script for recreating it, since it's
 # kept out of version control and might be hard to recover
 # or recreate for your teammates (or yourself later on).
-config :blockchain_api, BlockchainAPIWeb.Endpoint,
-  secret_key_base: "some long encoded secret"
+config :blockchain_api, BlockchainAPIWeb.Endpoint, secret_key_base: "some long encoded secret"
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,

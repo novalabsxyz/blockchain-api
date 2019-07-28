@@ -6,16 +6,18 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
 
   def list(_params) do
     SecurityTransaction
-    |> order_by([ct], [desc: ct.id])
+    |> order_by([ct], desc: ct.id)
     |> Repo.all()
   end
 
   def get_balance(address) do
-    res = SecurityTransaction
-          |> where([ct], ct.payee == ^address)
-          |> order_by([ct], [desc: ct.id])
-          |> limit(1)
-          |> Repo.one()
+    res =
+      SecurityTransaction
+      |> where([ct], ct.payee == ^address)
+      |> order_by([ct], desc: ct.id)
+      |> limit(1)
+      |> Repo.one()
+
     case res do
       nil -> 0
       s -> s.amount
@@ -25,7 +27,7 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
   def get!(hash) do
     SecurityTransaction
     |> where([ct], ct.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do

@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.POCRequestTransaction do
   use Ecto.Schema
   import Ecto.Changeset
+
   alias BlockchainAPI.{
     Query,
     Schema.POCRequestTransaction,
@@ -21,7 +22,9 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
     field :onion, :binary, null: false
     field :owner, :binary, null: false
 
-    has_one :poc_receipts_transactions, POCReceiptsTransaction, foreign_key: :poc_request_transactions_id, references: :id
+    has_one :poc_receipts_transactions, POCReceiptsTransaction,
+      foreign_key: :poc_request_transactions_id,
+      references: :id
 
     timestamps()
   end
@@ -37,6 +40,7 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
 
   def encode_model(poc_request) do
     {lat, lng} = Util.h3_to_lat_lng(poc_request.location)
+
     challenge_id =
       case Query.POCRequestTransaction.get_challenge(poc_request) do
         nil -> nil

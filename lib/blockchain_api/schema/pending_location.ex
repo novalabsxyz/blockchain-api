@@ -44,7 +44,9 @@ defmodule BlockchainAPI.Schema.PendingLocation do
     |> validate_required(@fields)
     |> foreign_key_constraint(:owner)
     |> unique_constraint(:unique_pending_location, name: :unique_pending_location)
-    |> unique_constraint(:unique_pending_owner_gateway_nonce, name: :unique_pending_owner_gateway_nonce)
+    |> unique_constraint(:unique_pending_owner_gateway_nonce,
+      name: :unique_pending_owner_gateway_nonce
+    )
   end
 
   def encode_model(pending_location) do

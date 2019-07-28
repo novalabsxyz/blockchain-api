@@ -24,27 +24,30 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.one()
   end
 
-  def activity_for(address, %{"before" => before, "limit" => limit}=_params) do
+  def activity_for(address, %{"before" => before, "limit" => limit} = _params) do
     address
     |> activity_query()
     |> filter_before(before, limit)
     |> Repo.all()
     |> encode()
   end
-  def activity_for(address, %{"before" => before}=_params) do
+
+  def activity_for(address, %{"before" => before} = _params) do
     address
     |> activity_query()
     |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
-  def activity_for(address, %{"limit" => limit}=_params) do
+
+  def activity_for(address, %{"limit" => limit} = _params) do
     address
     |> activity_query()
     |> limit(^limit)
     |> Repo.all()
     |> encode()
   end
+
   def activity_for(address, %{}) do
     address
     |> activity_query()
@@ -55,7 +58,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   defp activity_query(address) do
     HotspotActivity
     |> where([ha], ha.gateway == ^address)
-    |> order_by([ha], [desc: ha.id])
+    |> order_by([ha], desc: ha.id)
   end
 
   defp filter_before(query, before, limit) do
@@ -65,6 +68,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   end
 
   defp encode([]), do: []
+
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end

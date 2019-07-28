@@ -14,7 +14,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
       add :txn, :binary, null: false
       add :submit_height, :bigint, null: false, default: 0
 
-      add :payer, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
+      add :payer, references(:accounts, on_delete: :nothing, column: :address, type: :binary),
+        null: false
 
       honeydew_fields(submit_payment_queue())
 
@@ -22,8 +23,11 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
     end
 
     create unique_index(:pending_payments, [:payer, :nonce], name: :unique_pending_payment_nonce)
-    create unique_index(:pending_payments, [:payer, :hash, :status, :submit_height], name: :unique_pending_payment)
+
+    create unique_index(:pending_payments, [:payer, :hash, :status, :submit_height],
+             name: :unique_pending_payment
+           )
+
     honeydew_indexes(:pending_payments, submit_payment_queue())
   end
-
 end

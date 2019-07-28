@@ -4,13 +4,13 @@ defmodule BlockchainAPI.Notifier do
 
   @me __MODULE__
   @url "https://onesignal.com/api/v1/notifications"
-  @bones 100000000
+  @bones 100_000_000
 
   alias BlockchainAPI.Util
 
-  #==================================================================
+  # ==================================================================
   # API
-  #==================================================================
+  # ==================================================================
   def start_link(args) do
     GenServer.start_link(@me, args, name: @me)
   end
@@ -19,9 +19,9 @@ defmodule BlockchainAPI.Notifier do
     GenServer.cast(@me, {:notify, block})
   end
 
-  #==================================================================
+  # ==================================================================
   # Callbacks
-  #==================================================================
+  # ==================================================================
   @impl true
   def init(_state) do
     :ok = :blockchain_event.add_handler(self())
@@ -36,13 +36,19 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:rewarder => rewarder, :chain => chain}=state) do
+  def handle_info(
+        {:blockchain_event, {:add_block, hash, false, _}},
+        %{:rewarder => rewarder, :chain => chain} = state
+      ) do
     {:ok, block} = :blockchain.get_block(hash, chain)
+
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
+
       txns ->
         Logger.info("Notifying for block: #{:blockchain_block.height(block)}")
+
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
@@ -53,11 +59,14 @@ defmodule BlockchainAPI.Notifier do
                   |> payload()
                   |> encode()
                   |> post()
+
                 true ->
                   # Don't notify when the payer is the rewarder to reduce spam
                   :ok
               end
-            _ -> :ok
+
+            _ ->
+              :ok
           end
         end)
     end
@@ -70,23 +79,25 @@ defmodule BlockchainAPI.Notifier do
     {:noreply, state}
   end
 
-  #==================================================================
+  # ==================================================================
   # Private Functions
-  #==================================================================
+  # ==================================================================
   defp headers() do
     [
       {"Content-Type", "application/json; charset=utf-8"},
-      {"Authorization", "Basic #{Application.fetch_env!(:blockchain_api, :onesignal_rest_api_key)}"}
+      {"Authorization",
+       "Basic #{Application.fetch_env!(:blockchain_api, :onesignal_rest_api_key)}"}
     ]
   end
 
-  defp payload(%{payee: address, amount: amount}=data) do
+  defp payload(%{payee: address, amount: amount} = data) do
     atoms =
       case rem(amount, @bones) == 0 do
         true ->
           Number.Delimit.number_to_delimited(div(amount, @bones), precision: 0)
+
         false ->
-          Number.Delimit.number_to_delimited(amount/@bones)
+          Number.Delimit.number_to_delimited(amount / @bones)
       end
 
     %{

@@ -41,6 +41,5 @@ defmodule BlockchainAPI.BlockTest do
     test "create_block/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Query.Block.create(@invalid_attrs)
     end
-
   end
 end

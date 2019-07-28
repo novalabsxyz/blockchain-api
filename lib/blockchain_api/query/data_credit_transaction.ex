@@ -5,11 +5,13 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
   alias BlockchainAPI.{Repo, Schema.DataCreditTransaction}
 
   def get_balance(address) do
-    res = DataCreditTransaction
-          |> where([ct], ct.payee == ^address)
-          |> order_by([ct], [desc: ct.id])
-          |> limit(1)
-          |> Repo.one()
+    res =
+      DataCreditTransaction
+      |> where([ct], ct.payee == ^address)
+      |> order_by([ct], desc: ct.id)
+      |> limit(1)
+      |> Repo.one()
+
     case res do
       nil -> 0
       dc -> dc.amount
@@ -19,7 +21,7 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
   def get!(hash) do
     DataCreditTransaction
     |> where([ct], ct.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do
