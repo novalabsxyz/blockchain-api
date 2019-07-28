@@ -30,7 +30,11 @@ defmodule BlockchainAPI.PeriodicCleaner do
   end
 
   @impl true
-  def handle_info(:clean, %{:chain => chain}=state) when chain != :undefined do
+  def handle_info(:clean, %{:chain => :undefined}=state) do
+    schedule_cleanup()
+    {:noreply, state}
+  end
+  def handle_info(:clean, %{:chain => chain}=state) do
     case :blockchain.height(chain) do
       {:error, _}=e ->
         Logger.error("There is no chain!")

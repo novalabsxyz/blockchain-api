@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Watcher do
   alias BlockchainAPI.{Query, Committer}
 
   @me __MODULE__
+  @replay_threshold 30
   require Logger
 
   #==================================================================
@@ -81,15 +82,28 @@ defmodule BlockchainAPI.Watcher do
             # nothing in the db yet
             Committer.commit(block, ledger, height)
           [last_known_height] ->
-            case height > last_known_height do
-              true ->
+
+            diff = height - last_known_height
+
+            cond do
+              diff > @replay_threshold ->
+                :blockchain_ledger_v1.clean(ledger)
+                new_ledger = :blockchain_ledger_v1.new(:blockchain_ledger_v1.dir(ledger))
+                {:ok, new_chain} = :blockchain_txn.absorb_block(block, :blockchain.ledger(new_ledger, chain))
+                Range.new(last_known_height + 1, diff)
+                |> Enum.map(
+                  fn h ->
+                    {:ok, b} = :blockchain.get_block(h, new_chain)
+                    Committer.commit(b, :blockchain.ledger(new_chain), h)
+                  end)
+              diff <= @replay_threshold ->
                 Range.new(last_known_height + 1, height)
-                |> Enum.map(fn h ->
-                  {:ok, b} = :blockchain.get_block(h, chain)
-                  h = :blockchain_block.height(b)
-                  Committer.commit(b, ledger, h)
-                end)
-              false ->
+                |> Enum.map(
+                  fn h ->
+                    {:ok, b} = :blockchain.get_block(h, chain)
+                    Committer.commit(b, ledger, h)
+                  end)
+              true ->
                 :ok
             end
         end
