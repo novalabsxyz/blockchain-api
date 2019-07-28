@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Watcher, Util, Query, Schema}
+  alias BlockchainAPI.{Util, Query, Schema}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -34,7 +34,7 @@ defmodule BlockchainAPIWeb.AccountController do
       # NOTE: This should probably be somewhere else and feels like a hack
       # This account does not exist in the database, hence we return some default values
       _error in Ecto.NoResultsError ->
-        {:ok, fee} = Watcher.chain()
+        {:ok, fee} = :blockchain_worker.blockchain()
                      |> :blockchain.ledger()
                      |> :blockchain_ledger_v1.transaction_fee()
 
