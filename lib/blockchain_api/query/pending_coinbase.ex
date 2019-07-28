@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
   def get!(hash) do
     PendingCoinbase
     |> where([pc], pc.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def get_by_id!(id) do

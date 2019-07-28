@@ -15,16 +15,22 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingLocationTable do
       add :txn, :binary, null: false
       add :submit_height, :bigint, null: false, default: 0
 
-      add :owner, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
+      add :owner, references(:accounts, on_delete: :nothing, column: :address, type: :binary),
+        null: false
 
       honeydew_fields(submit_location_queue())
 
       timestamps()
     end
 
-    create unique_index(:pending_locations, [:owner, :gateway, :nonce], name: :unique_pending_owner_gateway_nonce)
-    create unique_index(:pending_locations, [:owner, :gateway, :submit_height, :hash, :status], name: :unique_pending_location)
+    create unique_index(:pending_locations, [:owner, :gateway, :nonce],
+             name: :unique_pending_owner_gateway_nonce
+           )
+
+    create unique_index(:pending_locations, [:owner, :gateway, :submit_height, :hash, :status],
+             name: :unique_pending_location
+           )
+
     honeydew_indexes(:pending_locations, submit_location_queue())
   end
-
 end

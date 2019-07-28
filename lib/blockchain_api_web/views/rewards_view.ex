@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.RewardsView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.rewards, RewardsView, "rewards.json"),
+      data: render_many(data.rewards, RewardsView, "rewards.json")
     }
   end
 

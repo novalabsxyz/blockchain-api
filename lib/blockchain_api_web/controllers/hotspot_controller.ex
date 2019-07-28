@@ -8,23 +8,27 @@ defmodule BlockchainAPIWeb.HotspotController do
   def index(conn, params) do
     hotspots = Query.Hotspot.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       hotspots: hotspots
     )
   end
 
   def show(conn, %{"address" => address}) do
-    hotspot = address
-              |> Util.string_to_bin()
-              |> Query.Hotspot.get!()
+    hotspot =
+      address
+      |> Util.string_to_bin()
+      |> Query.Hotspot.get!()
+
     render(conn, "show.json", hotspot: hotspot)
   end
 
-  def search(conn, %{"term" => term}=_params) do
+  def search(conn, %{"term" => term} = _params) do
     results = Query.Hotspot.search(term)
 
-    render(conn,
+    render(
+      conn,
       "search.json",
       results: results
     )

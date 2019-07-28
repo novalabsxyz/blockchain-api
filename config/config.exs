@@ -28,8 +28,7 @@ config :logger,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :logger, :console,
-  level: :info
+config :logger, :console, level: :info
 
 config :logger, :error_log,
   path: "log/blockchain_api/error.log",

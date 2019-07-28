@@ -26,27 +26,30 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
   end
 
-  def challenges(%{"before" => before, "limit" => limit}=_params) do
+  def challenges(%{"before" => before, "limit" => limit} = _params) do
     path_query()
     |> receipt_query()
     |> filter_before(before, limit)
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"before" => before}=_params) do
+
+  def challenges(%{"before" => before} = _params) do
     path_query()
     |> receipt_query()
     |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"limit" => limit}=_params) do
+
+  def challenges(%{"limit" => limit} = _params) do
     path_query()
     |> receipt_query()
     |> limit(^limit)
     |> Repo.all()
     |> encode()
   end
+
   def challenges(%{}) do
     path_query()
     |> receipt_query()
@@ -57,7 +60,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   def get!(hash) do
     POCReceiptsTransaction
     |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -69,13 +72,16 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   def aggregate_challenges(challenges) do
     start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
     finish = Util.current_time()
+
     challenges
     |> Enum.reduce({0, 0}, fn %{success: success, time: time}, {successful, failed} ->
       cond do
         time >= start && time <= finish && success ->
           {successful + 1, failed}
+
         time >= start && time <= finish ->
           {successful, failed + 1}
+
         true ->
           {successful, failed}
       end
@@ -83,18 +89,19 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp encode([]), do: []
+
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 
   defp encode_entry(%{challenge: entry, height: height, hotspot: hotspot, block: block}) do
+    path_elements =
+      entry.poc_path_elements
+      |> encode_path_elements()
+      # NOTE: The path always seems to end up in reverse order
+      |> Enum.reverse()
 
-    path_elements = entry.poc_path_elements
-                    |> encode_path_elements()
-                    #NOTE: The path always seems to end up in reverse order
-                    |> Enum.reverse()
-
-    success = Enum.all?(path_elements, fn(elem) -> elem.result == "success" end)
+    success = Enum.all?(path_elements, fn elem -> elem.result == "success" end)
     {lat, lng} = Util.h3_to_lat_lng(entry.challenger_loc)
 
     %{
@@ -128,12 +135,15 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp encode_path_elements([]), do: []
+
   defp encode_path_elements(path_elements) do
-    Enum.map(path_elements,
-      fn(%{element: element, hotspot: hotspot}) ->
+    Enum.map(
+      path_elements,
+      fn %{element: element, hotspot: hotspot} ->
         witnesses = encode_witnesses(element.poc_witness)
         receipt = encode_receipts(element.poc_receipt)
         {lat, lng} = Util.h3_to_lat_lng(element.challengee_loc)
+
         %{
           witnesses: witnesses,
           receipt: receipt,
@@ -158,12 +168,15 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           },
           primary: element.primary
         }
-      end)
+      end
+    )
   end
 
   defp encode_receipts([]), do: %{}
+
   defp encode_receipts([receipt]) do
     {lat, lng} = Util.h3_to_lat_lng(receipt.location)
+
     %{
       address: Util.bin_to_string(receipt.gateway),
       owner: Util.bin_to_string(receipt.owner),
@@ -177,11 +190,13 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp encode_witnesses([]), do: []
+
   defp encode_witnesses(witnesses) do
     Enum.map(
       witnesses,
-      fn(witness) ->
+      fn witness ->
         {lat, lng} = Util.h3_to_lat_lng(witness.location)
+
         %{
           address: Util.bin_to_string(witness.gateway),
           owner: Util.bin_to_string(witness.owner),
@@ -191,7 +206,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           signature: Util.bin_to_string(witness.signature),
           time: System.convert_time_unit(witness.timestamp, :nanosecond, :millisecond)
         }
-      end)
+      end
+    )
   end
 
   defp path_query() do

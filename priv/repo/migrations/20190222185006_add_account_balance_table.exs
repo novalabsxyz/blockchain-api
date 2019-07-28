@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddAccountBalanceTable do
     end
 
     # composite uniqueness for account_address, block_time, balance
-    create unique_index(:account_balances, [:account_address, :block_height, :balance], name: :unique_account_height_balance)
+    create unique_index(:account_balances, [:account_address, :block_height, :balance],
+             name: :unique_account_height_balance
+           )
   end
-
 end

@@ -27,8 +27,8 @@ defmodule BlockchainAPI.Schema.Block do
 
   def encode_model(block) do
     %{
-      Map.take(block, @fields) |
-      hash: Util.bin_to_string(block.hash)
+      Map.take(block, @fields)
+      | hash: Util.bin_to_string(block.hash)
     }
   end
 
@@ -48,5 +48,4 @@ defmodule BlockchainAPI.Schema.Block do
       round: :blockchain_block.hbbft_round(block)
     }
   end
-
 end

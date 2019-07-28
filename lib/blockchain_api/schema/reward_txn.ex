@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.RewardTxn do
   use Ecto.Schema
   import Ecto.Changeset
+
   alias BlockchainAPI.{
     Util,
     Schema.RewardsTransaction,

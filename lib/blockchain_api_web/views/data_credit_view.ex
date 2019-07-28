@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.DataCreditView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.data_credit_transactions, DataCreditView, "data_credit.json"),
+      data: render_many(data.data_credit_transactions, DataCreditView, "data_credit.json")
     }
   end
 
@@ -15,5 +15,4 @@ defmodule BlockchainAPIWeb.DataCreditView do
   def render("data_credit.json", %{data_credit: data_credit}) do
     data_credit
   end
-
 end

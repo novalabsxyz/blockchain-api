@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.POCPathElement do
   use Ecto.Schema
   import Ecto.Changeset
+
   alias BlockchainAPI.{
     Util,
     Schema.POCPathElement,
@@ -27,7 +28,10 @@ defmodule BlockchainAPI.Schema.POCPathElement do
     field :primary, :boolean, null: false
     field :result, :string, null: false, default: "untested"
 
-    belongs_to :poc_receipts_transactions, POCReceiptsTransaction, define_field: false, foreign_key: :hash
+    belongs_to :poc_receipts_transactions, POCReceiptsTransaction,
+      define_field: false,
+      foreign_key: :hash
+
     has_many :poc_receipt, POCReceipt, foreign_key: :poc_path_elements_id, references: :id
     has_many :poc_witness, POCWitness, foreign_key: :poc_path_elements_id, references: :id
 
@@ -44,7 +48,9 @@ defmodule BlockchainAPI.Schema.POCPathElement do
   def encode_model(poc_path_element) do
     {challengee, owner, {lat, lng}} =
       case {poc_path_element.challengee, poc_path_element.challengee_owner} do
-        {"null", "null"} -> {nil, nil, {nil, nil}}
+        {"null", "null"} ->
+          {nil, nil, {nil, nil}}
+
         {c, o} ->
           {lat, lng} = Util.h3_to_lat_lng(poc_path_element.challengee_loc)
           {Util.bin_to_string(c), Util.bin_to_string(o), {lat, lng}}
@@ -53,11 +59,12 @@ defmodule BlockchainAPI.Schema.POCPathElement do
     poc_path_element
     |> Map.take(@fields)
     |> Map.merge(%{
-      poc_receipts_transactions_hash: Util.bin_to_string(poc_path_element.poc_receipts_transactions_hash),
+      poc_receipts_transactions_hash:
+        Util.bin_to_string(poc_path_element.poc_receipts_transactions_hash),
       challengee: challengee,
       challengee_owner: owner,
       challengee_lat: lat,
-      challengee_lng: lng,
+      challengee_lng: lng
     })
   end
 

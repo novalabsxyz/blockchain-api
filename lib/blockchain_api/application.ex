@@ -20,12 +20,17 @@ defmodule BlockchainAPI.Application do
 
     swarm_key = to_charlist(:filename.join([base_dir, "blockchain_api", "swarm_key"]))
     :ok = :filelib.ensure_dir(swarm_key)
+
     {pubkey, ecdh_fun, sig_fun} =
       case :libp2p_crypto.load_keys(swarm_key) do
         {:ok, %{:secret => priv_key, :public => pub_key}} ->
           {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
+
         {:error, :enoent} ->
-          key_map = %{:secret => priv_key, :public => pub_key} = :libp2p_crypto.generate_keys(:ecc_compact)
+          key_map =
+            %{:secret => priv_key, :public => pub_key} =
+            :libp2p_crypto.generate_keys(:ecc_compact)
+
           :ok = :libp2p_crypto.save_keys(key_map, swarm_key)
           {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
       end
@@ -60,20 +65,43 @@ defmodule BlockchainAPI.Application do
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
       {BlockchainAPI.Watcher, watcher_worker_opts},
-      {BlockchainAPI.PeriodicCleaner, []},
+      {BlockchainAPI.PeriodicCleaner, []}
       # {BlockchainAPI.Notifier, []}
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
     {:ok, sup} = Supervisor.start_link(children, opts)
 
-    :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok =
+      Honeydew.start_queue(submit_payment_queue(),
+        queue: {EctoPollQueue, queue_args(PendingPayment)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
     :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
-    :ok = Honeydew.start_queue(submit_gateway_queue(), queue: {EctoPollQueue, queue_args(PendingGateway)}, failure_mode: Honeydew.FailureMode.Abandon)
+
+    :ok =
+      Honeydew.start_queue(submit_gateway_queue(),
+        queue: {EctoPollQueue, queue_args(PendingGateway)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
     :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
-    :ok = Honeydew.start_queue(submit_location_queue(), queue: {EctoPollQueue, queue_args(PendingLocation)}, failure_mode: Honeydew.FailureMode.Abandon)
+
+    :ok =
+      Honeydew.start_queue(submit_location_queue(),
+        queue: {EctoPollQueue, queue_args(PendingLocation)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
     :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
-    :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
+
+    :ok =
+      Honeydew.start_queue(submit_coinbase_queue(),
+        queue: {EctoPollQueue, queue_args(PendingCoinbase)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
     :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
 
     {:ok, sup}
@@ -102,5 +130,4 @@ defmodule BlockchainAPI.Application do
     poll_interval = Application.get_env(:ecto_poll_queue, :interval, 2)
     [schema: schema, repo: Repo, poll_interval: poll_interval]
   end
-
 end

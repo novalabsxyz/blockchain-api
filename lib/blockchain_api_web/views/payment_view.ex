@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.PaymentView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.payment_transactions, PaymentView, "payment.json"),
+      data: render_many(data.payment_transactions, PaymentView, "payment.json")
     }
   end
 

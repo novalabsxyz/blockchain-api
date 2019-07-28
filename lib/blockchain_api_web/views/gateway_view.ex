@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.GatewayView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.gateways, GatewayView, "gateway.json"),
+      data: render_many(data.gateways, GatewayView, "gateway.json")
     }
   end
 

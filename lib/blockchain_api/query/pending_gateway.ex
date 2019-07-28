@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
   def get!(hash) do
     PendingGateway
     |> where([pg], pg.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def get_by_id!(id) do
@@ -42,7 +42,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
   def list_pending() do
     PendingGateway
     |> where([pg], pg.status == "pending")
-    |> Repo.all
+    |> Repo.all()
   end
 
   def get_by_owner(address) do
@@ -58,17 +58,17 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> format()
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
   defp format(entries) do
     entries
     |> Enum.map(&format_one/1)
   end
 
   defp format_one(nil), do: %{}
+
   defp format_one(entry) do
     Map.merge(entry, %{type: "gateway"})
   end
-
 end

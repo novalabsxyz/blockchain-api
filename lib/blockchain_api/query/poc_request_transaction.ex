@@ -17,20 +17,20 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
   def get!(hash) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   # NOTE: onions are supposed to always have a unique hash
   def get_by_onion(onion) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.onion == ^onion)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def ongoing(params) do
-    height = from(b in Block, select: (max(b.height) - 1)) |> Repo.one!()
+    height = from(b in Block, select: max(b.height) - 1) |> Repo.one!()
     txns = Query.Transaction.at_height(height, params)
-    length(Enum.filter(txns, fn(txn) -> txn.type == "poc_request" end))
+    length(Enum.filter(txns, fn txn -> txn.type == "poc_request" end))
   end
 
   def create(attrs \\ %{}) do

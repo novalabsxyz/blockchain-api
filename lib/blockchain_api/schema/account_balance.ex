@@ -20,13 +20,14 @@ defmodule BlockchainAPI.Schema.AccountBalance do
     account_balance
     |> cast(attrs, [:account_address, :block_height, :block_time, :balance, :delta])
     |> validate_required([:account_address, :block_height, :block_time, :balance, :delta])
+
     # |> unique_constraint(:unique_account_height_balance, name: :unique_account_height_balance)
   end
 
   def encode_model(account_balance) do
     %{
-      Map.take(account_balance, @fields) |
-      account_address: Util.bin_to_string(account_balance.address)
+      Map.take(account_balance, @fields)
+      | account_address: Util.bin_to_string(account_balance.address)
     }
   end
 

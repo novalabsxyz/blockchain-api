@@ -3,17 +3,16 @@ defmodule BlockchainAPIWeb.ActivityView do
   alias BlockchainAPIWeb.ActivityView
 
   def render("index.json", data) do
-	%{
-	  data: render_many(data.activity, ActivityView, "activity.json"),
-	}
+    %{
+      data: render_many(data.activity, ActivityView, "activity.json")
+    }
   end
 
   def render("show.json", %{activity: activity}) do
-	%{data: render_one(activity, ActivityView, "activity.json")}
+    %{data: render_one(activity, ActivityView, "activity.json")}
   end
 
   def render("activity.json", %{activity: activity}) do
-	activity
+    activity
   end
 end
-

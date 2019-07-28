@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Query.ConsensusMember do
 
   def list(_params) do
     ConsensusMember
-    |> order_by([ct], [desc: ct.id])
+    |> order_by([ct], desc: ct.id)
     |> Repo.all()
   end
 

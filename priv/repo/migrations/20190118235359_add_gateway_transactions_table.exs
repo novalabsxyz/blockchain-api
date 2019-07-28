@@ -5,17 +5,19 @@ defmodule BlockchainAPI.Repo.Migrations.AddGatewayTransactionsTable do
     create table(:gateway_transactions) do
       add :owner, :binary, null: false
       add :gateway, :binary, null: false
-      add :payer, :binary, null: true # payer can be undefined or empty binary in core
+      # payer can be undefined or empty binary in core
+      add :payer, :binary, null: true
       add :fee, :bigint, null: false, default: 0
       add :staking_fee, :bigint, null: false, default: 1
       add :status, :string, null: false, default: "cleared"
 
-      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary),
+        null: false
+
       timestamps()
     end
 
     create unique_index(:gateway_transactions, [:hash], name: :unique_gateway_hash)
     create unique_index(:gateway_transactions, [:gateway], name: :unique_gateway)
   end
-
 end

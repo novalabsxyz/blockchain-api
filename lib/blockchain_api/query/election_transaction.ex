@@ -31,12 +31,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   defp format_elections([]), do: []
+
   defp format_elections(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 
   defp encode_entry(entry) do
     members = entry.consensus_members |> Enum.map(&encode_member/1)
+
     %{
       members: members,
       proof: Util.bin_to_string(entry.proof),
@@ -49,5 +51,4 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode_member(member) do
     Util.bin_to_string(member.address)
   end
-
 end
