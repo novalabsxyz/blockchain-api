@@ -37,16 +37,22 @@ defmodule BlockchainAPIWeb.AccountController do
         {:ok, fee} = Watcher.chain()
                      |> :blockchain.ledger()
                      |> :blockchain_ledger_v1.transaction_fee()
-        # NOTE: The staking server is different, it's not an "Account" but it has data_credits
+
+        # XXX: This is a temp fix
+        # We need to update account migration, schema to have dc_balance, dc_nonce,
+        # security_balance, security_nonce as well and fetch it from there
         account_data_credit_balance = address
                                       |> Util.string_to_bin()
                                       |> Query.DataCreditTransaction.get_balance()
+        account_security_balance = address
+                                   |> Util.string_to_bin()
+                                   |> Query.SecurityTransaction.get_balance()
         non_existent_account =
           %{
             address: address,
             fee: fee,
             balance: 0,
-            security_balance: 0,
+            security_balance: account_security_balance,
             dc_balance: account_data_credit_balance,
             history: %{
               day: Enum.map(1..24, fn(_) -> 0 end),
