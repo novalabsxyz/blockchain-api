@@ -19,9 +19,12 @@ defmodule BlockchainAPIWeb.AccountController do
   def show(conn, %{"address" => address}) do
     try do
       bin_address = address |> Util.string_to_bin()
-      account = bin_address |> Query.Account.get!() |> Schema.Account.encode_model()
-      account_security_balance = Query.SecurityTransaction.get_balance(bin_address)
-      account_data_credit_balance = Query.DataCreditTransaction.get_balance(bin_address)
+      account = bin_address
+                |> IO.inspect(label: "bin_address")
+                |> Query.Account.get!()
+                |> IO.inspect(label: "account")
+                |> Schema.Account.encode_model()
+                |> IO.inspect(label: "encoded")
       account_balance_history = Query.AccountBalance.get_history(bin_address)
 
       account_data =
@@ -29,8 +32,6 @@ defmodule BlockchainAPIWeb.AccountController do
         |> Map.merge(%{
           history: account_balance_history,
           nonce: Query.Account.get_speculative_nonce(bin_address),
-          security_balance: account_security_balance,
-          dc_balance: account_data_credit_balance
         })
 
       render(conn, "show.json", account: account_data)
