@@ -155,8 +155,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
               state: hotspot.short_state,
               country: hotspot.short_country
             }
-          },
-          primary: element.primary
+          }
         }
       end)
   end
