@@ -13,7 +13,6 @@ defmodule BlockchainAPI.Schema.POCPathElement do
     :challengee,
     :challengee_loc,
     :poc_receipts_transactions_hash,
-    :primary,
     :challengee_owner,
     :result
   ]
@@ -24,7 +23,6 @@ defmodule BlockchainAPI.Schema.POCPathElement do
     field :challengee_loc, :string, null: true
     field :challengee_owner, :binary, null: true
     field :poc_receipts_transactions_hash, :binary, null: false
-    field :primary, :boolean, null: false
     field :result, :string, null: false, default: "untested"
 
     belongs_to :poc_receipts_transactions, POCReceiptsTransaction, define_field: false, foreign_key: :hash
@@ -61,12 +59,11 @@ defmodule BlockchainAPI.Schema.POCPathElement do
     })
   end
 
-  def map(hash, challengee, challengee_loc, challengee_owner, is_primary, result) do
+  def map(hash, challengee, challengee_loc, challengee_owner, result) do
     %{
       poc_receipts_transactions_hash: hash,
       challengee: challengee,
       challengee_loc: Util.h3_to_string(challengee_loc),
-      primary: is_primary,
       challengee_owner: challengee_owner,
       result: result
     }

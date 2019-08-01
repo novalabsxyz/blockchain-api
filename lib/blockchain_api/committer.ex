@@ -329,178 +329,22 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height) do
-    ## TODO: Split this function into smaller helper functions
-
-    time = :blockchain_block.time(block)
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
     challenger_owner = :blockchain_ledger_gateway_v1.owner_address(challenger_info)
-    challengees = for element <- :blockchain_txn_poc_receipts_v1.path(txn), do: :blockchain_poc_path_element_v1.challengee(element)
-    {:ok, event_ledger_height} = :blockchain_ledger_v1.current_height(ledger)
-    new_chain = :blockchain.ledger(ledger, :blockchain_worker.blockchain())
 
-    ## recalculate target
-    {:ok, gw_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
-    last_challenge = :blockchain_ledger_gateway_v1.last_poc_challenge(gw_info)
-    {:ok, challenge_block} = :blockchain.get_block(last_challenge, new_chain)
-    challenge_block_hash = :blockchain_block.hash_block(challenge_block)
-    challenge_block_height = :blockchain_block.height(challenge_block)
-    # Logger.info("challenge block height: #{challenge_block_height}")
-    {:ok, old_ledger} = :blockchain.ledger_at(challenge_block_height, new_chain)
-
-    case height == (event_ledger_height + 1) do
-      false ->
-        raise BlockchainAPI.CommitError, message: "height: #{height}, event_ledger_height: #{event_ledger_height}"
-      true ->
-        :ok
-    end
-
-    case :blockchain_ledger_v1.context_cache(old_ledger) do
-      {:undefined, :undefined} ->
-        raise BlockchainAPI.CommitError, message: "context and cache missing"
-      {:undefined, _} ->
-        raise BlockchainAPI.CommitError, message: "context missing"
-      {_, :undefined} ->
-        raise BlockchainAPI.CommitError, message: "cache missing"
-      _ -> :ok
-    end
-
-    case :blockchain_ledger_v1.snapshot(old_ledger) do
-      {:error, :undefined} ->
-        raise BlockchainAPI.CommitError, message: "snapshot missing"
-      {:ok, _} ->
-        :ok
-    end
-
-    secret = :blockchain_txn_poc_receipts_v1.secret(txn)
-    entropy = <<secret :: binary, challenge_block_hash :: binary, challenger :: binary>>
-    {target, gateways} = :blockchain_poc_path.target(entropy, old_ledger, challenger)
-    {:ok, path} = :blockchain_poc_path.build(entropy, target, gateways, last_challenge, old_ledger)
-    txn_path0 = :blockchain_txn_poc_receipts_v1.path(txn)
-    txn_path = txn_path0 |> Enum.map(fn(element) -> :blockchain_poc_path_element_v1.challengee(element) end)
-
-    ## DB operations
+    # Create transaction entry
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
+
+    # Create POC Receipts transaction entry
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)
     {:ok, poc_receipt_txn_entry} = POCReceiptsTransaction.map(poc_request.id, challenger_loc, challenger_owner, txn)
                                    |> Query.POCReceiptsTransaction.create()
 
-    case Enum.member?(challengees, target) do
-      false ->
-        raise BlockchainAPI.CommitError, message: "Target: #{inspect(target)} not in challengees: #{inspect(challengees)}"
-      true ->
-        case path == txn_path do
-          false ->
-            raise BlockchainAPI.CommitError, message: "Path: #{inspect(path)} does not match txn_path: #{inspect(txn_path)}"
-          true ->
-            deltas = :blockchain_txn_poc_receipts_v1.deltas(txn)
-
-            txn_path0
-            |> Enum.with_index()
-            |> Enum.map(
-              fn({element, index}) when element != :undefined ->
-                challengee = element |> :blockchain_poc_path_element_v1.challengee()
-                res = challengee |> :blockchain_ledger_v1.find_gateway_info(ledger)
-
-                case res do
-                  {:error, _} ->
-                    :ok
-
-                  {:ok, challengee_info} ->
-                    challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
-                    challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
-                    is_primary = challengee == target
-
-                    delta = Enum.at(deltas, index)
-
-                    {:ok, path_element_entry} =
-                      POCPathElement.map(poc_receipt_txn_entry.hash,
-                        challengee,
-                        challengee_loc,
-                        challengee_owner,
-                        is_primary,
-                        poc_result(delta))
-                      |> Query.POCPathElement.create()
-
-                    case :blockchain_poc_path_element_v1.receipt(element) do
-                      :undefined ->
-                        :ok
-                      receipt ->
-                        rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
-                        {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(ledger)
-                        rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
-                        rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
-                        {:ok, rx_score} = :blockchain_ledger_v1.gateway_score(rx_gateway, ledger)
-
-                        {:ok, poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
-                                             |> Query.POCReceipt.create()
-
-                        rx_score_delta =
-                          case Query.HotspotActivity.last_poc_score(rx_gateway) do
-                            nil ->
-                              0.0
-                            s ->
-                              rx_score - s
-                          end
-
-                        {:ok, _activity_entry} = Query.HotspotActivity.create(%{
-                          gateway: rx_gateway,
-                          poc_rx_txn_hash: :blockchain_txn.hash(txn),
-                          poc_rx_txn_block_height: height,
-                          poc_rx_txn_block_time: time,
-                          poc_rx_id: poc_receipt.id,
-                          poc_rx_challenge_id: poc_receipt_txn_entry.id,
-                          poc_score: rx_score,
-                          poc_score_delta: rx_score_delta
-                        })
-
-                        _ = rapid_decline(rx_gateway)
-
-                    end
-
-                    element
-                    |> :blockchain_poc_path_element_v1.witnesses()
-                    |> Enum.map(
-                      fn(witness) when witness != :undefined ->
-                        witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
-
-                        case :blockchain_ledger_v1.find_gateway_info(witness_gateway, ledger) do
-                          {:error, _} ->
-                            :ok
-                          {:ok, wx_info} ->
-                            wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
-                            wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
-                            {:ok, wx_score} = :blockchain_ledger_v1.gateway_score(witness_gateway, ledger)
-
-                            {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
-                                                 |> Query.POCWitness.create()
-
-                            wx_score_delta =
-                              case Query.HotspotActivity.last_poc_score(witness_gateway) do
-                                nil ->
-                                  0.0
-                                s ->
-                                  wx_score - s
-                              end
-
-                            {:ok, _activity_entry} = Query.HotspotActivity.create(%{
-                              gateway: witness_gateway,
-                              poc_rx_txn_hash: :blockchain_txn.hash(txn),
-                              poc_rx_txn_block_height: height,
-                              poc_rx_txn_block_time: time,
-                              poc_witness_id: poc_witness.id,
-                              poc_witness_challenge_id: poc_receipt_txn_entry.id,
-                              poc_score: wx_score,
-                              poc_score_delta: wx_score_delta
-                            })
-                        end
-                      end)
-                end
-              end)
-        end
-    end
+    # Populate receipt and witness tables from the poc path _without_ any vaidation. It's done in core.
+    insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry)
   end
 
 
@@ -628,12 +472,119 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp poc_result(nil), do: "untested"
-  defp poc_result({_, {0, 0}}), do: "untested"
-  defp poc_result({_, {a, b}}) do
-    case a > b do
-      true -> "success"
-      false -> "failure"
+
+  # POC Related private db helper functions. Maybe move to a separate module?
+  defp insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry) do
+    deltas = :blockchain_txn_poc_receipts_v1.deltas(txn)
+    time = :blockchain_block.time(block)
+    txn
+    |> :blockchain_txn_poc_receipts_v1.path()
+    |> Enum.with_index()
+    |> Enum.map(
+      fn({element, index}) when element != :undefined ->
+        challengee = element |> :blockchain_poc_path_element_v1.challengee()
+        res = challengee |> :blockchain_ledger_v1.find_gateway_info(ledger)
+
+        case res do
+          {:error, _} ->
+            :ok
+
+          {:ok, challengee_info} ->
+            challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
+            challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
+
+            delta = Enum.at(deltas, index)
+
+            {:ok, path_element_entry} =
+              POCPathElement.map(poc_receipt_txn_entry.hash,
+                challengee,
+                challengee_loc,
+                challengee_owner,
+                poc_result(delta))
+                |> Query.POCPathElement.create()
+
+            _ = add_receipt(txn, height, time, ledger, element, path_element_entry, poc_receipt_txn_entry)
+            _ = add_witnesses(txn, height, time, ledger, element, path_element_entry, poc_receipt_txn_entry)
+
+        end
+      end)
+  end
+
+  defp add_witnesses(txn, height, time, ledger, element, path_element_entry, poc_receipt_txn_entry) do
+    element
+    |> :blockchain_poc_path_element_v1.witnesses()
+    |> Enum.map(
+      fn(witness) when witness != :undefined ->
+        witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
+
+        case :blockchain_ledger_v1.find_gateway_info(witness_gateway, ledger) do
+          {:error, _} ->
+            :ok
+          {:ok, wx_info} ->
+            wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
+            wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
+            {:ok, wx_score} = :blockchain_ledger_v1.gateway_score(witness_gateway, ledger)
+
+            {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
+                                 |> Query.POCWitness.create()
+
+            wx_score_delta =
+              case Query.HotspotActivity.last_poc_score(witness_gateway) do
+                nil ->
+                  0.0
+                s ->
+                  wx_score - s
+              end
+
+            {:ok, _activity_entry} = Query.HotspotActivity.create(%{
+              gateway: witness_gateway,
+              poc_rx_txn_hash: :blockchain_txn.hash(txn),
+              poc_rx_txn_block_height: height,
+              poc_rx_txn_block_time: time,
+              poc_witness_id: poc_witness.id,
+              poc_witness_challenge_id: poc_receipt_txn_entry.id,
+              poc_score: wx_score,
+              poc_score_delta: wx_score_delta
+            })
+        end
+      end)
+  end
+
+  defp add_receipt(txn, height, time, ledger, element, path_element_entry, poc_receipt_txn_entry) do
+    case :blockchain_poc_path_element_v1.receipt(element) do
+      :undefined ->
+        :ok
+      receipt ->
+        rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
+        {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(ledger)
+        rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
+        rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
+        {:ok, rx_score} = :blockchain_ledger_v1.gateway_score(rx_gateway, ledger)
+
+        {:ok, poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
+                             |> Query.POCReceipt.create()
+
+        rx_score_delta =
+          case Query.HotspotActivity.last_poc_score(rx_gateway) do
+            nil ->
+              0.0
+            s ->
+              rx_score - s
+          end
+
+        {:ok, _activity_entry} = Query.HotspotActivity.create(%{
+          gateway: rx_gateway,
+          poc_rx_txn_hash: :blockchain_txn.hash(txn),
+          poc_rx_txn_block_height: height,
+          poc_rx_txn_block_time: time,
+          poc_rx_id: poc_receipt.id,
+          poc_rx_challenge_id: poc_receipt_txn_entry.id,
+          poc_score: rx_score,
+          poc_score_delta: rx_score_delta
+        })
+
+        _ = rapid_decline(rx_gateway)
+
     end
   end
 
@@ -654,4 +605,14 @@ defmodule BlockchainAPI.Committer do
         end
     end
   end
+
+  defp poc_result(nil), do: "untested"
+  defp poc_result({_, {0, 0}}), do: "untested"
+  defp poc_result({_, {a, b}}) do
+    case a > b do
+      true -> "success"
+      false -> "failure"
+    end
+  end
+
 end
