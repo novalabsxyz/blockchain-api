@@ -62,7 +62,7 @@ defmodule BlockchainAPI.Application do
       {BlockchainAPI.Watcher, watcher_worker_opts},
       {BlockchainAPI.PeriodicCleaner, []},
       {BlockchainAPI.PeriodicUpdater, []},
-      # {BlockchainAPI.Notifier, []}
+      {BlockchainAPI.Notifier, []}
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
