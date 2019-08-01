@@ -479,7 +479,6 @@ defmodule BlockchainAPI.Committer do
     time = :blockchain_block.time(block)
     txn
     |> :blockchain_txn_poc_receipts_v1.path()
-    |> Enum.map(fn(path_element) -> :blockchain_poc_path_element_v1.challengee(path_element) end)
     |> Enum.with_index()
     |> Enum.map(
       fn({element, index}) when element != :undefined ->
