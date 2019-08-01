@@ -16,6 +16,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.PaymentTransaction,
     Schema.RewardTxn,
     Schema.SecurityTransaction,
+    Schema.Transaction,
     Util
   }
 
@@ -106,6 +107,17 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       }
     )
 
+    location_status_query = from(
+      lt in LocationTransaction,
+      group_by: lt.gateway,
+      left_join: t in Transaction,
+      on: t.hash == lt.hash,
+      select: %{
+        gateway: lt.gateway,
+        location_height: max(t.block_height)
+      }
+    )
+
     query = from(
       at in AccountTransaction,
       where: at.account_address == ^address,
@@ -120,6 +132,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       on: gt.gateway == lt.gateway,
       left_join: s in subquery(status_query),
       on: s.gateway == gt.gateway,
+      left_join: lsq in subquery(location_status_query),
+      on: lsq.gateway == gt.gateway,
       distinct: hotspot.address,
       order_by: [desc: lt.nonce, desc: hotspot.id],
       select: %{
@@ -142,7 +156,8 @@ defmodule BlockchainAPI.Query.AccountTransaction do
         short_state: hotspot.short_state,
         short_country: hotspot.short_country,
         score: hotspot.score,
-        status: fragment("CASE WHEN ? - ? < 35 THEN 'online' ELSE 'offline' END", ^current_height, s.challenge_height)
+        location_height: lsq.location_height,
+        status: fragment("CASE WHEN ? - ? < 35 THEN 'online' ELSE CASE WHEN ? - ? < 35 THEN 'online' ELSE 'offline' END END", ^current_height, s.challenge_height, ^current_height, lsq.location_height)
       })
 
     query
