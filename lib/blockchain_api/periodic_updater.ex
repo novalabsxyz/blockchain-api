@@ -37,8 +37,10 @@ defmodule BlockchainAPI.PeriodicUpdater do
         Logger.error("There is no chain!")
         e
       {:ok, _chain_height} ->
+        Logger.debug("Running periodic_updater")
         ledger = :blockchain.ledger(chain)
         hotspots_with_no_location_in_db = Query.Hotspot.all_no_loc()
+        Logger.debug("hotspots_with_no_location_in_db: #{inspect(hotspots_with_no_location_in_db)}")
 
         hotspots_with_location_in_ledger = hotspots_with_no_location_in_db
                                            |> Enum.reduce([],
@@ -49,11 +51,13 @@ defmodule BlockchainAPI.PeriodicUpdater do
                                                  loc -> [{hotspot, loc} | acc]
                                                end
                                              end)
+        Logger.debug("hotspots_with_location_in_ledger: #{inspect(hotspots_with_location_in_ledger)}")
 
         hotspots_with_location_in_ledger
         |> Enum.each(
           fn({h, l}) ->
             loc_map = Util.reverse_geocode(l)
+            Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{loc_map}")
             Repo.update(h, loc_map)
           end)
 
