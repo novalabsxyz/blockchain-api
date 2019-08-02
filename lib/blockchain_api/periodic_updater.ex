@@ -68,7 +68,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
               {:ok, loc_map} ->
                 Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{inspect(loc_map)}")
                 try do
-                  Query.Hotspot.update!(h, loc_map)
+                  Query.Hotspot.update!(h, Map.merge(loc_map, %{location: Util.h3_to_string(l)}))
                 rescue
                   error ->
                     Logger.error("Error updating hotspot: #{inspect(h)}, reason: #{inspect(error)}")
