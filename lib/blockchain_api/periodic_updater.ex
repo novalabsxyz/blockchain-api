@@ -61,7 +61,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
                 Logger.error("Unable to geo encode")
                 e
               {:ok, loc_map} ->
-                Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{loc_map}")
+                Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{inspect(loc_map)}")
                 Repo.update(h, loc_map)
             end
           end)
