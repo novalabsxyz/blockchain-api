@@ -101,7 +101,9 @@ defmodule BlockchainAPIWeb.TransactionController do
           |> Base.decode64!()
           |> :blockchain_txn.deserialize()
 
-    case :blockchain.height(:blockchain_worker.blockchain()) do
+    chain = :blockchain_worker.blockchain()
+
+    case :blockchain.height(chain) do
       {:error, _} ->
         send_resp(conn, 404, "no_chain")
       {:ok, chain_height} ->
@@ -109,7 +111,22 @@ defmodule BlockchainAPIWeb.TransactionController do
           :blockchain_txn_payment_v1 ->
             Schema.PendingPayment.map(txn, chain_height) |> Query.PendingPayment.create()
           :blockchain_txn_add_gateway_v1 ->
-            Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
+            # Check that the account exists in the DB
+            owner = :blockchain_txn_add_gateway_v1.owner(txn)
+            case Query.Account.get(owner) do
+              nil ->
+                # Create account
+                ledger = :blockchain.ledger(chain)
+                {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
+                case Query.Account.create(%{balance: 0, address: owner, nonce: 0, fee: fee}) do
+                  {:ok, _} ->
+                    Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
+                  {:error, _} ->
+                    send_resp(conn, 404, "error_adding_gateway_owner")
+                end
+              _account ->
+                Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
+            end
           :blockchain_txn_assert_location_v1 ->
             Schema.PendingLocation.map(txn, chain_height) |> Query.PendingLocation.create()
           :blockchain_txn_coinbase_v1 ->
