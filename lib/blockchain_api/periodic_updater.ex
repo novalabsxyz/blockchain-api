@@ -38,8 +38,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
         e
       {:ok, _chain_height} ->
         ledger = :blockchain.ledger(chain)
-        hotspots_with_no_location_in_db = Query.Hotspot.all()
-                                          |> Enum.filter(fn(h) -> h.location == nil end)
+        hotspots_with_no_location_in_db = Query.Hotspot.all_no_loc()
 
         hotspots_with_location_in_ledger = hotspots_with_no_location_in_db
                                            |> Enum.reduce([],
