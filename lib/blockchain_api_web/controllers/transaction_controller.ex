@@ -118,8 +118,7 @@ defmodule BlockchainAPIWeb.TransactionController do
                 # Create account
                 ledger = :blockchain.ledger(chain)
                 {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
-                changeset = Schema.Account.changeset(%Schema.Account{}, %{balance: 0, address: owner, nonce: 0, fee: fee})
-                case Query.Account.create(changeset) do
+                case Query.Account.create(%{balance: 0, address: owner, nonce: 0, fee: fee}) do
                   {:ok, _} ->
                     Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
                   {:error, _} ->
