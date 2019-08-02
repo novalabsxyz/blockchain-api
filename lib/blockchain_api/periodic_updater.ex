@@ -56,9 +56,14 @@ defmodule BlockchainAPI.PeriodicUpdater do
         hotspots_with_location_in_ledger
         |> Enum.each(
           fn({h, l}) ->
-            loc_map = Util.reverse_geocode(l)
-            Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{loc_map}")
-            Repo.update(h, loc_map)
+            case Util.reverse_geocode(l) do
+              {:error, _}=e ->
+                Logger.error("Unable to geo encode")
+                e
+              {:ok, loc_map} ->
+                Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{loc_map}")
+                Repo.update(h, loc_map)
+            end
           end)
 
     end
