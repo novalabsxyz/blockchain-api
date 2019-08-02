@@ -33,4 +33,17 @@ defmodule BlockchainAPI.Query.RewardTxn do
     )
     |> Repo.one!()
   end
+
+  def get_after(time) do
+    from(
+      rt in RewardTxn,
+      where: rt.inserted_at > ^time,
+      group_by: rt.account,
+      select: %{
+        account: rt.account,
+        amount: sum(rt.amount)
+      }
+    )
+    |> Repo.all()
+  end
 end
