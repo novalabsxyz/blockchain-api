@@ -124,7 +124,7 @@ defmodule BlockchainAPIWeb.TransactionController do
                   {:error, _} ->
                     send_resp(conn, 404, "error_adding_gateway_owner")
                 end
-              {:ok, _} ->
+              _account ->
                 Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
             end
           :blockchain_txn_assert_location_v1 ->
