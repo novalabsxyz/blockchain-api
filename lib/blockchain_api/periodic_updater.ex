@@ -8,7 +8,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
   """
 
   use GenServer
-  alias BlockchainAPI.{Query, Util, Repo}
+  alias BlockchainAPI.{Query, Util}
   require Logger
 
   @me __MODULE__
@@ -31,7 +31,12 @@ defmodule BlockchainAPI.PeriodicUpdater do
   end
 
   @impl true
-  def handle_info(:update, %{:chain => chain}=state) when chain != :undefined do
+  def handle_info(:update, %{:chain => :undefined}) do
+    chain = :blockchain_worker.blockchain()
+    schedule_update()
+    {:noreply, %{chain: chain}}
+  end
+  def handle_info(:update, %{:chain => chain}=state) do
     case :blockchain.height(chain) do
       {:error, _}=e ->
         Logger.error("There is no chain!")
@@ -62,7 +67,12 @@ defmodule BlockchainAPI.PeriodicUpdater do
                 e
               {:ok, loc_map} ->
                 Logger.debug("Updating hotspot: #{inspect(h)} with loc_map: #{inspect(loc_map)}")
-                Repo.update(h, loc_map)
+                try do
+                  Query.Hotspot.update!(h, loc_map)
+                rescue
+                  error ->
+                    Logger.error("Error updating hotspot: #{inspect(h)}, reason: #{inspect(error)}")
+                end
             end
           end)
 
