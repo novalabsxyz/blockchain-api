@@ -19,6 +19,7 @@ defmodule BlockchainAPI.Util do
   }
 
   @max_retries 5
+  require Logger
 
   def rounder(nil, _) do
     nil
@@ -62,6 +63,10 @@ defmodule BlockchainAPI.Util do
     reverse_geocode(loc, @max_retries)
   end
 
+  def reverse_geocode(loc, 0) do
+    Logger.error("Exceeded google maps lookup for #{inspect(loc)}")
+    {:error, :retries_exceeded}
+  end
   def reverse_geocode(loc, retry) do
     {lat, lng} = h3_to_lat_lng(h3_to_string(loc))
 
