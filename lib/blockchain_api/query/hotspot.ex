@@ -37,6 +37,13 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.all()
   end
 
+  def all_no_loc() do
+    Hotspot
+    |> where([h], is_nil(h.location))
+    |> order_by([h], [desc: h.id])
+    |> Repo.all()
+  end
+
   # Search hotspots with fuzzy str match with Levenshtein distance
 
   def search(query_string) do

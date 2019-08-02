@@ -18,6 +18,9 @@ defmodule BlockchainAPI.Util do
     SecurityTransaction
   }
 
+  @max_retries 5
+  require Logger
+
   def rounder(nil, _) do
     nil
   end
@@ -57,6 +60,14 @@ defmodule BlockchainAPI.Util do
   end
 
   def reverse_geocode(loc) do
+    reverse_geocode(loc, @max_retries)
+  end
+
+  def reverse_geocode(loc, 0) do
+    Logger.error("Exceeded google maps lookup for #{inspect(loc)}")
+    {:error, :retries_exceeded}
+  end
+  def reverse_geocode(loc, retry) do
     {lat, lng} = h3_to_lat_lng(h3_to_string(loc))
 
     case HTTPoison.get("https://maps.googleapis.com/maps/api/geocode/json?latlng=#{lat},#{lng}&key=#{Application.get_env(:blockchain_api, :google_maps_secret)}") do
@@ -77,9 +88,11 @@ defmodule BlockchainAPI.Util do
               }
             }
           _ ->
+            reverse_geocode(loc, retry - 1)
             {:error, :unknown_location}
         end
       _ ->
+        reverse_geocode(loc, retry - 1)
         {:error, :bad_response}
     end
   end
