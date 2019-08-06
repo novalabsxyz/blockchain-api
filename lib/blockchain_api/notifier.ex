@@ -76,12 +76,17 @@ defmodule BlockchainAPI.Notifier do
   end
 
   defp payload(%{payee: address, amount: amount}=data) do
+    units0 = Decimal.div(amount, @bones)
+    unit_str = units0 |> Decimal.to_string()
+
     units =
-      case rem(amount, @bones) == 0 do
-        true ->
-          Number.Delimit.number_to_delimited(div(amount, @bones), precision: 0)
-        false ->
-          Number.Delimit.number_to_delimited(amount/@bones)
+      case :binary.match(unit_str, ".") do
+        {start, _} ->
+          precision = byte_size(unit_str) - start - 1
+          units0 |> Decimal.to_float() |> Number.Delimit.number_to_delimited(precision: precision)
+
+        :nomatch ->
+          units0 |> Decimal.to_float() |> Number.Delimit.number_to_delimited(precision: 0)
       end
 
     %{
