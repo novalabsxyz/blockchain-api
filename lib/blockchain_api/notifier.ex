@@ -76,18 +76,10 @@ defmodule BlockchainAPI.Notifier do
   end
 
   defp payload(%{payee: address, amount: amount}=data) do
-    units =
-      case rem(amount, @bones) == 0 do
-        true ->
-          Number.Delimit.number_to_delimited(div(amount, @bones), precision: 0)
-        false ->
-          Number.Delimit.number_to_delimited(amount/@bones)
-      end
-
     %{
       :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{units} #{@ticker}!"},
+      :contents => %{:en => "You got #{units(amount)} #{@ticker}!"},
       :data => data
     }
   end
@@ -109,4 +101,29 @@ defmodule BlockchainAPI.Notifier do
       type: "receivedPayment"
     }
   end
+
+  def units(amount) when is_integer(amount) do
+    amount |> Decimal.div(@bones) |> delimit_unit()
+  end
+  def units(amount) when is_float(amount) do
+    amount |> Decimal.from_float() |> Decimal.div(@bones) |> delimit_unit()
+  end
+
+  defp delimit_unit(units0) do
+    unit_str = units0 |> Decimal.to_string()
+    case :binary.match(unit_str, ".") do
+      {start, _} ->
+        precision = byte_size(unit_str) - start - 1
+        units0
+        |> Decimal.to_float()
+        |> Number.Delimit.number_to_delimited(precision: precision)
+        |> String.trim_trailing("0")
+
+      :nomatch ->
+        units0
+        |> Decimal.to_float()
+        |> Number.Delimit.number_to_delimited(precision: 0)
+    end
+  end
+
 end
