@@ -102,10 +102,10 @@ defmodule BlockchainAPI.Notifier do
     }
   end
 
-  defp units(amount) when is_integer(amount) do
+  def units(amount) when is_integer(amount) do
     amount |> Decimal.div(@bones) |> delimit_unit()
   end
-  defp units(amount) when is_float(amount) do
+  def units(amount) when is_float(amount) do
     amount |> Decimal.from_float() |> Decimal.div(@bones) |> delimit_unit()
   end
 
