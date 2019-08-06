@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Notifier do
   @me __MODULE__
   @url "https://onesignal.com/api/v1/notifications"
   @bones 100000000
+  @ticker "HLM"
 
   alias BlockchainAPI.Util
 
@@ -26,7 +27,7 @@ defmodule BlockchainAPI.Notifier do
   def init(_state) do
     :ok = :blockchain_event.add_handler(self())
     chain = :blockchain_worker.blockchain()
-    {:ok, %{chain: chain, rewarder: :blockchain_swarm.pubkey_bin()}}
+    {:ok, %{chain: chain}}
   end
 
   @impl true
@@ -36,7 +37,7 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:rewarder => rewarder, :chain => chain}=state) do
+  def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:chain => chain}=state) do
     {:ok, block} = :blockchain.get_block(hash, chain)
     case :blockchain_block.transactions(block) do
       [] ->
@@ -46,17 +47,11 @@ defmodule BlockchainAPI.Notifier do
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
-              case :blockchain_txn_payment_v1.payer(txn) == rewarder do
-                false ->
-                  txn
-                  |> payment_data()
-                  |> payload()
-                  |> encode()
-                  |> post()
-                true ->
-                  # Don't notify when the payer is the rewarder to reduce spam
-                  :ok
-              end
+              txn
+              |> payment_data()
+              |> payload()
+              |> encode()
+              |> post()
             _ -> :ok
           end
         end)
@@ -81,7 +76,7 @@ defmodule BlockchainAPI.Notifier do
   end
 
   defp payload(%{payee: address, amount: amount}=data) do
-    atoms =
+    units =
       case rem(amount, @bones) == 0 do
         true ->
           Number.Delimit.number_to_delimited(div(amount, @bones), precision: 0)
@@ -92,7 +87,7 @@ defmodule BlockchainAPI.Notifier do
     %{
       :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{atoms} ATOMs!"},
+      :contents => %{:en => "You got #{units} #{@ticker}!"},
       :data => data
     }
   end
