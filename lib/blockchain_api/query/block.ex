@@ -2,12 +2,19 @@ defmodule BlockchainAPI.Query.Block do
   @moduledoc false
   import Ecto.Query, warn: false
   @default_limit 100
+  @max_limit 1000
 
   alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
 
-  def list(%{"before" => before, "limit" => limit}=_params) do
+  def list(%{"before" => before, "limit" => limit}=_params) when limit < @max_limit do
     list_query()
     |> filter_before(before, limit)
+    |> Repo.all()
+    |> encode()
+  end
+  def list(%{"before" => before, "limit" => _limit}=_params) do
+    list_query()
+    |> filter_before(before, @max_limit)
     |> Repo.all()
     |> encode()
   end
@@ -17,14 +24,21 @@ defmodule BlockchainAPI.Query.Block do
     |> Repo.all()
     |> encode()
   end
-  def list(%{"limit" => limit}=_params) do
+  def list(%{"limit" => limit}=_params) when limit < @max_limit do
     list_query()
     |> limit(^limit)
     |> Repo.all()
     |> encode()
   end
+  def list(%{"limit" => _limit}=_params) do
+    list_query()
+    |> limit(^@max_limit)
+    |> Repo.all()
+    |> encode()
+  end
   def list(%{}) do
     list_query()
+    |> limit(^@default_limit)
     |> Repo.all()
     |> encode()
   end
