@@ -26,8 +26,9 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
     end
 
     def insert_fake_challenges() do
-      fake_location = Util.h3_to_string(631210983218633727)
-      {:ok, loc_info} = Util.reverse_geocode(fake_location)
+      fake_loc = 631210983218633727
+      fake_location = Util.h3_to_string(fake_loc)
+      {:ok, loc_info} = Util.reverse_geocode(fake_loc)
       hotspot_map =
         Map.merge(
           %{
