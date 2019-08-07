@@ -72,7 +72,7 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
               onion: :crypto.strong_rand_bytes(32),
               challenger_owner: r.owner,
               challenger: r.challenger,
-              challenger_loc: fake_location
+              challenger_loc: fake_location,
               poc_request_transactions_id: r.id,
               fee: 0
             }
