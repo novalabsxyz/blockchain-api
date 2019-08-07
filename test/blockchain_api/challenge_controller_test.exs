@@ -26,16 +26,21 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
     end
 
     def insert_fake_challenges() do
-      fake_loc = 631210983218633727
-      fake_location = Util.h3_to_string(fake_loc)
-      {:ok, loc_info} = Util.reverse_geocode(fake_loc)
+      fake_location = Util.h3_to_string(631210983218633727)
       hotspot_map =
-        Map.merge(
           %{
             address: :crypto.strong_rand_bytes(32),
             owner: :crypto.strong_rand_bytes(32),
-            location: fake_location
-          }, loc_info)
+            location: fake_location,
+            long_city: "San Rafael",
+            long_country: "United States",
+            long_state: "California",
+            long_street: "Las Colindas Road",
+            short_city: "San Rafael",
+            short_country: "US",
+            short_state: "CA",
+            short_street: "Las Colindas Rd"
+          }
       {:ok, fake_spot} = Query.Hotspot.create(hotspot_map)
       Range.new(1, @num_challenges)
       |> Enum.map(
