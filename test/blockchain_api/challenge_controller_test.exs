@@ -1,6 +1,6 @@
 defmodule BlockchainAPIWeb.ChallengeControllerTest do
   use BlockchainAPIWeb.ConnCase
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.{Query, Util}
 
   describe "several challenges" do
 
@@ -26,6 +26,16 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
     end
 
     def insert_fake_challenges() do
+      fake_location = "8c489e3467569ff"
+      {:ok, loc_info} = Util.reverse_geocode(:h3.from_string(fake_location))
+      hotspot_map =
+        Map.merge(
+          %{
+            address: :crypto.strong_rand_bytes(32),
+            owner: :crypto.strong_rand_bytes(32),
+            location: fake_location
+          }, loc_info)
+      {:ok, fake_spot} = Query.Hotspot.create(hotspot_map)
       Range.new(1, @num_challenges)
       |> Enum.map(
         fn(h) ->
@@ -52,7 +62,7 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
               onion: :crypto.strong_rand_bytes(32),
               owner: :crypto.strong_rand_bytes(32),
               challenger: g.gateway,
-              location: "8c489e3467569ff",
+              location: fake_location,
               fee: 0
             }
           {:ok, r} = Query.POCRequestTransaction.create(request_map)
@@ -62,7 +72,7 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
               onion: :crypto.strong_rand_bytes(32),
               challenger_owner: r.owner,
               challenger: r.challenger,
-              challenger_loc: "8c489e3467569ff",
+              challenger_loc: fake_location
               poc_request_transactions_id: r.id,
               fee: 0
             }
