@@ -1,8 +1,8 @@
 defmodule BlockchainAPI.NotifierClient do
   @url "https://onesignal.com/api/v1/notifications"
 
-  def post(data, message) do
-    HTTPoison.post(@url, to_payload(data, message), headers())
+  def post(data, message, opts \\ %{}) do
+    HTTPoison.post(@url, to_payload(data, message, opts), headers())
   end
 
   defp headers() do
@@ -12,13 +12,14 @@ defmodule BlockchainAPI.NotifierClient do
     ]
   end
 
-  defp to_payload(data, message) do
+  defp to_payload(data, message, opts) do
     %{
       :app_id => Application.fetch_env!(:blockchain_api, :onesignal_app_id),
       :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => data.address}],
       :contents => %{:en => message},
       :data => data
     }
+    |> Map.merge(opts)
     |> encode()
   end
 

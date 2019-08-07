@@ -34,6 +34,13 @@ defmodule BlockchainAPI.Query.RewardTxn do
     |> Repo.one!()
   end
 
+  def get_from_last_week do
+    Timex.now()
+    |> Timex.shift(days: -7)
+    |> Timex.to_unix()
+    |> get_after()
+  end
+
   def get_after(time) do
     from(
       rt in RewardTxn,
