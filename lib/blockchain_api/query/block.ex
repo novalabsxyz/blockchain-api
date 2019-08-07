@@ -14,7 +14,7 @@ defmodule BlockchainAPI.Query.Block do
   end
   def list(%{"before" => before, "limit" => _limit}=_params) do
     list_query()
-    |> filter_before(before, @max_limit)
+    |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end

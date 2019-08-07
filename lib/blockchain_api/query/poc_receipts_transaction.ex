@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   import Ecto.Query, warn: false
 
   @default_limit 100
+  @max_limit 500
 
   alias BlockchainAPI.{
     Util,
@@ -26,10 +27,17 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
   end
 
-  def challenges(%{"before" => before, "limit" => limit}=_params) do
+  def challenges(%{"before" => before, "limit" => limit}=_params) when limit < @max_limit do
     path_query()
     |> receipt_query()
     |> filter_before(before, limit)
+    |> Repo.all()
+    |> encode()
+  end
+  def challenges(%{"before" => before, "limit" => _limit}=_params) do
+    path_query()
+    |> receipt_query()
+    |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
@@ -40,16 +48,24 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"limit" => limit}=_params) do
+  def challenges(%{"limit" => limit}=_params) when limit < @max_limit do
     path_query()
     |> receipt_query()
     |> limit(^limit)
     |> Repo.all()
     |> encode()
   end
+  def challenges(%{"limit" => _limit}=_params) do
+    path_query()
+    |> receipt_query()
+    |> limit(^@max_limit)
+    |> Repo.all()
+    |> encode()
+  end
   def challenges(%{}) do
     path_query()
     |> receipt_query()
+    |> limit(^@default_limit)
     |> Repo.all()
     |> encode()
   end
