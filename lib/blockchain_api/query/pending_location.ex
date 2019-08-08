@@ -55,8 +55,8 @@ defmodule BlockchainAPI.Query.PendingLocation do
       where: pl.nonce == ^nonce,
       select: pl
     )
-    |> Repo.one()
-    |> format_one()
+    |> Repo.all()
+    |> format()
   end
 
   #==================================================================
