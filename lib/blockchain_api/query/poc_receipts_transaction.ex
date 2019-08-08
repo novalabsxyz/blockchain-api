@@ -103,6 +103,22 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     entries |> Enum.map(&encode_entry/1)
   end
 
+  defp encode_entry(%{challenge: entry, height: height, hotspot: nil, block: block}) do
+    # Used ONLY for testing
+    # If there is no hotspot to encode, what do we even do
+    %{
+      id: entry.id,
+      challenger: Util.bin_to_string(entry.challenger),
+      challenger_owner: Util.bin_to_string(entry.challenger_owner),
+      hash: Util.bin_to_string(entry.hash),
+      onion: Util.bin_to_string(entry.onion),
+      signature: Util.bin_to_string(entry.signature),
+      height: height,
+      time: block.time,
+      success: false,
+      pathElements: []
+    }
+  end
   defp encode_entry(%{challenge: entry, height: height, hotspot: hotspot, block: block}) do
 
     path_elements = entry.poc_path_elements

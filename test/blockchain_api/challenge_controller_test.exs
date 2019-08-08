@@ -24,6 +24,14 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
 
       assert length(challenges) == @default_limit
     end
+    test "challenge index/2 returns #{@max_limit} challenges when limit > #{@max_limit}", %{conn: conn} do
+      :ok = setup()
+      %{"data" => challenges} = conn
+                                |> get(Routes.challenge_path(conn, :index, %{"limit" => 1000}))
+                                |> json_response(200)
+
+      assert length(challenges) == @max_limit
+    end
 
     def insert_fake_challenges() do
       fake_location = Util.h3_to_string(631210983218633727)
