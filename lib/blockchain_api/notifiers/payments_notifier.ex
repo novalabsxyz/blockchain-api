@@ -57,6 +57,13 @@ defmodule BlockchainAPI.PaymentsNotifier do
   end
 
   @impl true
+  def handle_info(msg, %{:chain => :undefined}) do
+    chain = :blockchain_worker.blockchain()
+    Process.send_after(self(), msg, :timer.minutes(1))
+    {:noreply, %{chain: chain}}
+  end
+
+  @impl true
   def handle_info(_, state) do
     {:noreply, state}
   end
