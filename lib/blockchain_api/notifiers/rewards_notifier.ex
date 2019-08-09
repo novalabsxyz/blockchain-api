@@ -1,5 +1,11 @@
 defmodule BlockchainAPI.RewardsNotifier do
+  use Task
+
   alias BlockchainAPI.{Query.RewardTxn, NotifierClient}
+
+  def start_link(_) do
+    Task.start_link(__MODULE__, :schedule_notifications, [])
+  end
 
   # 1 week in ms
   @interval 1000 * 60 * 60 * 24 * 7

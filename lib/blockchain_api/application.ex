@@ -62,7 +62,8 @@ defmodule BlockchainAPI.Application do
       {Watcher, watcher_worker_opts},
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
-      {PaymentsNotifier, []}
+      {PaymentsNotifier, []},
+      {RewardsNotifier, []}
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
@@ -76,7 +77,6 @@ defmodule BlockchainAPI.Application do
     :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
     :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
-    Task.start_link(RewardsNotifier, :schedule_notifications, [])
 
     {:ok, sup}
   end
