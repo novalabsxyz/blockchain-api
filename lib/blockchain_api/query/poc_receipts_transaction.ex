@@ -27,38 +27,35 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
   end
 
-  def challenges(%{"before" => before, "limit" => limit}=_params) when limit < @max_limit do
+  def challenges(%{"before" => before, "limit" => limit0}=_params) do
+    limit =
+      case String.to_integer(limit0) > @max_limit do
+        true -> @max_limit
+        false -> limit0
+      end
     path_query()
     |> receipt_query()
     |> filter_before(before, limit)
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"before" => before, "limit" => _limit}=_params) do
-    path_query()
-    |> receipt_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
   def challenges(%{"before" => before}=_params) do
+    IO.inspect(before, label: :before)
     path_query()
     |> receipt_query()
     |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"limit" => limit}=_params) when limit < @max_limit do
+  def challenges(%{"limit" => limit0}=_params) do
+    limit =
+      case String.to_integer(limit0) > @max_limit do
+        true -> @max_limit
+        false -> limit0
+      end
     path_query()
     |> receipt_query()
     |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{"limit" => _limit}=_params) do
-    path_query()
-    |> receipt_query()
-    |> limit(^@max_limit)
     |> Repo.all()
     |> encode()
   end

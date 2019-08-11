@@ -39,6 +39,33 @@ defmodule BlockchainAPIWeb.BlockControllerTest do
 
       assert length(blocks) == @max_limit
     end
+
+    test "block index/2 before without limit", %{conn: conn} do
+      :ok = setup()
+      %{"data" => blocks} = conn
+                            |> get(Routes.block_path(conn, :index, %{"before" => 200}))
+                            |> json_response(200)
+
+      assert length(blocks) == @default_limit
+    end
+
+    test "block index/2 with valid limit", %{conn: conn} do
+      :ok = setup()
+      %{"data" => blocks} = conn
+                            |> get(Routes.block_path(conn, :index, %{"limit" => 400}))
+                            |> json_response(200)
+
+      assert length(blocks) == 400
+    end
+
+    test "block index/2 before with invalid limit", %{conn: conn} do
+      :ok = setup()
+      %{"data" => blocks} = conn
+                            |> get(Routes.block_path(conn, :index, %{"before" => 1800, "limit" => 1500}))
+                            |> json_response(200)
+
+      assert length(blocks) == @max_limit
+    end
   end
 end
 

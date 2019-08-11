@@ -6,15 +6,14 @@ defmodule BlockchainAPI.Query.Block do
 
   alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
 
-  def list(%{"before" => before, "limit" => limit}=_params) when limit < @max_limit do
+  def list(%{"before" => before, "limit" => limit0}=_params) do
+    limit =
+      case String.to_integer(limit0) > @max_limit do
+        true -> @max_limit
+        false -> limit0
+      end
     list_query()
     |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def list(%{"before" => before, "limit" => _limit}=_params) do
-    list_query()
-    |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
@@ -24,15 +23,14 @@ defmodule BlockchainAPI.Query.Block do
     |> Repo.all()
     |> encode()
   end
-  def list(%{"limit" => limit}=_params) when limit < @max_limit do
+  def list(%{"limit" => limit0}=_params) do
+    limit =
+      case String.to_integer(limit0) > @max_limit do
+        true -> @max_limit
+        false -> limit0
+      end
     list_query()
     |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def list(%{"limit" => _limit}=_params) do
-    list_query()
-    |> limit(^@max_limit)
     |> Repo.all()
     |> encode()
   end

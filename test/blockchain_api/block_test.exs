@@ -20,7 +20,7 @@ defmodule BlockchainAPI.BlockTest do
 
     test "list_blocks/0 returns all blocks" do
       block = block_fixture()
-      [b] = Query.Block.list(%{"limit" => 1})
+      [b] = Query.Block.list(%{"limit" => "1"})
       assert b.height == block.height and b.time == block.time
     end
 
