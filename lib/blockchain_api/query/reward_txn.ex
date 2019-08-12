@@ -37,7 +37,6 @@ defmodule BlockchainAPI.Query.RewardTxn do
   def get_from_last_week do
     Timex.now()
     |> Timex.shift(days: -7)
-    |> Timex.to_unix()
     |> get_after()
   end
 
