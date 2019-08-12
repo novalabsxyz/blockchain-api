@@ -58,6 +58,14 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> encode()
   end
 
+  def issued do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+
+    receipt_issued_count_query(start, finish)
+    |> Repo.one!()
+  end
+
   def get!(hash) do
     POCReceiptsTransaction
     |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
@@ -259,7 +267,19 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       on: rx.challenger == h.address,
       order_by: [desc: rx.id],
       where: rx.id == ^id,
-      select: %{challenge: rx, height: t.block_height, hotspot: h, block: b}
+      select: %{challenge: rx, height: t.block_height, hotspot: h, block: b, time: b.time}
+    )
+  end
+
+  defp receipt_issued_count_query(start, finish) do
+    from(
+      rx in POCReceiptsTransaction,
+      left_join: t in Transaction,
+      on: rx.hash == t.hash,
+      left_join: b in Block,
+      on: t.block_height == b.height,
+      where: b.time > ^start and b.time < ^finish,
+      select: count(rx.id)
     )
   end
 

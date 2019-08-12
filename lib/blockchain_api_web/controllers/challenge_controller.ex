@@ -9,12 +9,13 @@ defmodule BlockchainAPIWeb.ChallengeController do
     challenges = Query.POCReceiptsTransaction.challenges(params)
     ongoing = Query.POCRequestTransaction.ongoing(params)
     {successful, failed} = Query.POCReceiptsTransaction.aggregate_challenges(challenges)
+    issued = Query.POCReceiptsTransaction.issued()
 
     render(conn,
       "index.json",
       challenges: challenges,
       total_ongoing: ongoing,
-      issued: successful + failed,
+      issued: issued,
       successful: successful,
       failed: failed
     )
