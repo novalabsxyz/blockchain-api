@@ -40,7 +40,6 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> encode()
   end
   def challenges(%{"before" => before}=_params) do
-    IO.inspect(before, label: :before)
     path_query()
     |> receipt_query()
     |> filter_before(before, @default_limit)
