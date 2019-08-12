@@ -36,6 +36,11 @@ defmodule BlockchainAPI.PaymentsNotifier do
   end
 
   @impl true
+  def handle_info({:blockchain_event, {_, _, true, _}}, state) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:chain => chain}=state) do
     {:ok, block} = :blockchain.get_block(hash, chain)
     case :blockchain_block.transactions(block) do
