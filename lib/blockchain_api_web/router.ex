@@ -20,6 +20,7 @@ defmodule BlockchainAPIWeb.Router do
     get "/hotspots/search", HotspotController, :search # This has to be before the resources
     resources "/hotspots", HotspotController, only: [:index, :show], param: "address" do
       resources "/activity", ActivityController, only: [:index]
+      resources "/rewards", HotspotRewardController, only: [:index]
     end
 
     resources "/transactions", TransactionController, only: [:index, :show, :create], param: "hash"

@@ -15,6 +15,8 @@ defmodule BlockchainAPI.Schema.RewardTxn do
     :type
   ]
 
+  @encoded_fields @fields ++ [:id]
+
   @derive {Jason.Encoder, only: @fields}
   schema "reward_txns" do
     field :account, :binary, null: false
@@ -38,7 +40,7 @@ defmodule BlockchainAPI.Schema.RewardTxn do
 
   def encode_model(reward) do
     reward
-    |> Map.take(@fields)
+    |> Map.take(@encoded_fields)
     |> Map.merge(%{
       rewards_hash: Util.bin_to_string(reward.rewards_hash),
       account: Util.bin_to_string(reward.account),
