@@ -94,6 +94,14 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     end)
   end
 
+  def last_poc_id() do
+    from(
+      p in POCReceiptsTransaction,
+      select: max(p.id)
+    )
+    |> Repo.one()
+  end
+
   defp encode([]), do: []
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
