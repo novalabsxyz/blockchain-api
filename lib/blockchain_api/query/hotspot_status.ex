@@ -3,19 +3,33 @@ defmodule BlockchainAPI.Query.HotspotStatus do
 
   require Logger
 
-  def get_status(pubkey_bin) do
+  def consolidate_status(challenge_status, pubkey_bin) do
+    case challenge_status do
+      "online" ->
+        "online"
+      "offline" ->
+        case get_staleness(pubkey_bin) do
+          {:error, _} ->
+            "offline"
+          {:ok, true} ->
+            "offline"
+          {:ok, false} ->
+            "online"
+        end
+    end
+  end
+
+  def get_staleness(pubkey_bin) do
     swarm = :blockchain_swarm.swarm()
     pb = :libp2p_swarm.peerbook(swarm)
     case :libp2p_peerbook.get(pb, pubkey_bin) do
-      {:error, reason} ->
+      {:error, reason}=e ->
         Logger.error("Peer not found #{inspect(reason)}")
-        %{}
+        e
       {:ok, peer} ->
         ts = :libp2p_peer.timestamp(peer)
         is_stale = :libp2p_peer.is_stale(peer, ts)
-        %{
-          is_stale: is_stale
-        }
+        {:ok, not(is_stale)}
     end
   end
 
