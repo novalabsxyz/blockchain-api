@@ -20,11 +20,7 @@ defmodule BlockchainAPI.Query.Block do
     |> encode()
   end
   def list(%{"limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
+    limit = min(@max_limit, String.to_integer(limit0))
     list_query()
     |> limit(^limit)
     |> Repo.all()

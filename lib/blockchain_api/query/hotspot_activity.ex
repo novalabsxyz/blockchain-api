@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   import Ecto.Query, warn: false
 
   @default_limit 100
+  @max_limit 500
 
   alias BlockchainAPI.{Repo, Util, Schema.HotspotActivity}
 
@@ -24,7 +25,8 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.one()
   end
 
-  def activity_for(address, %{"before" => before, "limit" => limit}=_params) do
+  def activity_for(address, %{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     address
     |> activity_query()
     |> filter_before(before, limit)
@@ -38,7 +40,8 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.all()
     |> encode()
   end
-  def activity_for(address, %{"limit" => limit}=_params) do
+  def activity_for(address, %{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     address
     |> activity_query()
     |> limit(^limit)
@@ -48,6 +51,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   def activity_for(address, %{}) do
     address
     |> activity_query()
+    |> limit(^@default_limit)
     |> Repo.all()
     |> encode()
   end

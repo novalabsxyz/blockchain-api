@@ -43,11 +43,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> encode()
   end
   def challenges(%{"limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
+    limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
     |> limit(^limit)
