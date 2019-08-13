@@ -2,7 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  @default_limit 100
+  @default_limit 50
+  @max_limit 100
 
   alias BlockchainAPI.{
     Util,
@@ -26,7 +27,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
   end
 
-  def challenges(%{"before" => before, "limit" => limit}=_params) do
+  def challenges(%{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
     |> filter_before(before, limit)
@@ -40,7 +42,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"limit" => limit}=_params) do
+  def challenges(%{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
     |> limit(^limit)
@@ -50,6 +53,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   def challenges(%{}) do
     path_query()
     |> receipt_query()
+    |> limit(^@default_limit)
     |> Repo.all()
     |> encode()
   end
@@ -82,11 +86,35 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     end)
   end
 
+  def last_poc_id() do
+    from(
+      p in POCReceiptsTransaction,
+      select: max(p.id)
+    )
+    |> Repo.one()
+  end
+
   defp encode([]), do: []
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 
+  defp encode_entry(%{challenge: entry, height: height, hotspot: nil, block: block}) do
+    # Used ONLY for testing
+    # If there is no hotspot to encode, what do we even do
+    %{
+      id: entry.id,
+      challenger: Util.bin_to_string(entry.challenger),
+      challenger_owner: Util.bin_to_string(entry.challenger_owner),
+      hash: Util.bin_to_string(entry.hash),
+      onion: Util.bin_to_string(entry.onion),
+      signature: Util.bin_to_string(entry.signature),
+      height: height,
+      time: block.time,
+      success: false,
+      pathElements: []
+    }
+  end
   defp encode_entry(%{challenge: entry, height: height, hotspot: hotspot, block: block}) do
 
     path_elements = entry.poc_path_elements

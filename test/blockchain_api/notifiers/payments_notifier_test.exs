@@ -1,7 +1,6 @@
 defmodule PaymentsNotifierTest do
   alias BlockchainAPI.PaymentsNotifier
   use ExUnit.Case
-  @bones 100000000
 
   test "whole number far greater than bones" do
     amount = 1000000000000000
