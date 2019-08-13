@@ -2,8 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  @default_limit 100
-  @max_limit 500
+  @default_limit 50
+  @max_limit 100
 
   alias BlockchainAPI.{
     Util,
@@ -28,11 +28,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   def challenges(%{"before" => before, "limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
+    limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
     |> filter_before(before, limit)

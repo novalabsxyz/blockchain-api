@@ -7,11 +7,7 @@ defmodule BlockchainAPI.Query.Block do
   alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
 
   def list(%{"before" => before, "limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
+    limit = min(@max_limit, String.to_integer(limit0))
     list_query()
     |> filter_before(before, limit)
     |> Repo.all()

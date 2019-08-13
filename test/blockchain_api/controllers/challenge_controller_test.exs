@@ -3,8 +3,8 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
   alias BlockchainAPI.{Query, Util}
 
   @num_challenges 1000
-  @default_limit 100
-  @max_limit 500
+  @default_limit 50
+  @max_limit 100
 
   describe "test challenge controller" do
     setup do
@@ -42,11 +42,12 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
     end
 
     test "challenge index/2 with valid limit", %{conn: conn} do
+      valid_limit = 99
       %{"data" => challenges} = conn
-                                |> get(Routes.challenge_path(conn, :index, %{"limit" => 400}))
+                                |> get(Routes.challenge_path(conn, :index, %{"limit" => valid_limit}))
                                 |> json_response(200)
 
-      assert length(challenges) == 400
+      assert length(challenges) == valid_limit
     end
 
     test "challenge index/2 before with invalid limit", %{conn: conn} do
