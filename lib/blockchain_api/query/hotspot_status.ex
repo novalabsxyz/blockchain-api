@@ -29,7 +29,7 @@ defmodule BlockchainAPI.Query.HotspotStatus do
       {:ok, peer} ->
         ts = :libp2p_peer.timestamp(peer)
         is_stale = :libp2p_peer.is_stale(peer, ts)
-        {:ok, not(is_stale)}
+        {:ok, is_stale}
     end
   end
 
