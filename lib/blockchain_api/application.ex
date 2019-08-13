@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Application do
 
   use Application
   alias Honeydew.EctoPollQueue
-  alias BlockchainAPI.Repo
+  alias BlockchainAPI.{PaymentsNotifier, PeriodicCleaner, PeriodicUpdater, Repo, RewardsNotifier, Watcher}
   alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}
   alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase}
 
@@ -55,14 +55,15 @@ defmodule BlockchainAPI.Application do
         type: :supervisor
       },
       # Start the Ecto repository
-      BlockchainAPI.Repo,
+      Repo,
       # Start the endpoint when the application starts
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
-      {BlockchainAPI.Watcher, watcher_worker_opts},
-      {BlockchainAPI.PeriodicCleaner, []},
-      {BlockchainAPI.PeriodicUpdater, []},
-      {BlockchainAPI.Notifier, []}
+      {Watcher, watcher_worker_opts},
+      {PeriodicCleaner, []},
+      {PeriodicUpdater, []},
+      {PaymentsNotifier, []},
+      {RewardsNotifier, []}
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]

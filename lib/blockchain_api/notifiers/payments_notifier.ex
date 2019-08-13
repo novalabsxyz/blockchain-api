@@ -1,13 +1,12 @@
-defmodule BlockchainAPI.Notifier do
+defmodule BlockchainAPI.PaymentsNotifier do
   use GenServer
   require Logger
 
   @me __MODULE__
-  @url "https://onesignal.com/api/v1/notifications"
   @bones 100000000
   @ticker "HLM"
 
-  alias BlockchainAPI.Util
+  alias BlockchainAPI.{NotifierClient, Util}
 
   #==================================================================
   # API
@@ -37,6 +36,11 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
+  def handle_info({:blockchain_event, {_, _, true, _}}, state) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({:blockchain_event, {:add_block, hash, false, _}}, %{:chain => chain}=state) do
     {:ok, block} = :blockchain.get_block(hash, chain)
     case :blockchain_block.transactions(block) do
@@ -47,17 +51,21 @@ defmodule BlockchainAPI.Notifier do
         Enum.map(txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_payment_v1 ->
-              txn
-              |> payment_data()
-              |> payload()
-              |> encode()
-              |> post()
+              amount = :blockchain_txn_payment_v1.amount(txn)
+              NotifierClient.post(payment_data(txn, amount), amount |> units() |> message())
             _ -> :ok
           end
         end)
     end
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(msg, %{:chain => :undefined}) do
+    chain = :blockchain_worker.blockchain()
+    Process.send_after(self(), msg, :timer.minutes(1))
+    {:noreply, %{chain: chain}}
   end
 
   @impl true
@@ -68,38 +76,18 @@ defmodule BlockchainAPI.Notifier do
   #==================================================================
   # Private Functions
   #==================================================================
-  defp headers() do
-    [
-      {"Content-Type", "application/json; charset=utf-8"},
-      {"Authorization", "Basic #{Application.fetch_env!(:blockchain_api, :onesignal_rest_api_key)}"}
-    ]
-  end
 
-  defp payload(%{payee: address, amount: amount}=data) do
+  defp payment_data(txn, amount) do
     %{
-      :app_id => "#{Application.fetch_env!(:blockchain_api, :onesignal_app_id)}",
-      :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => address}],
-      :contents => %{:en => "You got #{units(amount)} #{@ticker}!"},
-      :data => data
-    }
-  end
-
-  defp encode(payload) do
-    {:ok, payload} = payload |> Jason.encode()
-    payload
-  end
-
-  defp post(payload) do
-    HTTPoison.post(@url, payload, headers())
-  end
-
-  defp payment_data(txn) do
-    %{
-      payee: Util.bin_to_string(:blockchain_txn_payment_v1.payee(txn)),
-      amount: :blockchain_txn_payment_v1.amount(txn),
+      address: Util.bin_to_string(:blockchain_txn_payment_v1.payee(txn)),
+      amount: amount,
       hash: Util.bin_to_string(:blockchain_txn_payment_v1.hash(txn)),
       type: "receivedPayment"
     }
+  end
+
+  defp message(units) do
+    "You got #{units} #{@ticker}"
   end
 
   def units(amount) when is_integer(amount) do
