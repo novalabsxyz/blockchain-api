@@ -3,6 +3,8 @@ defmodule BlockchainAPI.RewardsNotifier do
 
   alias BlockchainAPI.{Query.RewardTxn, NotifierClient}
 
+  @ticker "HLM"
+
   def start_link(_) do
     Task.start_link(__MODULE__, :schedule_notifications, [])
   end
@@ -39,6 +41,6 @@ defmodule BlockchainAPI.RewardsNotifier do
   end
 
   defp message(reward) do
-    "You received #{reward.amount} rewards this week!"
+    "Your hotspots earned #{reward} #{@ticker} from mining in the past week."
   end
 end
