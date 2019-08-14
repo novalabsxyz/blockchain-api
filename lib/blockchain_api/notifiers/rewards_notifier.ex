@@ -15,7 +15,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     now = Timex.now(:utc)
     days_to_notification = 7 - Timex.days_to_beginning_of_week(now, "Tuesday")
     notification_day = Timex.shift(now, days: days_to_notification)
-    notification_time = Timex.to_datetime({notification_day.year, notification_day.month, notification_day.day}, {0,0,0})
+    notification_time = Timex.to_datetime({{notification_day.year, notification_day.month, notification_day.day}, {0,0,0}}, "Etc/UTC")
 
     Timex.diff(notification_time, Timex.now(), :milliseconds)
     |> :timer.apply_after(__MODULE__, :send_notifications, [])
