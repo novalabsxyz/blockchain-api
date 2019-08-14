@@ -9,12 +9,7 @@ defmodule BlockchainAPI.Query.HotspotReward do
   alias BlockchainAPI.{Repo, Schema.RewardTxn}
 
   def list(address, %{"before" => before, "limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
-
+    limit = min(String.to_integer(limit0), @max_limit)
     address
     |> list_query()
     |> filter_before(before, limit)
@@ -29,11 +24,7 @@ defmodule BlockchainAPI.Query.HotspotReward do
     # |> encode()
   end
   def list(address, %{"limit" => limit0}=_params) do
-    limit =
-      case String.to_integer(limit0) > @max_limit do
-        true -> @max_limit
-        false -> limit0
-      end
+    limit = min(String.to_integer(limit0), @max_limit)
     address
     |> list_query()
     |> limit(^limit)
