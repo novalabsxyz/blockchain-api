@@ -58,6 +58,15 @@ prod-console:
 test:
 	PORT=4002 MIX_ENV=test $(MIX) test --trace
 
+testrelease:
+	NO_ESCRIPT=1 MIX_ENV=test $(MIX) distillery.release --env=test
+
+test-start:
+	PORT=4002 MIX_ENV=test ./_build/test/rel/blockchain_api/bin/blockchain_api start
+
+test-console:
+	PORT=4002 MIX_ENV=test ./_build/test/rel/blockchain_api/bin/blockchain_api console
+
 reset-test-db:
 	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
 
