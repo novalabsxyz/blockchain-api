@@ -30,7 +30,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
 
-# Mostly secret information read from environment variables
+# Don't connect dev to seed nodes
 config :blockchain,
-  seed_nodes: Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
-  seed_node_dns: String.to_charlist(System.get_env("SEED_NODE_DNS"))
+  seed_nodes: [],
+  seed_node_dns: ''
