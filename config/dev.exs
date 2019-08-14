@@ -16,7 +16,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   server: true,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
-  check_origin: false
+  check_origin: false,
+  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Don't connect dev to seed nodes
@@ -29,16 +30,14 @@ config :blockchain_api, env: Mix.env()
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
-config :blockchain_api, onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY")
-config :blockchain_api, onesignal_app_id: System.get_env("ONESIGNAL_APP_ID")
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
-  url: System.get_env("DATABASE_URL"),
-  username: System.get_env("DATABASE_USER"),
-  password: System.get_env("DATABASE_PASS"),
-  database: System.get_env("DATABASE_NAME"),
-  hostname: System.get_env("DATABASE_HOST"),
+  username: "postgres",
+  password: "postgres",
+  database: "blockchain_api_dev",
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10,
   timeout: 60000,
   log: false
