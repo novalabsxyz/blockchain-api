@@ -2,9 +2,15 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
+port = String.to_integer(System.get_env("PORT") || "4002")
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
-  http: [port: 4002],
-  server: false
+  http: [port: port],
+  url: [host: (System.get_env("HOSTNAME") || "localhost"), port: port],
+  server: true,
+  root: ".",
+  version: Application.spec(:blockchain_api, :vsn),
+  check_origin: false,
+  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
 
 config :blockchain_api, env: Mix.env()
 
@@ -19,6 +25,11 @@ config :blockchain_api, BlockchainAPI.Repo,
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :blockchain_api, BlockchainAPIWeb.Endpoint,
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
+
+# Mostly secret information read from environment variables
 config :blockchain,
-  seed_nodes: [],
-  seed_node_dns: ''
+  seed_nodes: Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
+  seed_node_dns: String.to_charlist(System.get_env("SEED_NODE_DNS"))
