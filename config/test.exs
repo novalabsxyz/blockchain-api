@@ -7,8 +7,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   server: true,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
-  check_origin: false,
-  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
+  check_origin: false
 
 config :blockchain_api, env: Mix.env()
 
