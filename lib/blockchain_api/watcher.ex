@@ -30,7 +30,8 @@ defmodule BlockchainAPI.Watcher do
     state =
       case Keyword.get(args, :env) do
         :test ->
-          %{chain: nil}
+          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "test", "genesis"])
+          load_chain(genesis_file)
         :dev ->
           genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
           load_chain(genesis_file)
