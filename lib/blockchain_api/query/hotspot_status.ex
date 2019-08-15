@@ -45,7 +45,11 @@ defmodule BlockchainAPI.Query.HotspotStatus do
         api_height = Query.Block.get_latest_height()
         case :libp2p_peer.signed_metadata_get(peer, <<"height">>, :undefined) do
           height when is_integer(height) and height > 0 ->
-            height/api_height
+            case abs(api_height - height) <= 5 do
+              true -> 1.0
+              false ->
+                height/api_height
+            end
           _ -> nil
         end
     end
