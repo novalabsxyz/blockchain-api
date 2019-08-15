@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Notifier do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def send_notifications(block, ledger) do
+  def notify(block, ledger) do
     GenServer.cast(__MODULE__, {:notify, block, ledger})
   end
 
