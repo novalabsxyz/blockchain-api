@@ -1,5 +1,5 @@
 defmodule BlockchainAPI.HotspotNotifier do
-  alias BlockchainAPI.{NotifierClient, Schema.Hotspot}
+  alias BlockchainAPI.{NotifierClient, Schema.Hotspot, Util}
 
   def send_new_hotspot_notification(txn, type, ledger) do
      map = Hotspot.map(type, txn, ledger)
