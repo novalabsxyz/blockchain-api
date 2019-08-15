@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.HotspotStatus do
   @moduledoc ~s(Get hotspot status using libp2p peer information)
 
   require Logger
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.{Query, Util}
 
   def consolidate_status(challenge_status, pubkey_bin) do
     case challenge_status do
@@ -25,7 +25,9 @@ defmodule BlockchainAPI.Query.HotspotStatus do
     pb = :libp2p_swarm.peerbook(swarm)
     case :libp2p_peerbook.get(pb, pubkey_bin) do
       {:error, reason}=e ->
-        Logger.error("Peer not found #{inspect(reason)}")
+        pubkey_b58 = Util.bin_to_string(pubkey_bin)
+        {:ok, name} = :erl_angry_purple_tiger.animal_name(pubkey_b58)
+        Logger.error("Peer: #{inspect(pubkey_b58)}, Name: #{inspect(name)}, Error: #{inspect(reason)}")
         e
       {:ok, peer} ->
         ts = :libp2p_peer.timestamp(peer)
@@ -39,7 +41,9 @@ defmodule BlockchainAPI.Query.HotspotStatus do
     pb = :libp2p_swarm.peerbook(swarm)
     case :libp2p_peerbook.get(pb, pubkey_bin) do
       {:error, reason} ->
-        Logger.error("Peer not found #{inspect(reason)}")
+        pubkey_b58 = Util.bin_to_string(pubkey_bin)
+        {:ok, name} = :erl_angry_purple_tiger.animal_name(pubkey_b58)
+        Logger.error("Peer: #{inspect(pubkey_b58)}, Name: #{inspect(name)}, Error: #{inspect(reason)}")
         nil
       {:ok, peer} ->
         api_height = Query.Block.get_latest_height()
