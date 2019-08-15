@@ -37,7 +37,7 @@
   "intercept": {:hex, :intercept, "1.0.0", "1f6c725e6fc070720643bd4d97ee53b1209365c80e520e1f5a1acb36712a7eb5", [:rebar3], [], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "lager": {:hex, :lager, "3.6.7", "2fbf823944caa0fc10df5ec13f3f047524a249bb32f0d801b7900c9610264286", [:rebar3], [{:goldrush, "0.1.9", [hex: :goldrush, repo: "hexpm", optional: false]}], "hexpm"},
-  "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "8a4ec1c222266c142cbcb8d2bb52ae02cad46a63", [branch: "master"]},
+  "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "e581bebea16c08bcbf921cfa2c915f72695aff5f", [branch: "master"]},
   "logger_file_backend": {:hex, :logger_file_backend, "0.0.11", "3bbc5f31d3669e8d09d7a9443e86056fae7fc18e45c6f748c33b8c79a7e147a1", [:mix], [], "hexpm"},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm"},
