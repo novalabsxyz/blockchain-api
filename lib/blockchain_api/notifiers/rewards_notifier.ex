@@ -3,6 +3,8 @@ defmodule BlockchainAPI.RewardsNotifier do
 
   alias BlockchainAPI.{Query.RewardTxn, NotifierClient}
 
+  @ticker "HLM"
+
   def start_link(_) do
     Task.start_link(__MODULE__, :schedule_notifications, [])
   end
@@ -15,7 +17,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     now = Timex.now(:utc)
     days_to_notification = 7 - Timex.days_to_beginning_of_week(now, "Tuesday")
     notification_day = Timex.shift(now, days: days_to_notification)
-    notification_time = Timex.to_datetime({notification_day.year, notification_day.month, notification_day.day}, {0,0,0})
+    notification_time = Timex.to_datetime({{notification_day.year, notification_day.month, notification_day.day}, {0,0,0}}, "Etc/UTC")
 
     Timex.diff(notification_time, Timex.now(), :milliseconds)
     |> :timer.apply_after(__MODULE__, :send_notifications, [])
@@ -39,6 +41,6 @@ defmodule BlockchainAPI.RewardsNotifier do
   end
 
   defp message(reward) do
-    "You received #{reward.amount} rewards this week!"
+    "Your hotspots earned #{reward} #{@ticker} from mining in the past week."
   end
 end
