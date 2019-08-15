@@ -173,9 +173,10 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Enum.map(fn map ->
       {lat, lng} = Util.h3_to_lat_lng(map.location)
       status = Query.HotspotStatus.consolidate_status(map.status, map.gateway)
+      sync_percent = Query.HotspotStatus.sync_percent(map.gateway)
       map
       |> encoded_account_gateway_map()
-      |> Map.merge(%{lat: lat, lng: lng, status: status})
+      |> Map.merge(%{lat: lat, lng: lng, status: status, sync_percent: sync_percent})
     end)
   end
 

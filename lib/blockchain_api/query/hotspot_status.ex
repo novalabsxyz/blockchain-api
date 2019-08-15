@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Query.HotspotStatus do
   @moduledoc ~s(Get hotspot status using libp2p peer information)
 
   require Logger
+  alias BlockchainAPI.Query
 
   def consolidate_status(challenge_status, pubkey_bin) do
     case challenge_status do
@@ -30,6 +31,20 @@ defmodule BlockchainAPI.Query.HotspotStatus do
         ts = :libp2p_peer.timestamp(peer)
         is_stale = :libp2p_peer.is_stale(peer, ts)
         {:ok, is_stale}
+    end
+  end
+
+  def sync_percent(pubkey_bin) do
+    swarm = :blockchain_swarm.swarm()
+    pb = :libp2p_swarm.peerbook(swarm)
+    case :libp2p_peerbook.get(pb, pubkey_bin) do
+      {:error, reason} ->
+        Logger.error("Peer not found #{inspect(reason)}")
+        nil
+      {:ok, peer} ->
+        height = :libp2p_peer.signed_metadata_get(peer, <<"height">>, 0)
+        api_height = Query.Block.get_latest_height()
+        height/api_height
     end
   end
 
