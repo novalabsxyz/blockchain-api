@@ -27,31 +27,19 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   def list(address, %{"before" => before, "limit" => limit}=_params) do
-
-    # NOTE: no pagination for pending recvs
-    pp = Query.PendingPayment.get_pending_by_address(address)
-    pg = Query.PendingGateway.get_by_owner(address)
-    pl = Query.PendingLocation.get_by_owner(address)
-    rest =  address
-            |> list_query()
-            |> filter_before(before, limit)
-            |> Repo.all()
-            |> format()
-
-    pp ++ pg ++ pl ++ rest
+    address
+    |> list_query()
+    |> filter_before(before, limit)
+    |> Repo.all()
+    |> format()
   end
   def list(address, %{"before" => before}=_params) do
-    pp = Query.PendingPayment.get_pending_by_address(address)
-    pg = Query.PendingGateway.get_by_owner(address)
-    pl = Query.PendingLocation.get_by_owner(address)
-    rest = address
-           |> list_query()
-           |> filter_before(before, @default_limit)
-           |> Repo.all()
-           |> format()
-
-    pp ++ pg ++ pl ++ rest
-  end
+    address
+    |> list_query()
+    |> filter_before(before, @default_limit)
+    |> Repo.all()
+    |> format()
+end
   def list(address, %{"limit" => limit}=_params) do
     pp = Query.PendingPayment.get_pending_by_address(address)
     pg = Query.PendingGateway.get_by_owner(address)
