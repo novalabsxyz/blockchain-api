@@ -42,9 +42,12 @@ defmodule BlockchainAPI.Query.HotspotStatus do
         Logger.error("Peer not found #{inspect(reason)}")
         nil
       {:ok, peer} ->
-        height = :libp2p_peer.signed_metadata_get(peer, <<"height">>, 0)
         api_height = Query.Block.get_latest_height()
-        height/api_height
+        case :libp2p_peer.signed_metadata_get(peer, <<"height">>, :undefined) do
+          height when is_integer(height) and height > 0 ->
+            height/api_height
+          _ -> nil
+        end
     end
   end
 
