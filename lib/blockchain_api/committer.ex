@@ -24,7 +24,8 @@ defmodule BlockchainAPI.Committer do
     Schema.RewardsTransaction,
     Schema.RewardTxn,
     Schema.SecurityTransaction,
-    Schema.Transaction
+    Schema.Transaction,
+    Util
   }
 
   alias BlockchainAPIWeb.BlockChannel
@@ -524,8 +525,9 @@ defmodule BlockchainAPI.Committer do
             wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
             wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
             {:ok, wx_score} = :blockchain_ledger_v1.gateway_score(witness_gateway, ledger)
+            distance = Util.h3_distance_in_meters(wx_loc, path_element_entry.challengee_loc |> String.to_charlist() |> :h3.from_string())
 
-            {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, wx_owner, witness)
+            {:ok, poc_witness} = POCWitness.map(path_element_entry.id, wx_loc, distance, wx_owner, witness)
                                  |> Query.POCWitness.create()
 
             wx_score_delta =

@@ -160,4 +160,20 @@ defmodule BlockchainAPI.Util do
     Timex.now() |> Timex.to_unix()
   end
 
+  @pi_over_180 3.14159265359 / 180.0
+  @radius_of_earth_meters 6_371_008.8
+
+  @doc """
+  Returns the distance in meters between two h3 indexes using the haversine formula.
+  """
+  def h3_distance_in_meters(h3_1, h3_2) do
+    {lat1, lon1} = :h3.to_geo(h3_1)
+    {lat2, lon2} = :h3.to_geo(h3_2)
+
+    a = :math.sin((lat2 - lat1) * @pi_over_180 / 2)
+    b = :math.sin((lon2 - lon1) * @pi_over_180 / 2)
+
+    s = a * a + b * b * :math.cos(lat1 * @pi_over_180) * :math.cos(lat2 * @pi_over_180)
+    2 * :math.atan2(:math.sqrt(s), :math.sqrt(1 - s)) * @radius_of_earth_meters
+  end
 end

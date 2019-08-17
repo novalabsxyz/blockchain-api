@@ -11,6 +11,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     :poc_path_elements_id,
     :gateway,
     :location,
+    :distance,
     :timestamp,
     :signal,
     :packet_hash,
@@ -28,6 +29,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     field :signal, :integer, null: false
     field :packet_hash, :binary, null: false
     field :signature, :binary, null: false
+    field :distance, :float, null: true
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -56,12 +58,13 @@ defmodule BlockchainAPI.Schema.POCWitness do
     })
   end
 
-  def map(id, wx_loc, owner, poc_witness) do
+  def map(id, wx_loc, distance, owner, poc_witness) do
     %{
       poc_path_elements_id: id,
       owner: owner,
       gateway: :blockchain_poc_witness_v1.gateway(poc_witness),
       location: Util.h3_to_string(wx_loc),
+      distance: distance,
       timestamp: :blockchain_poc_witness_v1.timestamp(poc_witness),
       signal: :blockchain_poc_witness_v1.signal(poc_witness),
       packet_hash: :blockchain_poc_witness_v1.packet_hash(poc_witness),
