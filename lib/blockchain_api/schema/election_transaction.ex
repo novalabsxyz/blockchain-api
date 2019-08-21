@@ -1,7 +1,15 @@
 defmodule BlockchainAPI.Schema.ElectionTransaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.ElectionTransaction, Schema.ConsensusMember}
+
+  alias BlockchainAPI.{
+    Query,
+    Schema.ConsensusMember,
+    Schema.ElectionTransaction,
+    Schema.Transaction,
+    Util
+  }
+
   @fields [:proof, :delay, :election_height, :hash]
 
   @derive {Phoenix.Param, key: :hash}
@@ -14,6 +22,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
     field :election_height, :integer, null: false
 
     has_many :consensus_members, ConsensusMember, foreign_key: :election_transactions_id, references: :id
+    belongs_to :transactions, Transaction, define_field: false, foreign_key: :hash
     timestamps()
   end
 
@@ -29,6 +38,7 @@ defmodule BlockchainAPI.Schema.ElectionTransaction do
     election
     |> Map.take(@fields)
     |> Map.merge(%{
+      members: Query.ElectionTransaction.get_consensus_members(election),
       proof: Util.bin_to_string(election.proof),
       hash: Util.bin_to_string(election.hash),
       type: "election"

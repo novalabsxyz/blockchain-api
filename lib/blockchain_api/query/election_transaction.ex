@@ -30,6 +30,13 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> Repo.insert()
   end
 
+  def get_consensus_members(election) do
+    election
+    |> Repo.preload(:consensus_members)
+    |> Map.get(:consensus_members)
+    |> Enum.map(&encode_member/1)
+  end
+
   defp format_elections([]), do: []
   defp format_elections(entries) do
     entries |> Enum.map(&encode_entry/1)
