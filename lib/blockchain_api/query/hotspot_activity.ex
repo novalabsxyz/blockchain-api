@@ -5,7 +5,15 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   @default_limit 100
   @max_limit 500
 
-  alias BlockchainAPI.{Repo, Util, Schema.HotspotActivity}
+  alias BlockchainAPI.{
+    Repo,
+    Util,
+  }
+  alias BlockchainAPI.Schema.{
+    HotspotActivity,
+    POCReceipt,
+    POCWitness
+  }
 
   def create(attrs \\ %{}) do
     %HotspotActivity{}
@@ -110,7 +118,53 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       reward_type: entry.reward_type,
       reward_amount: entry.reward_amount,
       reward_block_height: entry.reward_block_height,
-      reward_block_time: entry.reward_block_time
+      reward_block_time: entry.reward_block_time,
+      challenges_witnessed: challenges_witnessed(entry),
+      challenges_completed: challenges_completed(entry)
     }
+  end
+
+  def challenges_witnessed(%{reward_type: "poc_witnesses"} = entry) do
+    get_challenges_count(POCWitness, entry)
+  end
+  def challenges_witnessed(_), do: nil
+
+  def challenges_completed(%{reward_type: "poc_challengers"} = entry) do
+    get_challenges_count(POCReceipt, entry)
+  end
+  def challenges_completed(_), do: nil
+
+  defp get_challenges_count(schema, %{reward_block_time: reward_time, gateway: gateway}) do
+    with query <- prev_reward_time_query(reward_time),
+         prev_reward_time when not is_nil(prev_reward_time) <- Repo.one(query) do
+      from(
+        s in schema,
+        where: s.gateway == ^gateway,
+        where: s.timestamp > ^prev_reward_time and s.timestamp < ^reward_time,
+        select: count(s.id)
+      )
+      |> Repo.one()
+    else
+      nil ->
+        from(
+          s in schema,
+          where: s.gateway == ^gateway,
+          where: s.timestamp < ^reward_time,
+          select: count(s.id)
+        )
+      _ ->
+        nil
+    end
+  end
+
+  defp prev_reward_time_query(reward_time) do
+    from(
+      ha in HotspotActivity,
+      where: not is_nil(ha.reward_block_time),
+      where: ha.reward_block_time < ^reward_time,
+      order_by: [desc: ha.reward_block_time],
+      select: ha.reward_block_time,
+      limit: 1
+    )
   end
 end
