@@ -1,8 +1,9 @@
 defmodule BlockchainAPI.RewardsNotifier do
   use Task
 
-  alias BlockchainAPI.{Query.RewardTxn, NotifierClient}
+  alias BlockchainAPI.Query.RewardTxn
 
+  @notifier_client Application.fetch_env!(:blockchain_api, :notifier_client)
   @ticker "HLM"
 
   def start_link(_) do
@@ -27,7 +28,7 @@ defmodule BlockchainAPI.RewardsNotifier do
   def send_notifications do
     RewardTxn.get_from_last_week()
     |> Enum.map(fn reward ->
-      NotifierClient.post(reward_data(reward), message(reward), %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
+      @notifier_client.post(reward_data(reward), message(reward), %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
     end)
     :timer.apply_after(@interval, __MODULE__, :send_notifications, [])
   end
@@ -41,6 +42,6 @@ defmodule BlockchainAPI.RewardsNotifier do
   end
 
   defp message(reward) do
-    "Your hotspots earned #{reward} #{@ticker} from mining in the past week."
+    "Your hotspots earned #{reward.amount} #{@ticker} from mining in the past week."
   end
 end
