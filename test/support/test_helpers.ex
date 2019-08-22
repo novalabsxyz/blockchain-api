@@ -65,7 +65,7 @@ defmodule BlockchainAPI.TestHelpers do
       end)
   end
 
-  def insert_hotspot_activity do
+  def insert_hotspot_activity(num_blocks \\ 10) do
     fake_location = Util.h3_to_string(631210983218633727)
     {:ok, account} = Query.Account.create(%{
       name: "Jane Doe",
@@ -89,7 +89,7 @@ defmodule BlockchainAPI.TestHelpers do
         short_street: "Las Colindas Rd"
       }
     {:ok, hotspot} = Query.Hotspot.create(hotspot_map)
-    Range.new(1, 10)
+    Range.new(1, num_blocks)
     |> Enum.map(
       fn(h) ->
         block_map = %{hash: :crypto.strong_rand_bytes(32), height: h, round: h, time: h}

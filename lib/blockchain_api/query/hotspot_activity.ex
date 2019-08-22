@@ -152,6 +152,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
           where: s.timestamp < ^reward_time,
           select: count(s.id)
         )
+        |> Repo.one()
     end
   end
 
