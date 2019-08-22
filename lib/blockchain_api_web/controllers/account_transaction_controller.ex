@@ -10,16 +10,7 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     bin_address = address |> Util.string_to_bin()
 
-    account_txns = bin_address |> Query.AccountTransaction.list(params)
-
-    txns =
-      case account_txns do
-        [] ->
-          # NOTE: This account does not have any transactions ever?
-          # Try getting just the pending payment transactions for it
-          bin_address |> Query.PendingPayment.get_by_address()
-        t -> t
-      end
+    txns = bin_address |> Query.AccountTransaction.list(params)
 
     render(conn,
       "index.json",
