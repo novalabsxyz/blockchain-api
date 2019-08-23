@@ -122,10 +122,13 @@ end
       on: s.gateway == gt.gateway,
       left_join: lsq in subquery(location_status_query),
       on: lsq.gateway == gt.gateway,
+      left_join: gtx in Transaction,
+      on: gtx.hash == gt.hash,
       distinct: hotspot.address,
       order_by: [desc: lt.nonce, desc: hotspot.id],
       select: %{
         account_address: at.account_address,
+        added_height: gtx.block_height,
         gateway: gt.gateway,
         gateway_hash: gt.hash,
         gateway_fee: gt.fee,
