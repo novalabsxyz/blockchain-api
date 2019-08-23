@@ -6,20 +6,21 @@ defmodule BlockchainAPI.PaymentsNotifier do
 
   def send_notification(txn) do
     amount = :blockchain_txn_payment_v1.amount(txn)
-    msg = amount |> units() |> message()
-    NotifierClient.post(payment_data(txn, amount), msg)
+    address = Util.bin_to_string(:blockchain_txn_payment_v1.payee(txn))
+    NotifierClient.post(payment_data(txn, amount, address), message(amount), address)
   end
 
-  defp payment_data(txn, amount) do
+  defp payment_data(txn, amount, address) do
     %{
-      address: Util.bin_to_string(:blockchain_txn_payment_v1.payee(txn)),
+      address: address,
       amount: amount,
       hash: Util.bin_to_string(:blockchain_txn_payment_v1.hash(txn)),
       type: "receivedPayment"
     }
   end
 
-  defp message(units) do
+  defp message(amount) do
+    units = units(amount)
     "You got #{units} #{@ticker}"
   end
 
@@ -46,5 +47,4 @@ defmodule BlockchainAPI.PaymentsNotifier do
         |> Number.Delimit.number_to_delimited(precision: 0)
     end
   end
-
 end
