@@ -1,6 +1,5 @@
 defmodule BlockchainAPI.FakeNotifierClient do
   def post(data, message, opts \\ %{}) do
-    IO.inspect "foooo"
     {:ok, %{}}
   end
 

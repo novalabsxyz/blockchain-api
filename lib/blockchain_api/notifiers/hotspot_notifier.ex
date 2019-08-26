@@ -1,5 +1,8 @@
 defmodule BlockchainAPI.HotspotNotifier do
-  alias BlockchainAPI.{NotifierClient, Schema.Hotspot, Util}
+  alias BlockchainAPI.{
+    Schema.Hotspot,
+    Util
+  }
 
   @notifier_client Application.fetch_env!(:blockchain_api, :notifier_client)
 
@@ -20,6 +23,13 @@ defmodule BlockchainAPI.HotspotNotifier do
   def send_add_hotspot_failed(:already_exists, pending_gateway) do
     data = %{gateway: pending_gateway.gateway, owner: pending_gateway.owner}
     message = "Unable to Add Hotspot. Hotspot Already on Blockchain."
+    @notifier_client.post(data, message)
+  end
+
+  def send_confirm_location_failed(pending_location) do
+    data = %{gateway: pending_location.gateway, owner: pending_location.owner}
+    animal_name = Hotspot.animal_name(pending_location)
+    message = "#{animal_name} Added Without Location Information."
     @notifier_client.post(data, message)
   end
 end

@@ -21,6 +21,15 @@ defmodule BlockchainAPI.NotifierTest do
     end
   end
 
+  describe "confirm_location_failed/2" do
+    setup [:insert_account, :insert_hotspot, :insert_pending_location]
+
+    test "sends notification when confirm location fails", %{pending_location: pl} do
+      resp = Notifier.confirm_location_failed(pl)
+      assert :ok == resp
+    end
+  end
+
   defp insert_account(_) do
     {:ok, account} =
       Query.Account.create(%{
@@ -66,5 +75,22 @@ defmodule BlockchainAPI.NotifierTest do
         submit_height: 4
       })
     {:ok, %{pending_gateway: pg}}
+  end
+
+  defp insert_pending_location(%{hotspot: hotspot}) do
+    pl =
+      Query.PendingLocation.create(%{
+        status: "pending",
+        location: "location1",
+        fee: 1,
+        staking_fee: 1,
+        nonce: 1,
+        gateway: hotspot.address,
+        hash: :crypto.strong_rand_bytes(32),
+        txn: "txn1",
+        submit_height: 1,
+        owner: hotspot.owner
+      })
+    {:ok, %{pending_location: pl}}
   end
 end
