@@ -9,24 +9,30 @@ defmodule BlockchainAPIWeb.TransactionControllerTest do
   describe "index/2" do
     setup [:insert_election_transactions]
 
-    test "returns election transactions with consensus members", %{conn: conn, member: member} do
+    test "returns election transactions with consensus members", %{conn: conn, members: [member1, member2]} do
       BlockchainAPI.Repo.all(BlockchainAPI.Schema.ConsensusMember)
-      %{"data" => [%{"members" => [member_address]}]} =
+      %{"data" => [%{"members" => member_addresses}]} =
         conn
         |> get(Routes.transaction_path(conn, :index, %{}))
         |> json_response(200)
 
-      assert member_address == Util.bin_to_string(member.address)
+      [address1, address2] = Enum.sort(member_addresses)
+
+      assert address1 == Util.bin_to_string(member1.address)
+      assert address2 == Util.bin_to_string(member2.address)
     end
 
-    test "returns election transaction consensus members for a given block", %{conn: conn, member: member, block: b} do
+    test "returns election transaction consensus members for a given block", %{conn: conn, members: [member1, member2], block: b} do
       BlockchainAPI.Repo.all(BlockchainAPI.Schema.ConsensusMember)
-      %{"data" => [%{"members" => [member_address]}]} =
+      %{"data" => [%{"members" => member_addresses}]} =
         conn
         |> get(Routes.transaction_path(conn, :index, %{"block_height" => b.height}))
         |> json_response(200)
 
-      assert member_address == Util.bin_to_string(member.address)
+      [address1, address2] = Enum.sort(member_addresses)
+
+      assert address1 == Util.bin_to_string(member1.address)
+      assert address2 == Util.bin_to_string(member2.address)
     end
   end
 
@@ -50,11 +56,16 @@ defmodule BlockchainAPIWeb.TransactionControllerTest do
         delay: 1,
         election_height: b.height
       })
-    {:ok, cm} =
+    {:ok, cm1} =
       Query.ConsensusMember.create(%{
         address: "address1",
         election_transactions_id: et.id
       })
-    {:ok, member: cm, block: b}
+    {:ok, cm2} =
+      Query.ConsensusMember.create(%{
+        address: "address2",
+        election_transactions_id: et.id
+      })
+    {:ok, members: [cm1, cm2], block: b}
   end
 end
