@@ -2,8 +2,8 @@ defmodule BlockchainAPI.HotspotNotifier do
   alias BlockchainAPI.{NotifierClient, Schema.Hotspot, Util}
 
   def send_new_hotspot_notification(txn, type, ledger) do
-     map = Hotspot.map(type, txn, ledger)
-    NotifierClient.post(data(map), message())
+    map = Hotspot.map(type, txn, ledger)
+    NotifierClient.post(data(map), message(map))
   end
 
   defp data(hotspot) do
@@ -13,7 +13,8 @@ defmodule BlockchainAPI.HotspotNotifier do
     }
   end
 
-  defp message do
-    "Your hotspot has been added to the network!"
+  defp message(hotspot) do
+    animal_name = Hotspot.animal_name(hotspot.address)
+    "#{animal_name} has been added to the network!"
   end
 end

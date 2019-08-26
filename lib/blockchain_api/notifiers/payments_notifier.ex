@@ -6,7 +6,8 @@ defmodule BlockchainAPI.PaymentsNotifier do
 
   def send_notification(txn) do
     amount = :blockchain_txn_payment_v1.amount(txn)
-    NotifierClient.post(payment_data(txn, amount), amount |> units() |> message())
+    msg = amount |> units() |> message()
+    NotifierClient.post(payment_data(txn, amount), msg)
   end
 
   defp payment_data(txn, amount) do
