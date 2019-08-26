@@ -9,7 +9,7 @@ defmodule BlockchainAPI.HotspotNotifier do
   def send_new_hotspot_notification(txn, type, ledger) do
     map = Hotspot.map(type, txn, ledger)
     data = %{address: Util.bin_to_string(map.address), owner: Util.bin_to_string(map.owner)}
-    animal_name = Hotspot.animal_name(hotspot.address)
+    animal_name = Hotspot.animal_name(map.address)
     message = "#{animal_name} has been added to the network!"
     @notifier_client.post(data, message)
   end
