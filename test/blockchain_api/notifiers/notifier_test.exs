@@ -6,11 +6,17 @@ defmodule BlockchainAPI.NotifierTest do
     Query
   }
 
-  describe "add_hotspot_failed/1" do
+  describe "add_hotspot_failed/2" do
     setup [:insert_account, :insert_hotspot, :insert_pending_gateway]
 
-    test "sends notification to owner of failed pending gateway", %{pending_gateway: pg} do
-      resp = Notifier.add_hotspot_failed(pg)
+    test "sends notification when hotspot already exists", %{pending_gateway: pg} do
+      resp = Notifier.add_hotspot_failed(:already_exists, pg)
+      assert :ok == resp
+    end
+
+    test "sends notification when hotspot times out" do
+      pg = insert_pending_gateway(%{hotspot: %{address: :crypto.strong_rand_bytes(32), owner: :crypto.strong_rand_bytes(32)}})
+      resp = Notifier.add_hotspot_failed(:timed_out, pg)
       assert :ok == resp
     end
   end

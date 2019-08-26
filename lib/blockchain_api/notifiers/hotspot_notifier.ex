@@ -11,7 +11,13 @@ defmodule BlockchainAPI.HotspotNotifier do
     @notifier_client.post(data, message)
   end
 
-  def send_add_hotspot_failed(pending_gateway) do
+  def send_add_hotspot_failed(:timed_out, pending_gateway) do
+    data = %{gateway: pending_gateway.gateway, owner: pending_gateway.owner}
+    message = "Unable to Add Hotspot. Transaction Timed Out."
+    @notifier_client.post(data, message)
+  end
+
+  def send_add_hotspot_failed(:already_exists, pending_gateway) do
     data = %{gateway: pending_gateway.gateway, owner: pending_gateway.owner}
     message = "Unable to Add Hotspot. Hotspot Already on Blockchain."
     @notifier_client.post(data, message)

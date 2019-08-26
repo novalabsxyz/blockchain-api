@@ -53,7 +53,10 @@ defmodule BlockchainAPI.PeriodicCleaner do
         |> Enum.map(
           fn(pg) ->
             Logger.info("Marking txn: #{inspect(Util.bin_to_string(pg.hash))} as error, pending_txn_submission_height: #{inspect(pg.submit_height)}, chain_height: #{inspect(chain_height)}")
-            Notifier.add_hotspot_failed(pg)
+            case Query.Hotspot.get(pg.gateway) do
+              nil -> Notifier.add_hotspot_failed(:timed_out, pg)
+              _ -> Notifier.add_hotspot_failed(:already_exists, pg)
+            end
             Query.PendingGateway.update!(pg, %{status: "error"})
           end)
         Query.PendingLocation.list_pending()
