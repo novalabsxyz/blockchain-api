@@ -59,6 +59,10 @@ defmodule BlockchainAPI.Util do
       to_string(:h3.to_string(location))
   end
 
+  def h3_from_string(index) do
+    index |> String.to_charlist() |> :h3.from_string()
+  end
+
   def reverse_geocode(loc) do
     reverse_geocode(loc, @max_retries)
   end

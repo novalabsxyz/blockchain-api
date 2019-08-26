@@ -50,14 +50,13 @@ defmodule Mix.Tasks.BackfillDistance do
     witnesses_without_distance = query |> Repo.all()
 
     for %{wx_id: wx_id, wx_loc: wx_loc, challengee_loc: challengee_loc} <- witnesses_without_distance do
-      distance = Util.h3_distance_in_meters(wx_loc |> to_h3(), challengee_loc |> to_h3())
+      distance = Util.h3_distance_in_meters(
+        wx_loc |> Util.h3_from_string(),
+        challengee_loc |> Util.h3_from_string()
+      )
       %POCWitness{id: wx_id}
       |> POCWitness.changeset(%{distance: distance})
       |> Repo.update()
     end
-  end
-
-  def to_h3(string_index) do
-    string_index |> String.to_charlist() |> :h3.from_string()
   end
 end
