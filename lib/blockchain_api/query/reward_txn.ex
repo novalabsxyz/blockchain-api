@@ -10,12 +10,6 @@ defmodule BlockchainAPI.Query.RewardTxn do
     |> Repo.insert()
   end
 
-  def update(%RewardTxn{} = reward_txn, attrs \\ %{}) do
-    reward_txn
-    |> RewardTxn.changeset(attrs)
-    |> Repo.update()
-  end
-
   def get!(rewards_hash, account, type) do
     from(
       r in RewardTxn,
