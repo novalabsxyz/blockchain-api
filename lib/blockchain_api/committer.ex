@@ -35,7 +35,13 @@ defmodule BlockchainAPI.Committer do
   def commit(block, ledger, height, sync_flag) do
     case commit_block(block, ledger, height) do
       {:ok, term} ->
-        if !sync_flag, do: Notifier.notify(block, ledger)
+        :ok =
+          case sync_flag do
+            false ->
+              :ok
+            true ->
+              Notifier.notify(block, ledger)
+          end
         Logger.info("Success! Commit block: #{height}")
         {:ok, term}
       {:error, reason} ->
