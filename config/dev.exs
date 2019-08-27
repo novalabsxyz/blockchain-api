@@ -34,11 +34,11 @@ config :blockchain_api, notifier_client: BlockchainAPI.FakeNotifierClient
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "blockchain_api_dev",
-  hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox,
+  url: System.get_env("DATABASE_URL") || "",
+  username: System.get_env("DATABASE_USER") || "postgres",
+  password: System.get_env("DATABASE_PASS") || "postgres",
+  database: System.get_env("DATABASE_NAME") || "blockchain_api_dev",
+  hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 20,
   timeout: 120000,
   log: false
