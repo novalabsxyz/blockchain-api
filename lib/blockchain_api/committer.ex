@@ -25,7 +25,8 @@ defmodule BlockchainAPI.Committer do
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.Transaction,
-    Util
+    Util,
+    Notifier
   }
 
   alias BlockchainAPIWeb.BlockChannel
