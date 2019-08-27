@@ -39,6 +39,6 @@ config :blockchain_api, BlockchainAPI.Repo,
   database: "blockchain_api_dev",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10,
-  timeout: 60000,
+  pool_size: 20,
+  timeout: 120000,
   log: false
