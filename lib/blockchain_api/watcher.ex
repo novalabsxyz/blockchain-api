@@ -63,14 +63,14 @@ defmodule BlockchainAPI.Watcher do
     chain = :blockchain_worker.blockchain()
     ledger = :blockchain.ledger(chain)
     {:ok, block} = :blockchain.get_block(genesis_hash, chain)
-    add_block(block, chain, ledger)
+    add_block(block, chain, ledger, true)
     {:noreply, %{chain: chain}}
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag, ledger}}, state = %{chain: chain}) when chain != nil do
+  def handle_info({:blockchain_event, {:add_block, hash, sync_flag, ledger}}, state = %{chain: chain}) when chain != nil do
     {:ok, block} = :blockchain.get_block(hash, chain)
-    add_block(block, chain, ledger)
+    add_block(block, chain, ledger, sync_flag)
     {:noreply, state}
   end
 
@@ -82,7 +82,7 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   # Private Functions
   #==================================================================
-  defp add_block(block, chain, ledger) do
+  defp add_block(block, chain, ledger, sync_flag) do
     height = :blockchain_block.height(block)
     try do
       Query.Block.get!(height)
@@ -91,7 +91,7 @@ defmodule BlockchainAPI.Watcher do
         case Query.Block.get_latest() do
           [nil] ->
             # nothing in the db yet
-            Committer.commit(block, ledger, height)
+            Committer.commit(block, ledger, height, sync_flag)
           [last_known_height] ->
             case height > last_known_height do
               true ->
@@ -99,7 +99,7 @@ defmodule BlockchainAPI.Watcher do
                 |> Enum.map(fn h ->
                   {:ok, b} = :blockchain.get_block(h, chain)
                   h = :blockchain_block.height(b)
-                  Committer.commit(b, ledger, h)
+                  Committer.commit(b, ledger, h, sync_flag)
                 end)
               false ->
                 :ok

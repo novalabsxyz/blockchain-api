@@ -137,4 +137,12 @@ defmodule BlockchainAPI.Schema.Hotspot do
         end
     end
   end
+
+  def animal_name(hotspot_address) do
+    {:ok, name} = :erl_angry_purple_tiger.animal_name(hotspot_address)
+    name
+    |> String.split("-")
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
+  end
 end

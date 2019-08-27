@@ -1,5 +1,6 @@
 defmodule BlockchainAPI.RewardsNotifier do
   use Task
+  require Logger
 
   alias BlockchainAPI.{Query.RewardTxn, NotifierClient}
 
@@ -25,6 +26,7 @@ defmodule BlockchainAPI.RewardsNotifier do
 
   # send notifications to onesignal and set timer to send again in one week
   def send_notifications do
+    Logger.info("Notifying for weekly rewards")
     RewardTxn.get_from_last_week()
     |> Enum.map(fn reward ->
       NotifierClient.post(reward_data(reward), message(reward), %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
