@@ -20,10 +20,10 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
-# Don't connect dev to seed nodes
+ # Mostly secret information read from environment variables
 config :blockchain,
-  seed_nodes: [],
-  seed_node_dns: ''
+  seed_nodes: Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
+  seed_node_dns: String.to_charlist(System.get_env("SEED_NODE_DNS"))
 
 config :blockchain_api, env: Mix.env()
 
