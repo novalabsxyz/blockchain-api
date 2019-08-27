@@ -41,7 +41,8 @@ defmodule BlockchainAPI.MixProject do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support", "priv/tasks"]
-  defp elixirc_paths(_), do: ["lib", "priv/tasks"]
+  defp elixirc_paths(:dev), do: ["lib", "test/support", "priv/tasks"]
+  defp elixirc_paths(:prod), do: ["lib", "priv/tasks"]
 
   # Specifies your project dependencies.
   #

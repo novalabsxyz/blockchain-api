@@ -30,6 +30,7 @@ config :blockchain_api, env: Mix.env()
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
+config :blockchain_api, notifier_client: BlockchainAPI.FakeNotifierClient
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,

@@ -1,8 +1,8 @@
 defmodule BlockchainAPI.NotifierClient do
   @url "https://onesignal.com/api/v1/notifications"
 
-  def post(data, message, opts \\ %{}) do
-    HTTPoison.post(@url, to_payload(data, message, opts), headers())
+  def post(data, message, send_address, opts \\ %{}) do
+    HTTPoison.post(@url, to_payload(data, message, send_address, opts), headers())
   end
 
   defp headers() do
