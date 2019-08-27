@@ -40,6 +40,6 @@ config :blockchain_api, BlockchainAPI.Repo,
   password: System.get_env("DATABASE_PASS"),
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
-  pool_size: 10,
-  timeout: 60000,
+  pool_size: 20,
+  timeout: 120000,
   log: false
