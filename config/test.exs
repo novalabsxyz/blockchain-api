@@ -27,7 +27,10 @@ config :blockchain_api, BlockchainAPI.Repo,
 
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
-config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
+
+config :blockchain_api,
+  google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
+  notifier_client: BlockchainAPI.FakeNotifierClient
 
 # Don't connect dev to seed nodes
 config :blockchain,
