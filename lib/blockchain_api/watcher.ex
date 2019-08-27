@@ -58,13 +58,13 @@ defmodule BlockchainAPI.Watcher do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, %{env: env} = _state) do
+  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, %{env: env} = state) do
     Logger.info("Got integrate_genesis_block event")
     chain = :blockchain_worker.blockchain()
     ledger = :blockchain.ledger(chain)
     {:ok, block} = :blockchain.get_block(genesis_hash, chain)
     add_block(block, chain, ledger, true, env)
-    {:noreply, %{chain: chain}}
+    {:noreply, Map.put(state, :chain, chain)}
   end
 
   @impl true

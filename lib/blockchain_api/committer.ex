@@ -35,7 +35,7 @@ defmodule BlockchainAPI.Committer do
   def commit(block, ledger, height, sync_flag, env) do
     case commit_block(block, ledger, height) do
       {:ok, term} ->
-        notify(block, ledger, sync_flag, env)
+        notify(env, block, ledger, sync_flag)
         Logger.info("Success! Commit block: #{height}")
         {:ok, term}
       {:error, reason} ->
@@ -57,8 +57,8 @@ defmodule BlockchainAPI.Committer do
     end)
   end
 
-  defp notify(block, ledger, false, :prod), do: Notifier.notify(block, ledger)
-  defp notify(_block, _ledger, _, _env), do: :ok
+  defp notify(:prod, block, ledger, false), do: Notifier.notify(block, ledger)
+  defp notify(_env, _block, _ledger, _sync_flag), do: :ok
 
   defp commit_account_balances(block, ledger) do
     account_bal_txn =
