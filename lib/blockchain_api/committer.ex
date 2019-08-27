@@ -321,8 +321,8 @@ defmodule BlockchainAPI.Committer do
 
     {:ok, challenger_info} = challenger |> :blockchain_ledger_v1.find_gateway_info(ledger)
 
-    challenger_loc = challenger_info |> :blockchain_ledger_gateway_v1.location()
-    challenger_owner = challenger_info |> :blockchain_ledger_gateway_v1.owner_address()
+    challenger_loc = challenger_info |> :blockchain_ledger_gateway_v2.location()
+    challenger_owner = challenger_info |> :blockchain_ledger_gateway_v2.owner_address()
 
     {:ok, _poc_request_entry} = POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
                                 |> Query.POCRequestTransaction.create()
@@ -340,8 +340,8 @@ defmodule BlockchainAPI.Committer do
     challenger = :blockchain_txn_poc_receipts_v1.challenger(txn)
     onion = :blockchain_txn_poc_receipts_v1.onion_key_hash(txn)
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
-    challenger_loc = :blockchain_ledger_gateway_v1.location(challenger_info)
-    challenger_owner = :blockchain_ledger_gateway_v1.owner_address(challenger_info)
+    challenger_loc = :blockchain_ledger_gateway_v2.location(challenger_info)
+    challenger_owner = :blockchain_ledger_gateway_v2.owner_address(challenger_info)
 
     # Create transaction entry
     {:ok, _transaction_entry} = Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
@@ -498,8 +498,8 @@ defmodule BlockchainAPI.Committer do
             :ok
 
           {:ok, challengee_info} ->
-            challengee_loc = :blockchain_ledger_gateway_v1.location(challengee_info)
-            challengee_owner = :blockchain_ledger_gateway_v1.owner_address(challengee_info)
+            challengee_loc = :blockchain_ledger_gateway_v2.location(challengee_info)
+            challengee_owner = :blockchain_ledger_gateway_v2.owner_address(challengee_info)
 
             delta = Enum.at(deltas, index)
 
@@ -529,8 +529,8 @@ defmodule BlockchainAPI.Committer do
           {:error, _} ->
             :ok
           {:ok, wx_info} ->
-            wx_loc = :blockchain_ledger_gateway_v1.location(wx_info)
-            wx_owner = :blockchain_ledger_gateway_v1.owner_address(wx_info)
+            wx_loc = :blockchain_ledger_gateway_v2.location(wx_info)
+            wx_owner = :blockchain_ledger_gateway_v2.owner_address(wx_info)
             {:ok, wx_score} = :blockchain_ledger_v1.gateway_score(witness_gateway, ledger)
             distance = Util.h3_distance_in_meters(wx_loc, path_element_entry.challengee_loc |> String.to_charlist() |> :h3.from_string())
 
@@ -566,8 +566,8 @@ defmodule BlockchainAPI.Committer do
       receipt ->
         rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
         {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(ledger)
-        rx_loc = :blockchain_ledger_gateway_v1.location(rx_info)
-        rx_owner = :blockchain_ledger_gateway_v1.owner_address(rx_info)
+        rx_loc = :blockchain_ledger_gateway_v2.location(rx_info)
+        rx_owner = :blockchain_ledger_gateway_v2.owner_address(rx_info)
         {:ok, rx_score} = :blockchain_ledger_v1.gateway_score(rx_gateway, ledger)
 
         {:ok, poc_receipt} = POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
