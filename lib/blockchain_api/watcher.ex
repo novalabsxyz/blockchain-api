@@ -31,13 +31,13 @@ defmodule BlockchainAPI.Watcher do
       case Keyword.get(args, :env) do
         :test ->
           genesis_file = Path.join([:code.priv_dir(:blockchain_api), "test", "genesis"])
-          load_chain(genesis_file)
+          %{chain: load_chain(genesis_file), env: :test}
         :dev ->
           genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
-          load_chain(genesis_file)
+          %{chain: load_chain(genesis_file), env: :dev}
         :prod ->
           genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod" , "genesis"])
-          load_chain(genesis_file)
+          %{chain: load_chain(genesis_file), env: :prod}
       end
 
     {:ok, state}
@@ -58,19 +58,19 @@ defmodule BlockchainAPI.Watcher do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, _state) do
+  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, %{env: env} = _state) do
     Logger.info("Got integrate_genesis_block event")
     chain = :blockchain_worker.blockchain()
     ledger = :blockchain.ledger(chain)
     {:ok, block} = :blockchain.get_block(genesis_hash, chain)
-    add_block(block, chain, ledger, true)
+    add_block(block, chain, ledger, true, env)
     {:noreply, %{chain: chain}}
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, sync_flag, ledger}}, state = %{chain: chain}) when chain != nil do
+  def handle_info({:blockchain_event, {:add_block, hash, sync_flag, ledger}}, state = %{chain: chain, env: env}) when chain != nil do
     {:ok, block} = :blockchain.get_block(hash, chain)
-    add_block(block, chain, ledger, sync_flag)
+    add_block(block, chain, ledger, sync_flag, env)
     {:noreply, state}
   end
 
@@ -82,7 +82,7 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   # Private Functions
   #==================================================================
-  defp add_block(block, chain, ledger, sync_flag) do
+  defp add_block(block, chain, ledger, sync_flag, env) do
     height = :blockchain_block.height(block)
     try do
       Query.Block.get!(height)
@@ -91,7 +91,7 @@ defmodule BlockchainAPI.Watcher do
         case Query.Block.get_latest() do
           [nil] ->
             # nothing in the db yet
-            Committer.commit(block, ledger, height, sync_flag)
+            Committer.commit(block, ledger, height, sync_flag, env)
           [last_known_height] ->
             case height > last_known_height do
               true ->
@@ -99,7 +99,7 @@ defmodule BlockchainAPI.Watcher do
                 |> Enum.map(fn h ->
                   {:ok, b} = :blockchain.get_block(h, chain)
                   h = :blockchain_block.height(b)
-                  Committer.commit(b, ledger, h, sync_flag)
+                  Committer.commit(b, ledger, h, sync_flag, env)
                 end)
               false ->
                 :ok
@@ -114,10 +114,9 @@ defmodule BlockchainAPI.Watcher do
         :ok = genesis_block
               |> :blockchain_block.deserialize()
               |> :blockchain_worker.integrate_genesis_block()
-        chain = :blockchain_worker.blockchain()
-        %{chain: chain}
+        :blockchain_worker.blockchain()
       {:error, _reason} ->
-        %{chain: nil}
+        nil
     end
   end
 end

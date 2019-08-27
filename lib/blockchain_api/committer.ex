@@ -32,16 +32,10 @@ defmodule BlockchainAPI.Committer do
 
   require Logger
 
-  def commit(block, ledger, height, sync_flag) do
+  def commit(block, ledger, height, sync_flag, env) do
     case commit_block(block, ledger, height) do
       {:ok, term} ->
-        :ok =
-          case sync_flag do
-            false ->
-              :ok
-            true ->
-              Notifier.notify(block, ledger)
-          end
+        notify(block, ledger, sync_flag, env)
         Logger.info("Success! Commit block: #{height}")
         {:ok, term}
       {:error, reason} ->
@@ -62,6 +56,9 @@ defmodule BlockchainAPI.Committer do
       BlockChannel.broadcast_change(inserted_block)
     end)
   end
+
+  defp notify(block, ledger, false, :prod), do: Notifier.notify(block, ledger)
+  defp notify(_block, _ledger, _, _env), do: :ok
 
   defp commit_account_balances(block, ledger) do
     account_bal_txn =
