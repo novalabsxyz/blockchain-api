@@ -15,6 +15,14 @@ defmodule BlockchainAPI.Notifier do
     GenServer.cast(__MODULE__, {:notify, block, ledger})
   end
 
+  def add_hotspot_failed(error, pending_gateway) do
+    GenServer.cast(__MODULE__, {:add_hotspot_failed, error, pending_gateway})
+  end
+
+  def confirm_location_failed(pending_location) do
+    GenServer.cast(__MODULE__, {:confirm_location_failed, pending_location})
+  end
+
   #==================================================================
   # Callbacks
   #==================================================================
@@ -44,6 +52,18 @@ defmodule BlockchainAPI.Notifier do
         end)
     end
 
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:add_hotspot_failed, error, pending_gateway}, state) do
+    HotspotNotifier.send_add_hotspot_failed(error, pending_gateway)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:confirm_location_failed, pending_location}, state) do
+    HotspotNotifier.send_confirm_location_failed(pending_location)
     {:noreply, state}
   end
 

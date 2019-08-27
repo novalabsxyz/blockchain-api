@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Committer do
   @moduledoc false
 
   alias BlockchainAPI.{
+    Notifier,
     Query,
     Repo,
     Schema.Account,

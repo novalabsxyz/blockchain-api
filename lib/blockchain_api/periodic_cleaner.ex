@@ -6,8 +6,13 @@ defmodule BlockchainAPI.PeriodicCleaner do
   """
 
   use GenServer
-  alias BlockchainAPI.{Query, Util}
   require Logger
+
+  alias BlockchainAPI.{
+    Notifier,
+    Query,
+    Util
+  }
 
   @me __MODULE__
   @max_height 20 # Wait for 20 blocks for txn to clear
@@ -46,16 +51,21 @@ defmodule BlockchainAPI.PeriodicCleaner do
         Query.PendingGateway.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
         |> Enum.map(
-          fn(pp) ->
-            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error, pending_txn_submission_height: #{inspect(pp.submit_height)}, chain_height: #{inspect(chain_height)}")
-            Query.PendingGateway.update!(pp, %{status: "error"})
+          fn(pg) ->
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pg.hash))} as error, pending_txn_submission_height: #{inspect(pg.submit_height)}, chain_height: #{inspect(chain_height)}")
+            case Query.Hotspot.get(pg.gateway) do
+              nil -> Notifier.add_hotspot_failed(:timed_out, pg)
+              _ -> Notifier.add_hotspot_failed(:already_exists, pg)
+            end
+            Query.PendingGateway.update!(pg, %{status: "error"})
           end)
         Query.PendingLocation.list_pending()
         |> Enum.filter(fn(entry) -> (chain_height - entry.submit_height) >= @max_height end)
         |> Enum.map(
-          fn(pp) ->
-            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pp.hash))} as error, pending_txn_submission_height: #{inspect(pp.submit_height)}, chain_height: #{inspect(chain_height)}")
-            Query.PendingLocation.update!(pp, %{status: "error"})
+          fn(pl) ->
+            Logger.info("Marking txn: #{inspect(Util.bin_to_string(pl.hash))} as error, pending_txn_submission_height: #{inspect(pl.submit_height)}, chain_height: #{inspect(chain_height)}")
+            Notifier.confirm_location_failed(pl)
+            Query.PendingLocation.update!(pl, %{status: "error"})
           end)
     end
 
