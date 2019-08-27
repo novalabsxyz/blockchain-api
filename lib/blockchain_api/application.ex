@@ -5,7 +5,10 @@ defmodule BlockchainAPI.Application do
 
   use Application
   alias Honeydew.EctoPollQueue
-  alias BlockchainAPI.{Notifier, PeriodicCleaner, PeriodicUpdater, Repo, RewardsNotifier, Watcher}
+  alias BlockchainAPI.Repo
+  alias BlockchainAPI.Watcher
+  alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
+  alias BlockchainAPI.{Notifier, RewardsNotifier}
   alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}
   alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase}
 
@@ -62,8 +65,6 @@ defmodule BlockchainAPI.Application do
       {Watcher, watcher_worker_opts},
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
-      {Notifier, []},
-      {RewardsNotifier, []}
     ]
 
     # Add notifier children if env is prod
@@ -72,7 +73,7 @@ defmodule BlockchainAPI.Application do
         :prod ->
           common_children ++
           [
-            {PaymentsNotifier, []},
+            {Notifier, []},
             {RewardsNotifier, []}
           ]
         _ ->
