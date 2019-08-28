@@ -21,54 +21,54 @@ clean:
 
 # Dev targets
 devrelease:
-	MIX_ENV=dev $(MIX) distillery.release --env=dev
+	export MIX_ENV=dev && $(MIX) distillery.release --env=dev
 
 dev-start:
-	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api start
+	export PORT=4000 MIX_ENV=dev && ./_build/dev/rel/blockchain_api/bin/blockchain_api start
 
 dev-foreground:
-	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api foreground
+	export PORT=4000 MIX_ENV=dev && ./_build/dev/rel/blockchain_api/bin/blockchain_api foreground
 
 dev-console:
-	PORT=4000 MIX_ENV=dev ./_build/dev/rel/blockchain_api/bin/blockchain_api console
+	export PORT=4000 MIX_ENV=dev && ./_build/dev/rel/blockchain_api/bin/blockchain_api console
 
 reset-dev-db:
-	PORT=4000 MIX_ENV=dev $(MIX) ecto.reset
+	export PORT=4000 MIX_ENV=dev && $(MIX) ecto.reset
 
 # Prod targets
 release:
-	NO_ESCRIPT=1 MIX_ENV=prod $(MIX) distillery.release --env=prod
+	export NO_ESCRIPT=1 MIX_ENV=prod && $(MIX) distillery.release --env=prod
 
 reset-prod-db:
-	PORT=4001 MIX_ENV=prod $(MIX) ecto.reset
+	export PORT=4001 MIX_ENV=prod && $(MIX) ecto.reset
 
 prod-interactive:
-	PORT=4001 MIX_ENV=prod iex -S mix phx.server
+	export PORT=4001 MIX_ENV=prod && iex -S mix phx.server
 
 prod-start:
-	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api start
+	export PORT=4001 MIX_ENV=prod && ./_build/prod/rel/blockchain_api/bin/blockchain_api start
 
 prod-foreground:
-	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api foreground
+	export PORT=4001 MIX_ENV=prod && ./_build/prod/rel/blockchain_api/bin/blockchain_api foreground
 
 prod-console:
-	PORT=4001 MIX_ENV=prod ./_build/prod/rel/blockchain_api/bin/blockchain_api console
+	export PORT=4001 MIX_ENV=prod && ./_build/prod/rel/blockchain_api/bin/blockchain_api console
 
 # Test targets
 test:
-	PORT=4002 MIX_ENV=test $(MIX) test --trace
+	export PORT=4002 MIX_ENV=test && $(MIX) test --trace
 
 testrelease:
-	NO_ESCRIPT=1 MIX_ENV=test $(MIX) distillery.release --env=test
+	export NO_ESCRIPT=1 MIX_ENV=test && $(MIX) distillery.release --env=test
 
 test-start:
-	PORT=4002 MIX_ENV=test ./_build/test/rel/blockchain_api/bin/blockchain_api start
+	export PORT=4002 MIX_ENV=test && ./_build/test/rel/blockchain_api/bin/blockchain_api start
 
 test-console:
-	PORT=4002 MIX_ENV=test ./_build/test/rel/blockchain_api/bin/blockchain_api console
+	export PORT=4002 MIX_ENV=test && ./_build/test/rel/blockchain_api/bin/blockchain_api console
 
 reset-test-db:
-	PORT=4002 MIX_ENV=test $(MIX) ecto.reset
+	export PORT=4002 MIX_ENV=test && $(MIX) ecto.reset
 
 ci:
-	PORT=4002 MIX_ENV=test NO_ESCRIPT=1 $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
+	export PORT=4002 MIX_ENV=test NO_ESCRIPT=1 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
