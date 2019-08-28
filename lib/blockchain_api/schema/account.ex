@@ -21,7 +21,7 @@ defmodule BlockchainAPI.Schema.Account do
     account
     |> cast(attrs, [:address, :name, :balance, :fee, :nonce])
     |> validate_required([:address, :balance, :fee, :nonce])
-    |> unique_constraint(:address)
+    |> unique_constraint(:address, name: :unique_account_address)
   end
 
   def encode_model(account) do

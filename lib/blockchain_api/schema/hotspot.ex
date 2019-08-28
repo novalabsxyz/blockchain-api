@@ -59,7 +59,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
       :score,
       :score_update_height])
     |> validate_required([:address, :owner, :score, :score_update_height])
-    |> unique_constraint(:unique_hotspots)
+    |> unique_constraint(:unique_hotspots, name: :unique_hotspots)
   end
 
   def encode_model(hotspot) do

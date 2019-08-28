@@ -24,7 +24,7 @@ defmodule BlockchainAPI.Schema.GatewayTransaction do
     |> cast(attrs, [:hash, :owner, :payer, :gateway, :fee, :staking_fee, :status])
     |> validate_required([:hash, :owner, :gateway, :fee, :staking_fee, :status])
     |> foreign_key_constraint(:hash)
-    |> unique_constraint(:gateway)
+    |> unique_constraint(:gateway, name: :unique_gateway)
   end
 
   def encode_model(gateway) do
