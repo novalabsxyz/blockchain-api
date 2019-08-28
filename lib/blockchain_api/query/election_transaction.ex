@@ -105,19 +105,29 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   defp encode_entry({etxn, blocks}) do
-    blocks = Enum.sort(blocks, & Map.get(&1, :height) < Map.get(&2, :height))
+    members = Enum.map(etxn.consensus_members, &encode_member/1)
+    blocks =
+      blocks
+      |> Enum.sort(& Map.get(&1, :height) < Map.get(&2, :height))
+      |> Enum.map(&Block.encode_model/1)
+
+
     %{
       id: etxn.id,
       blocks_count: length(blocks),
       hash: Util.bin_to_string(etxn.hash),
       start_time: List.first(blocks) |> Map.get(:time),
       end_time: List.last(blocks) |> Map.get(:time),
-      members: etxn.consensus_members,
+      members: members,
       blocks: blocks
     }
   end
 
-  defp encode_member(member) do
-    Util.bin_to_string(member.address)
+  defp encode_member(%{address: address, score: score}) do
+    %{address: Util.bin_to_string(address), score: score}
+  end
+
+  defp encode_member(%{address: address}) do
+    Util.bin_to_string(address)
   end
 end
