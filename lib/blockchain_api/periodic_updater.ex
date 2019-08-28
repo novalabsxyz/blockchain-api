@@ -50,10 +50,13 @@ defmodule BlockchainAPI.PeriodicUpdater do
         hotspots_with_location_in_ledger = hotspots_with_no_location_in_db
                                            |> Enum.reduce([],
                                              fn(hotspot, acc) ->
-                                               {:ok, gateway} = :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger)
-                                               case :blockchain_ledger_gateway_v2.location(gateway) do
-                                                 :undefined -> acc
-                                                 loc -> [{hotspot, loc} | acc]
+                                               case :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger) do
+                                                 {:error, _} -> acc
+                                                 {:ok, gateway} ->
+                                                   case :blockchain_ledger_gateway_v2.location(gateway) do
+                                                     :undefined -> acc
+                                                     loc -> [{hotspot, loc} | acc]
+                                                   end
                                                end
                                              end)
         Logger.debug("hotspots_with_location_in_ledger: #{inspect(hotspots_with_location_in_ledger)}")
