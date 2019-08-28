@@ -48,8 +48,8 @@ defmodule BlockchainAPI.Application do
     env = Application.fetch_env!(:blockchain_api, :env)
     watcher_worker_opts = [{:env, env}]
 
-    # Common children to start in test, dev and prod envs
-    common_children = [
+    # Children to start in test, dev and prod envs
+    children = [
       # Start the blockchain
       %{
         id: :blockchain_sup,
@@ -65,20 +65,9 @@ defmodule BlockchainAPI.Application do
       {Watcher, watcher_worker_opts},
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
+      {Notifier, []},
+      {RewardsNotifier, []}
     ]
-
-    # Add notifier children if env is prod
-    children =
-      case env do
-        :prod ->
-          common_children ++
-          [
-            {Notifier, []},
-            {RewardsNotifier, []}
-          ]
-        _ ->
-          common_children
-      end
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
     {:ok, sup} = Supervisor.start_link(children, opts)
