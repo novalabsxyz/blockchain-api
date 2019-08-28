@@ -31,6 +31,7 @@ defmodule BlockchainAPIWeb.Router do
     resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
     resources "/challenges", ChallengeController, only: [:index, :show], param: "id"
 
+    get "/groups", ElectionTransactionController, :index, as: "groups"
     get "/pending_gateways", PendingGatewayController, :show
     get "/pending_locations", PendingLocationController, :show
     get "/pending_payments", PendingPaymentController, :show
