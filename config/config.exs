@@ -9,7 +9,8 @@ use Mix.Config
 
 config :blockchain_api,
   ecto_repos: [BlockchainAPI.Repo],
-  notifier_client: BlockchainAPI.NotifierClient
+  onesignal_rest_api_key: "",
+  onesignal_app_id: ""
 
 # Configures the endpoint
 config :blockchain_api, BlockchainAPIWeb.Endpoint,

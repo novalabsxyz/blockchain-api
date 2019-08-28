@@ -51,7 +51,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
                                            |> Enum.reduce([],
                                              fn(hotspot, acc) ->
                                                {:ok, gateway} = :blockchain_ledger_v1.find_gateway_info(hotspot.address, ledger)
-                                               case :blockchain_ledger_gateway_v1.location(gateway) do
+                                               case :blockchain_ledger_gateway_v2.location(gateway) do
                                                  :undefined -> acc
                                                  loc -> [{hotspot, loc} | acc]
                                                end

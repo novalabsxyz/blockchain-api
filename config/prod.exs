@@ -31,6 +31,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
 config :blockchain_api, onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY")
 config :blockchain_api, onesignal_app_id: System.get_env("ONESIGNAL_APP_ID")
+config :blockchain_api, notifier_client: BlockchainAPI.NotifierClient
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
@@ -39,6 +40,6 @@ config :blockchain_api, BlockchainAPI.Repo,
   password: System.get_env("DATABASE_PASS"),
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
-  pool_size: 10,
-  timeout: 60000,
+  pool_size: 20,
+  timeout: 120000,
   log: false
