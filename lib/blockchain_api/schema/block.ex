@@ -20,9 +20,9 @@ defmodule BlockchainAPI.Schema.Block do
     block
     |> cast(attrs, [:hash, :height, :round, :time])
     |> validate_required([:hash, :height, :round, :time])
-    |> unique_constraint(:hash)
-    |> unique_constraint(:height)
-    |> unique_constraint(:time)
+    # |> unique_constraint(:hash, name: "block hash already exists")
+    |> unique_constraint(:height, name: :unique_block_height)
+    |> unique_constraint(:time, name: :unique_block_time)
   end
 
   def encode_model(block) do
