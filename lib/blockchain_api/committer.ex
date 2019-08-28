@@ -47,14 +47,18 @@ defmodule BlockchainAPI.Committer do
 
   defp commit_block(block, ledger, height) do
     Repo.transaction(fn() ->
-      {:ok, inserted_block} = block |> Block.map() |> Query.Block.create()
-      add_transactions(block, ledger, height)
-      add_account_transactions(block)
-      commit_account_balances(block, ledger)
-      insert_or_update_all_account(ledger)
-      update_hotspot_score(ledger, height)
-      # NOTE: move this elsewhere...
-      BlockChannel.broadcast_change(inserted_block)
+      case Query.Block.create(Block.map(block)) do
+        {:error, _reason}=e ->
+          e
+        {:ok, inserted_block} ->
+          add_transactions(block, ledger, height)
+          add_account_transactions(block)
+          commit_account_balances(block, ledger)
+          insert_or_update_all_account(ledger)
+          update_hotspot_score(ledger, height)
+          # NOTE: move this elsewhere...
+          BlockChannel.broadcast_change(inserted_block)
+      end
     end)
   end
 
