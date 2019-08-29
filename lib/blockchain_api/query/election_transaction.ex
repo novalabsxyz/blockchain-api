@@ -77,8 +77,9 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       on: t0.hash == e0.hash,
       join: b in Block,
       on: b.height > t0.block_height and b.height <= t1.block_height,
+      group_by: e1.id,
       order_by: [desc: e1.id],
-      select: %{election_transaction: e1, block: b}
+      select: %{election_transaction: e1, blocks: fragment("json_agg(?)", b)}
     )
   end
 
@@ -98,18 +99,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   defp format_elections([]), do: []
-  defp format_elections(entries) do
-    entries
-    |> Enum.group_by(&Map.get(&1, :election_transaction), &Map.get(&1, :block))
-    |> Enum.map(&encode_entry/1)
-  end
+  defp format_elections(entries), do: Enum.map(entries, &encode_entry/1)
 
-  defp encode_entry({etxn, blocks}) do
+  defp encode_entry(%{election_transaction: etxn, blocks: blocks}) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
     blocks =
       blocks
-      |> Enum.sort(& Map.get(&1, :height) < Map.get(&2, :height))
-      |> Enum.map(&Block.encode_model/1)
+      |> Stream.map(&Block.encode_model/1)
+      |> Enum.sort(&Map.get(&1, :height) < Map.get(&2, :height))
 
 
     %{

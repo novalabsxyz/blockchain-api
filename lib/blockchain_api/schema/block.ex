@@ -27,6 +27,15 @@ defmodule BlockchainAPI.Schema.Block do
     |> unique_constraint(:time, name: :unique_block_time)
   end
 
+  def encode_model(%{"hash" => hash, "round" => round, "time" => time, "height" => height}) do
+    %{
+      hash: Util.bin_to_string(hash),
+      round: round,
+      time: time,
+      height: height
+    }
+  end
+
   def encode_model(block) do
     %{
       Map.take(block, @fields) |

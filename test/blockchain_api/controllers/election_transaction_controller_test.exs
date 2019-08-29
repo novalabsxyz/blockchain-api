@@ -31,6 +31,15 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         "hash" => _
       } = group
     end
+
+    test "returns n consensus groups when limit param is set", %{conn: conn} do
+      %{"data" => [group|_] = groups} =
+        conn
+        |> get(Routes.groups_path(conn, :index, %{limit: 4}))
+        |> json_response(200)
+
+      assert length(groups) == 4
+    end
   end
 
   defp insert_election_transactions(_) do
