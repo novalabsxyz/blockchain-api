@@ -1,7 +1,11 @@
 defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
   use BlockchainAPIWeb.ConnCase
 
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.{
+    Query,
+    Repo,
+    Schema.ElectionTransaction
+  }
 
   describe "index/2" do
     setup [:insert_election_transactions]
@@ -12,7 +16,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         |> get(Routes.groups_path(conn, :index, %{}))
         |> json_response(200)
 
-      assert length(groups) == 9
+      assert length(groups) == 10
       assert %{
         "members" => [
           %{"address" => _, "score" => _},
@@ -39,6 +43,21 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         |> json_response(200)
 
       assert length(groups) == 4
+    end
+
+    test "returns prior consensus groups when before param is set", %{conn: conn} do
+      first_id =
+        ElectionTransaction
+        |> Repo.all()
+        |> hd()
+        |> Map.get(:id)
+
+      %{"data" =>  groups} =
+        conn
+        |> get(Routes.groups_path(conn, :index, %{before: first_id + 1}))
+        |> json_response(200)
+
+      assert length(groups) == 1
     end
   end
 

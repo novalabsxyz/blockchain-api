@@ -75,8 +75,8 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       on: e0.id == e1.id - 1,
       left_join: t0 in Transaction,
       on: t0.hash == e0.hash,
-      join: b in Block,
-      on: b.height > t0.block_height and b.height <= t1.block_height,
+      left_join: b in Block,
+      on: b.height > fragment("case when ? is null then 0 else ? end", t0.block_height, t0.block_height) and b.height <= t1.block_height,
       group_by: e1.id,
       order_by: [desc: e1.id],
       select: %{election_transaction: e1, blocks: fragment("json_agg(?)", b)}
