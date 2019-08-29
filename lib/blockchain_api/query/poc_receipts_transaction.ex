@@ -22,12 +22,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> encode_entry()
   end
 
-  def list(_) do
-    POCReceiptsTransaction
-    |> Repo.all()
-  end
-
-  def challenges(%{"before" => before, "limit" => limit0}=_params) do
+  def list(%{"before" => before, "limit" => limit0}=_params) do
     limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
@@ -35,14 +30,14 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"before" => before}=_params) do
+  def list(%{"before" => before}=_params) do
     path_query()
     |> receipt_query()
     |> filter_before(before, @default_limit)
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{"limit" => limit0}=_params) do
+  def list(%{"limit" => limit0}=_params) do
     limit = min(@max_limit, String.to_integer(limit0))
     path_query()
     |> receipt_query()
@@ -50,7 +45,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.all()
     |> encode()
   end
-  def challenges(%{}) do
+  def list(%{}) do
     path_query()
     |> receipt_query()
     |> limit(^@default_limit)

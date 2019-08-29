@@ -4,8 +4,9 @@ defmodule BlockchainAPI.Query.HotspotActivity do
 
   @default_limit 100
   @max_limit 500
+  @me __MODULE__
 
-  alias BlockchainAPI.{Repo, Util, Schema.HotspotActivity}
+  alias BlockchainAPI.{Repo, Util, Query, Schema.HotspotActivity}
 
   def create(attrs \\ %{}) do
     %HotspotActivity{}
@@ -30,30 +31,26 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     address
     |> activity_query()
     |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
+    |> Query.Util.list_stream(@me)
   end
   def activity_for(address, %{"before" => before}=_params) do
     address
     |> activity_query()
     |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
+    |> Query.Util.list_stream(@me)
   end
   def activity_for(address, %{"limit" => limit0}=_params) do
     limit = min(@max_limit, String.to_integer(limit0))
     address
     |> activity_query()
     |> limit(^limit)
-    |> Repo.all()
-    |> encode()
+    |> Query.Util.list_stream(@me)
   end
   def activity_for(address, %{}) do
     address
     |> activity_query()
     |> limit(^@default_limit)
-    |> Repo.all()
-    |> encode()
+    |> Query.Util.list_stream(@me)
   end
 
   defp activity_query(address) do
@@ -68,8 +65,8 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> limit(^limit)
   end
 
-  defp encode([]), do: []
-  defp encode(entries) do
+  def encode([]), do: []
+  def encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 

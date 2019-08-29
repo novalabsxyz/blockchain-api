@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
   @default_limit 100
+  @me __MODULE__
 
   alias BlockchainAPI.{
     Query,
@@ -30,16 +31,14 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     address
     |> list_query()
     |> filter_before(before, limit)
-    |> Repo.all()
-    |> format()
+    |> Query.Util.list_stream(@me)
   end
   def list(address, %{"before" => before}=_params) do
     address
     |> list_query()
     |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> format()
-end
+    |> Query.Util.list_stream(@me)
+  end
   def list(address, %{"limit" => limit}=_params) do
     pp = Query.PendingPayment.get_pending_by_address(address)
     pg = Query.PendingGateway.get_by_owner(address)
@@ -47,8 +46,7 @@ end
     rest = address
            |> list_query()
            |> limit(^limit)
-           |> Repo.all()
-           |> format()
+           |> Query.Util.list_stream(@me)
 
     pp ++ pg ++ pl ++ rest
   end
@@ -58,8 +56,7 @@ end
     pl = Query.PendingLocation.get_by_owner(address)
     rest = address
            |> list_query()
-           |> Repo.all()
-           |> format()
+           |> Query.Util.list_stream(@me)
 
     pp ++ pg ++ pl ++ rest
   end
@@ -220,7 +217,7 @@ end
     |> limit(^limit)
   end
 
-  defp format(entries) do
+  def encode(entries) do
     entries
     |> Enum.reduce([],
       fn(entry, acc) ->
