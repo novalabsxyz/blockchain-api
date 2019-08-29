@@ -15,10 +15,10 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.Block
   }
 
-  def show!(id) do
+  def show(id) do
     path_query()
     |> receipt_query(id)
-    |> Repo.one!()
+    |> Repo.one()
     |> encode_entry()
   end
 

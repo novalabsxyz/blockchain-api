@@ -15,7 +15,7 @@ defmodule BlockchainAPIWeb.BlockController do
   end
 
   def show(conn, %{"height" => height}) do
-    block = Query.Block.get!(height)
+    block = Query.Block.get(height)
     render(conn, "show.json", block: block)
   end
 end

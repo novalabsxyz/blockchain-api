@@ -81,7 +81,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   def get_gateways(address, _params \\ %{}) do
-    current_height = Query.Block.get_latest_height()
+    current_height = Query.Block.get_latest()
 
     status_query = from(
       ha in HotspotActivity,

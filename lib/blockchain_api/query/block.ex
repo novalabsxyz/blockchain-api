@@ -22,7 +22,7 @@ defmodule BlockchainAPI.Query.Block do
     list_query() |> limit(@default_limit) |> Query.Util.list_stream(@me)
   end
 
-  def get!(height) do
+  def get(height) do
     query = from(
       block in Block,
       full_join: txn in Transaction,
@@ -38,7 +38,7 @@ defmodule BlockchainAPI.Query.Block do
         txns: count(txn.id)
       })
 
-    query |> Repo.one!() |> encode()
+    query |> Repo.one() |> encode()
   end
 
   def create(attrs \\ %{}) do
