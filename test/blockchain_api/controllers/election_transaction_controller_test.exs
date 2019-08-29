@@ -11,11 +11,12 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
     setup [:insert_election_transactions]
 
     test "returns list of conensus groups", %{conn: conn} do
-      %{"data" => [group|_] = groups} = 
+      %{"data" => [current_group|_] = groups} =
         conn
         |> get(Routes.groups_path(conn, :index, %{}))
         |> json_response(200)
 
+      oldest_group = List.last(groups)
       assert length(groups) == 10
       assert %{
         "members" => [
@@ -33,7 +34,8 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         "start_time" => _,
         "end_time" => _,
         "hash" => _
-      } = group
+      } = oldest_group
+      assert length(current_group["blocks"]) == 2
     end
 
     test "returns n consensus groups when limit param is set", %{conn: conn} do
@@ -73,10 +75,32 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           round: x,
           time: x
         })
-      {:ok, _t1} =
+      {:ok, t1} =
         Query.Transaction.create(b1.height, %{
           hash: :crypto.strong_rand_bytes(32),
-          type: "payment"
+          type: "election"
+        })
+      {:ok, et} =
+        Query.ElectionTransaction.create(%{
+          hash: t1.hash,
+          proof: "proof#{x}",
+          delay: 1,
+          election_height: b1.height
+        })
+      {:ok, cm1} =
+        Query.ConsensusMember.create(%{
+          address: "address#{x}",
+          election_transactions_id: et.id
+        })
+      {:ok, cm2} =
+        Query.ConsensusMember.create(%{
+          address: "address#{y}",
+          election_transactions_id: et.id
+        })
+      {:ok, cm3} =
+        Query.ConsensusMember.create(%{
+          address: "address#{z}",
+          election_transactions_id: et.id
         })
       {:ok, b2} =
         Query.Block.create(%{
@@ -97,32 +121,10 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           round: z,
           time: z
         })
-      {:ok, t3} =
+      {:ok, _t3} =
         Query.Transaction.create(b3.height, %{
           hash: :crypto.strong_rand_bytes(32),
-          type: "election"
-        })
-      {:ok, et} =
-        Query.ElectionTransaction.create(%{
-          hash: t3.hash,
-          proof: "proof#{x}",
-          delay: 1,
-          election_height: b3.height
-        })
-      {:ok, cm1} =
-        Query.ConsensusMember.create(%{
-          address: "address#{x}",
-          election_transactions_id: et.id
-        })
-      {:ok, cm2} =
-        Query.ConsensusMember.create(%{
-          address: "address#{y}",
-          election_transactions_id: et.id
-        })
-      {:ok, cm3} =
-        Query.ConsensusMember.create(%{
-          address: "address#{z}",
-          election_transactions_id: et.id
+          type: "payment"
         })
       {:ok, members: [cm1, cm2, cm3], blocks: [b1, b2, b3], group: et}
     end)
