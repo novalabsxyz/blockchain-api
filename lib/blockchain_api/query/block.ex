@@ -5,8 +5,17 @@ defmodule BlockchainAPI.Query.Block do
   @default_limit 100
   @max_limit 1000
 
-  alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
+  alias BlockchainAPI.{
+    Repo,
+    Util,
+    Schema.Block,
+    Schema.Transaction,
+    Cache
+  }
 
+  #==================================================================
+  # Public functions
+  #==================================================================
   def list(params) do
     list_query()
     |> maybe_filter(params)
@@ -14,7 +23,31 @@ defmodule BlockchainAPI.Query.Block do
     |> encode()
   end
 
-  def get!(height) do
+  def get(height) do
+    Cache.Util.get(:block_cache, height, &set_height/1, :timer.hours(24))
+  end
+
+  def create(attrs \\ %{}) do
+    %Block{}
+    |> Block.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_latest_height() do
+    query = from b in Block, select: max(b.height)
+    Repo.one(query)
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  # Cache helpers
+  def set_height(height) do
+    data = get_by_height(height)
+    {:commit, data}
+  end
+
+  defp get_by_height(height) do
     query = from(
       block in Block,
       full_join: txn in Transaction,
@@ -30,28 +63,10 @@ defmodule BlockchainAPI.Query.Block do
         txns: count(txn.id)
       })
 
-    query |> Repo.one!() |> encode()
+    query |> Repo.one() |> encode()
   end
 
-  def create(attrs \\ %{}) do
-    %Block{}
-    |> Block.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def get_latest() do
-    query = from block in Block, select: max(block.height)
-    Repo.all(query)
-  end
-
-  def get_latest_height() do
-    query = from b in Block, select: max(b.height)
-    Repo.one(query)
-  end
-
-  #==================================================================
-  # Helper functions
-  #==================================================================
+  # Encoding helpers
   defp encode(nil), do: nil
   defp encode(%{hash: hash}=block) do
     %{block | hash: Util.bin_to_string(hash)}
@@ -63,6 +78,7 @@ defmodule BlockchainAPI.Query.Block do
     end)
   end
 
+  # Query helpers
   defp list_query() do
     from(
       block in Block,

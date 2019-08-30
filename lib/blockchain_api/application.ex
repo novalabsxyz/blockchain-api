@@ -69,12 +69,8 @@ defmodule BlockchainAPI.Application do
       {PeriodicUpdater, []},
       {Notifier, []},
       {RewardsNotifier, []},
-      Supervisor.child_spec(
-        Cachex,
-        start: {
-          # maximum 5000 entries, LRW eviction, trim to 2500
-          Cachex, :start_link, [:challenge_cache, [limit: limit(size: 5000, policy: Cachex.Policy.LRW, reclaim: 0.5)]]
-        })
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:challenge_cache, [limit: cache_limit()]]}, id: :challenge_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:block_cache, [limit: cache_limit()]]}, id: :block_cache),
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
@@ -114,6 +110,11 @@ defmodule BlockchainAPI.Application do
     # NOTE: Check for new jobs every 5s, this query is frequent but quite inexpensive
     poll_interval = Application.get_env(:ecto_poll_queue, :interval, 2)
     [schema: schema, repo: Repo, poll_interval: poll_interval]
+  end
+
+  defp cache_limit() do
+    # maximum 5000 entries, LRW eviction, trim to 2500
+    limit(size: 5000, policy: Cachex.Policy.LRW, reclaim: 0.5)
   end
 
 end
