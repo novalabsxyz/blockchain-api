@@ -20,11 +20,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   # Public functions
   #==================================================================
   def list(params) do
-    path_query()
-    |> receipt_query()
-    |> maybe_filter(params)
-    |> Repo.all()
-    |> encode()
+    {:challenges, challenges} = Cache.Util.get(:challenge_cache, {:challenges, params}, &set_list/1, :timer.minutes(2))
+    challenges
   end
 
   def create(attrs \\ %{}) do
@@ -42,11 +39,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   def show(id) do
-    Cache.Util.get(:challenge_cache, id, &set_id/1, :timer.hours(24))
+    Cache.Util.get(:challenge_cache, id, &set_id/1, :timer.minutes(2))
   end
 
   def get(hash) do
-    Cache.Util.get(:challenge_cache, hash, &set_hash/1, :timer.hours(24))
+    Cache.Util.get(:challenge_cache, hash, &set_hash/1, :timer.minutes(2))
   end
 
   def aggregate_challenges(challenges) do
@@ -85,6 +82,15 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   def set_hash(hash) do
     data = get_by_hash(hash)
     {:commit, data}
+  end
+
+  defp set_list({:challenges, params}) do
+    data = path_query()
+           |> receipt_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
+    {:commit, {:challenges, data}}
   end
 
   defp get_by_id(id) do

@@ -17,14 +17,12 @@ defmodule BlockchainAPI.Query.Block do
   # Public functions
   #==================================================================
   def list(params) do
-    list_query()
-    |> maybe_filter(params)
-    |> Repo.all()
-    |> encode()
+    {:blocks, blocks} = Cache.Util.get(:block_cache, {:blocks, params}, &set_list/1, :timer.minutes(2))
+    blocks
   end
 
   def get(height) do
-    Cache.Util.get(:block_cache, height, &set_height/1, :timer.hours(24))
+    Cache.Util.get(:block_cache, height, &set_height/1, :timer.minutes(2))
   end
 
   def create(attrs \\ %{}) do
@@ -42,9 +40,17 @@ defmodule BlockchainAPI.Query.Block do
   # Helper functions
   #==================================================================
   # Cache helpers
-  def set_height(height) do
+  defp set_height(height) do
     data = get_by_height(height)
     {:commit, data}
+  end
+
+  defp set_list({:blocks, params}) do
+    data = list_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
+    {:commit, {:blocks, data}}
   end
 
   defp get_by_height(height) do
