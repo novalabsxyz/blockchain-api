@@ -75,7 +75,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       on: e2.id == e1.id + 1,
       left_join: t2 in Transaction,
       on: t2.hash == e2.hash,
-      left_join: b in Block,
+      left_join: b in subquery(blocks_subquery()),
       on: b.height > t1.block_height and fragment("case when ? is null then true else ? <= ? end", t2.block_height, b.height, t2.block_height),
       group_by: e1.id,
       order_by: [desc: e1.id],
@@ -92,6 +92,17 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     )
   end
 
+  defp blocks_subquery do
+    from(
+      b in Block,
+      left_join: t in Transaction,
+      on: t.block_height == b.height,
+      group_by: b.id,
+      order_by: [desc: b.height],
+      select: %{height: b.height, hash: b.hash, round: b.round, time: b.time, txns: count(t.id)}
+    )
+  end
+
   defp filter_before(query, before, limit) do
     query
     |> where([et], et.id < ^before)
@@ -105,7 +116,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
     blocks =
       blocks
-      |> Stream.map(&Block.encode_model/1)
+      |> Stream.map(&Map.merge(Block.encode_model(&1), %{txns: &1["txns"]}))
       |> Enum.sort(&Map.get(&1, :height) < Map.get(&2, :height))
 
 

@@ -25,9 +25,9 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           %{"address" => _, "score" => _}
         ],
         "blocks" => [
-          %{"hash" => _, "height" => _, "round" => _, "time" => _},
-          %{"hash" => _, "height" => _, "round" => _, "time" => _},
-          %{"hash" => _, "height" => _, "round" => _, "time" => _}
+          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _},
+          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _},
+          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _}
         ],
         "id" => _,
         "blocks_count" => _,
