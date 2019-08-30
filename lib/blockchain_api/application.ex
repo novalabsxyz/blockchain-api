@@ -17,6 +17,8 @@ defmodule BlockchainAPI.Application do
   import PendingLocation, only: [submit_location_queue: 0]
   import PendingCoinbase, only: [submit_coinbase_queue: 0]
 
+  import Cachex.Spec
+
   def start(_type, _args) do
     # Blockchain Supervisor Options
     base_dir = ~c(data)
@@ -66,7 +68,13 @@ defmodule BlockchainAPI.Application do
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
       {Notifier, []},
-      {RewardsNotifier, []}
+      {RewardsNotifier, []},
+      Supervisor.child_spec(
+        Cachex,
+        start: {
+          # maximum 5000 entries, LRW eviction, trim to 2500
+          Cachex, :start_link, [:challenge_cache, [limit: limit(size: 5000, policy: Cachex.Policy.LRW, reclaim: 0.5)]]
+        })
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]

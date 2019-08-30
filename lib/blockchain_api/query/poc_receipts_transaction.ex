@@ -66,16 +66,43 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.one!()
   end
 
-  def get!(hash) do
-    POCReceiptsTransaction
-    |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
-    |> Repo.one!
+  # Public functions
+  def show(id) do
+    Cache.Util.get(:challenge_cache, id, &set_id/1, :timer.hours(24))
+  end
+
+  def get(hash) do
+    Cache.Util.get(:challenge_cache, hash, &set_hash/1, :timer.hours(24))
   end
 
   def create(attrs \\ %{}) do
     %POCReceiptsTransaction{}
     |> POCReceiptsTransaction.changeset(attrs)
     |> Repo.insert()
+  end
+
+  # Cache helpers
+  def set_id(id) do
+    data = get_by_id(id)
+    {:commit, data}
+  end
+
+  def set_hash(hash) do
+    data = get_by_hash(hash)
+    {:commit, data}
+  end
+
+  defp get_by_id(id) do
+    path_query()
+    |> receipt_query(id)
+    |> Repo.one()
+    |> encode_entry()
+  end
+
+  defp get_by_hash(hash) do
+    POCReceiptsTransaction
+    |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
+    |> Repo.one()
   end
 
   def aggregate_challenges(challenges) do
@@ -107,6 +134,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     entries |> Enum.map(&encode_entry/1)
   end
 
+  defp encode_entry(nil), do: nil
   defp encode_entry(%{challenge: entry, height: height, hotspot: nil, block: block}) do
     # Used ONLY for testing
     # If there is no hotspot to encode, what do we even do

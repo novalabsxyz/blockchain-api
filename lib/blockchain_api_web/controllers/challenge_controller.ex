@@ -22,7 +22,7 @@ defmodule BlockchainAPIWeb.ChallengeController do
   end
 
   def show(conn, %{"id" => id}) do
-    challenge = Query.POCReceiptsTransaction.show!(id)
+    challenge = Query.POCReceiptsTransaction.show(id)
     render(conn, "show.json", challenge: challenge)
   end
 

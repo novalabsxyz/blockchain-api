@@ -31,7 +31,8 @@ defmodule BlockchainAPI.MixProject do
         :xmerl,
         :timex,
         :httpoison,
-        :erl_angry_purple_tiger
+        :erl_angry_purple_tiger,
+        :cachex
       ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
@@ -72,7 +73,8 @@ defmodule BlockchainAPI.MixProject do
       {:poison, "~> 3.1"},
       {:logger_file_backend, "~> 0.0.10"},
       {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
-      {:timex, "~> 3.1"}
+      {:timex, "~> 3.1"},
+      {:cachex, "~> 3.2"}
     ]
   end
 
