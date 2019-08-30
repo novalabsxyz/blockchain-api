@@ -6,7 +6,7 @@ defmodule BlockchainAPIWeb.ChallengeController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    challenges = Query.POCReceiptsTransaction.challenges(params)
+    challenges = Query.POCReceiptsTransaction.list(params)
     ongoing = Query.POCRequestTransaction.ongoing(params)
     {successful, failed} = Query.POCReceiptsTransaction.aggregate_challenges(challenges)
     issued = Query.POCReceiptsTransaction.issued()

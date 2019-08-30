@@ -12,48 +12,14 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.POCPathElement,
     Schema.Transaction,
     Schema.Hotspot,
-    Schema.Block
+    Schema.Block,
+    Cache
   }
 
-  def show!(id) do
-    path_query()
-    |> receipt_query(id)
-    |> Repo.one!()
-    |> encode_entry()
-  end
-
-  def list(_) do
-    POCReceiptsTransaction
-    |> Repo.all()
-  end
-
-  def challenges(%{"before" => before, "limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
+  def list(params) do
     path_query()
     |> receipt_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{"before" => before}=_params) do
-    path_query()
-    |> receipt_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{"limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    path_query()
-    |> receipt_query()
-    |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{}) do
-    path_query()
-    |> receipt_query()
-    |> limit(^@default_limit)
+    |> maybe_filter(params)
     |> Repo.all()
     |> encode()
   end
@@ -312,9 +278,24 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     )
   end
 
-  defp filter_before(query, before, limit) do
+  def maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     query
     |> where([poc_rx], poc_rx.id < ^before)
     |> limit(^limit)
+  end
+  def maybe_filter(query, %{"before" => before}=_params) do
+    query
+    |> where([poc_rx], poc_rx.id < ^before)
+    |> limit(@default_limit)
+  end
+  def maybe_filter(query, %{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
+    query
+    |> limit(^limit)
+  end
+  def maybe_filter(query, %{}) do
+    query
+    |> limit(@default_limit)
   end
 end

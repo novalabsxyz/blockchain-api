@@ -8,7 +8,7 @@ defmodule BlockchainAPIWeb.ActivityController do
   def index(conn, %{"hotspot_address" => address}=params) do
     activity = address
                |> Util.string_to_bin()
-               |> Query.HotspotActivity.activity_for(params)
+               |> Query.HotspotActivity.list(params)
 
     render(conn,
       "index.json",
