@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.Transaction,
     Schema.Hotspot,
     Schema.Block,
-    Cache
+    Cache,
+    Query
   }
 
   #==================================================================
@@ -85,11 +86,20 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp set_list({:challenges, params}) do
-    data = path_query()
-           |> receipt_query()
-           |> maybe_filter(params)
-           |> Repo.all()
-           |> encode()
+    challenges = path_query()
+                 |> receipt_query()
+                 |> maybe_filter(params)
+                 |> Repo.all()
+                 |> encode()
+    ongoing = Query.POCRequestTransaction.ongoing(params)
+    {successful, failed} = aggregate_challenges(challenges)
+    data = %{
+      challenges: challenges,
+      total_ongoing: ongoing,
+      issued: issued(),
+      successful: successful,
+      failed: failed
+    }
     {:commit, {:challenges, data}}
   end
 

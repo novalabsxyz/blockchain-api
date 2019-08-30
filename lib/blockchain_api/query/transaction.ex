@@ -52,7 +52,6 @@ defmodule BlockchainAPI.Query.Transaction do
     query
     |> Repo.all()
     |> format_transactions()
-
   end
 
   def at_height(block_height, _params) do
