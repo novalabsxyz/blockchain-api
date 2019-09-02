@@ -20,9 +20,17 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
- # Mostly secret information read from environment variables
+# Mostly secret information read from environment variables
+seed_nodes =
+  try do
+    Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1)
+  rescue
+    _e ->
+      raise ArgumentError, message: "Export the env vars!"
+  end
+
 config :blockchain,
-  seed_nodes: Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1),
+  seed_nodes: seed_nodes,
   seed_node_dns: String.to_charlist(System.get_env("SEED_NODE_DNS"))
 
 config :blockchain_api, env: Mix.env()
