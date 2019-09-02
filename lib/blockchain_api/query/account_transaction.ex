@@ -17,29 +17,27 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.Transaction,
-    Util
+    Util,
+    Cache
   }
 
+  #==================================================================
+  # Public functions
+  #==================================================================
   def create(attrs \\ %{}) do
     %AccountTransaction{}
     |> AccountTransaction.changeset(attrs)
     |> Repo.insert()
   end
 
-  def list(address, %{"before" => before, "limit" => limit}=_params) do
-    address
-    |> list_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> format()
+  def list(address, %{"before" => _before, "limit" => _limit}=params) do
+    {:account_txns, _, account_txns} = Cache.Util.get(:account_txn_cache, {:account_txns, address, params}, &set_list/1, :timer.minutes(2))
+    account_txns
   end
-  def list(address, %{"before" => before}=_params) do
-    address
-    |> list_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> format()
-end
+  def list(address, %{"before" => _before}=params) do
+    {:account_txns, _, account_txns} = Cache.Util.get(:account_txn_cache, {:account_txns, address, params}, &set_list/1, :timer.minutes(2))
+    account_txns
+  end
   def list(address, %{"limit" => limit}=_params) do
     pp = Query.PendingPayment.get_pending_by_address(address)
     pg = Query.PendingGateway.get_by_owner(address)
@@ -159,6 +157,15 @@ end
   #==================================================================
   # Helper functions
   #==================================================================
+  defp set_list({:account_txns, address, params}) do
+    data = address
+           |> list_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> format()
+    {:commit, {:account_txns, address, data}}
+  end
+
   defp clean_account_gateways(entries) do
     entries
     |> Enum.map(fn map ->
@@ -212,12 +219,6 @@ end
       where: at.account_address == ^address,
       where: at.txn_status == "cleared"
     )
-  end
-
-  defp filter_before(query, before, limit) do
-    query
-    |> where([at], at.id < ^before)
-    |> limit(^limit)
   end
 
   defp format(entries) do
@@ -310,6 +311,17 @@ end
           |> Map.merge(%{height: reward.block_height, time: reward.block_time})
 
     [Map.merge(res, %{id: entry.id}) | acc]
+  end
+
+  defp maybe_filter(query, %{"before" => before, "limit" => limit}=_params) do
+    query
+    |> where([at], at.id < ^before)
+    |> limit(^limit)
+  end
+  defp maybe_filter(query, %{"before" => before}=_params) do
+    query
+    |> where([at], at.id < ^before)
+    |> limit(@default_limit)
   end
 
 end

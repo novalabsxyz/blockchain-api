@@ -1,7 +1,7 @@
 defmodule BlockchainAPI.Schema.Transaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.Transaction}
+  alias BlockchainAPI.{Util, Schema.Transaction, Schema.Block}
   @fields [:id, :hash, :type, :block_height]
 
   @derive {Phoenix.Param, key: :hash}
@@ -11,6 +11,8 @@ defmodule BlockchainAPI.Schema.Transaction do
     field :block_height, :integer, null: false
     field :hash, :binary, null: false
     field :status, :string, null: false, default: "cleared"
+
+    belongs_to :block, Block, define_field: false, foreign_key: :height
 
     timestamps()
   end

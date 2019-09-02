@@ -91,7 +91,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
                  |> maybe_filter(params)
                  |> Repo.all()
                  |> encode()
-    ongoing = Query.POCRequestTransaction.ongoing(params)
+    ongoing = Query.Transaction.get_ongoing_poc_requests()
     {successful, failed} = aggregate_challenges(challenges)
     data = %{
       challenges: challenges,

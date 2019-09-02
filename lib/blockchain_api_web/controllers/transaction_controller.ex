@@ -18,18 +18,8 @@ defmodule BlockchainAPIWeb.TransactionController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, %{"block_height" => height}=params) do
-    txns = Query.Transaction.at_height(height, params)
-
-    render(conn,
-      "index.json",
-      transactions: txns
-    )
-  end
-
-  def index(conn, params) do
-
-    txns = Query.Transaction.list(params)
+  def index(conn, %{"block_height" => height}=_params) do
+    txns = Query.Transaction.get(height)
 
     render(conn,
       "index.json",

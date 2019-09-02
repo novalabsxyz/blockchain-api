@@ -71,6 +71,8 @@ defmodule BlockchainAPI.Application do
       {RewardsNotifier, []},
       Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:challenge_cache, [limit: cache_limit()]]}, id: :challenge_cache),
       Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:block_cache, [limit: cache_limit()]]}, id: :block_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:txn_cache, [limit: cache_limit()]]}, id: :txn_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:account_txn_cache, [limit: cache_limit()]]}, id: :account_txn_cache),
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]

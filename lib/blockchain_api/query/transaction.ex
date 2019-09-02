@@ -16,94 +16,12 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.RewardsTransaction,
     Schema.SecurityTransaction,
     Schema.Transaction,
-    Util
+    Util,
+    Cache
   }
 
-  def list(_params) do
-    query = from(
-      transaction in Transaction,
-      left_join: block in Block,
-      on: transaction.block_height == block.height,
-      left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.hash,
-      left_join: security_transaction in SecurityTransaction,
-      on: transaction.hash == security_transaction.hash,
-      left_join: data_credit_transaction in DataCreditTransaction,
-      on: transaction.hash == data_credit_transaction.hash,
-      left_join: election_transaction in ElectionTransaction,
-      on: transaction.hash == election_transaction.hash,
-      left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.hash,
-      left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.hash,
-      left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.hash,
-      order_by: [desc: block.height, desc: transaction.id],
-      select: [
-        coinbase_transaction,
-        payment_transaction,
-        gateway_transaction,
-        location_transaction,
-        security_transaction,
-        data_credit_transaction,
-        election_transaction
-      ])
-
-    query
-    |> Repo.all()
-    |> format_transactions()
-  end
-
-  def at_height(block_height, _params) do
-    query = from(
-      block in Block,
-      where: block.height == ^block_height,
-      left_join: transaction in Transaction,
-      on: block.height == transaction.block_height,
-      left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.hash,
-      left_join: security_transaction in SecurityTransaction,
-      on: transaction.hash == security_transaction.hash,
-      left_join: data_credit_transaction in DataCreditTransaction,
-      on: transaction.hash == data_credit_transaction.hash,
-      left_join: election_transaction in ElectionTransaction,
-      on: transaction.hash == election_transaction.hash,
-      left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.hash,
-      left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.hash,
-      left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.hash,
-      left_join: poc_request_transaction in POCRequestTransaction,
-      on: transaction.hash == poc_request_transaction.hash,
-      left_join: poc_receipts_transaction in POCReceiptsTransaction,
-      on: transaction.hash == poc_receipts_transaction.hash,
-      left_join: rewards_txn in RewardsTransaction,
-      on: transaction.hash == rewards_txn.hash,
-      order_by: [
-        desc: block.height,
-        desc: transaction.id,
-        desc: payment_transaction.nonce,
-        desc: location_transaction.nonce
-      ],
-      select: %{
-        time: block.time,
-        height: block.height,
-        coinbase: coinbase_transaction,
-        security: security_transaction,
-        data_credit: data_credit_transaction,
-        election: election_transaction,
-        payment: payment_transaction,
-        gateway: gateway_transaction,
-        location: location_transaction,
-        poc_request: poc_request_transaction,
-        poc_receipts: poc_receipts_transaction,
-        rewards: rewards_txn
-      })
-
-    query
-    |> Repo.all()
-    |> format_blocks()
+  def get(block_height) do
+    Cache.Util.get(:txn_cache, block_height, &set_by_height/1, :timer.minutes(2))
   end
 
   def type(hash) do
@@ -268,16 +186,85 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Repo.one!()
   end
 
+  def get_ongoing_poc_requests() do
+    from(
+      block in Block,
+      left_join: txn in Transaction,
+      on: block.height == txn.block_height,
+      where: txn.type == "poc_request",
+      having: block.height == max(block.height),
+      group_by: block.height,
+      order_by: [desc: block.height],
+      limit: 1,
+      select: count(txn)
+    )
+    |> Repo.one
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
-  defp format_transactions(entries) do
-    entries
-    |> List.flatten
-    |> Enum.reject(&is_nil/1)
+
+  # Cache helper
+  defp set_by_height(block_height) do
+    data = get_by_height(block_height)
+    {:commit, data}
   end
 
-  defp format_blocks(entries) do
+  defp get_by_height(block_height) do
+    query = from(
+      block in Block,
+      where: block.height == ^block_height,
+      left_join: transaction in Transaction,
+      on: block.height == transaction.block_height,
+      left_join: coinbase_transaction in CoinbaseTransaction,
+      on: transaction.hash == coinbase_transaction.hash,
+      left_join: security_transaction in SecurityTransaction,
+      on: transaction.hash == security_transaction.hash,
+      left_join: data_credit_transaction in DataCreditTransaction,
+      on: transaction.hash == data_credit_transaction.hash,
+      left_join: election_transaction in ElectionTransaction,
+      on: transaction.hash == election_transaction.hash,
+      left_join: payment_transaction in PaymentTransaction,
+      on: transaction.hash == payment_transaction.hash,
+      left_join: gateway_transaction in GatewayTransaction,
+      on: transaction.hash == gateway_transaction.hash,
+      left_join: location_transaction in LocationTransaction,
+      on: transaction.hash == location_transaction.hash,
+      left_join: poc_request_transaction in POCRequestTransaction,
+      on: transaction.hash == poc_request_transaction.hash,
+      left_join: poc_receipts_transaction in POCReceiptsTransaction,
+      on: transaction.hash == poc_receipts_transaction.hash,
+      left_join: rewards_txn in RewardsTransaction,
+      on: transaction.hash == rewards_txn.hash,
+      order_by: [
+        desc: block.height,
+        desc: transaction.id,
+        desc: payment_transaction.nonce,
+        desc: location_transaction.nonce
+      ],
+      select: %{
+        time: block.time,
+        height: block.height,
+        coinbase: coinbase_transaction,
+        security: security_transaction,
+        data_credit: data_credit_transaction,
+        election: election_transaction,
+        payment: payment_transaction,
+        gateway: gateway_transaction,
+        location: location_transaction,
+        poc_request: poc_request_transaction,
+        poc_receipts: poc_receipts_transaction,
+        rewards: rewards_txn
+      })
+
+    query
+    |> Repo.all()
+    |> encode()
+  end
+
+  # Encoding helpers
+  defp encode(entries) do
     entries
     |> Enum.map(fn map -> :maps.filter(fn _, v -> not is_nil(v) end, map) end)
     |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
