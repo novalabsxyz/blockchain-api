@@ -3,8 +3,8 @@ defmodule BlockchainAPIWeb.ChallengeControllerTest do
   import BlockchainAPI.TestHelpers
   alias BlockchainAPI.{Query, Util}
 
-  @default_limit 50
-  @max_limit 100
+  @default_limit 100
+  @max_limit 500
 
   describe "test challenge controller" do
     setup do

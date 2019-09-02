@@ -2,8 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  @default_limit 50
-  @max_limit 100
+  @default_limit 100
+  @max_limit 500
 
   alias BlockchainAPI.{
     Util,
@@ -13,8 +13,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.Transaction,
     Schema.Hotspot,
     Schema.Block,
-    Cache,
-    Query
+    Cache
   }
 
   #==================================================================
@@ -86,20 +85,11 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   end
 
   defp set_list({:challenges, params}) do
-    challenges = path_query()
-                 |> receipt_query()
-                 |> maybe_filter(params)
-                 |> Repo.all()
-                 |> encode()
-    ongoing = Query.Transaction.get_ongoing_poc_requests()
-    {successful, failed} = aggregate_challenges(challenges)
-    data = %{
-      challenges: challenges,
-      total_ongoing: ongoing,
-      issued: issued(),
-      successful: successful,
-      failed: failed
-    }
+    data = path_query()
+           |> receipt_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
     {:commit, {:challenges, data}}
   end
 
