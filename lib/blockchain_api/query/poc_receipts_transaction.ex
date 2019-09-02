@@ -24,18 +24,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     challenges
   end
 
-  def create(attrs \\ %{}) do
-    %POCReceiptsTransaction{}
-    |> POCReceiptsTransaction.changeset(attrs)
-    |> Repo.insert()
-  end
-
   def issued() do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Util.current_time()
-
-    receipt_issued_count_query(start, finish)
-    |> Repo.one!()
+    Cache.Util.get(:challenge_cache, :issued, &set_issued/0, :timer.minutes(2))
   end
 
   def show(id) do
@@ -70,6 +60,12 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.one()
   end
 
+  def create(attrs \\ %{}) do
+    %POCReceiptsTransaction{}
+    |> POCReceiptsTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
@@ -81,6 +77,15 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
 
   def set_hash(hash) do
     data = get_by_hash(hash)
+    {:commit, data}
+  end
+
+  defp set_issued() do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+
+    data = receipt_issued_count_query(start, finish) |> Repo.one()
+
     {:commit, data}
   end
 
