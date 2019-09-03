@@ -63,18 +63,18 @@ defmodule BlockchainAPI.MixProject do
       {:httpoison, "~> 1.4"},
       {:number, "~> 1.0"},
       {:honeydew, "~> 1.4.0"},
+      {:poison, "~> 3.1"},
+      {:timex, "~> 3.1"},
+      {:cachex, "~> 3.2"},
+      {:distillery, "~> 2.0"},
+      {:cors_plug, "~> 2.0"},
+      {:logger_file_backend, "~> 0.0.10"},
 
       # blockchain requirements
-      {:distillery, "~> 2.0"},
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
-      {:cors_plug, "~> 2.0"},
-      {:poison, "~> 3.1"},
-      {:logger_file_backend, "~> 0.0.10"},
-      {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
-      {:timex, "~> 3.1"},
-      {:cachex, "~> 3.2"}
+      {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
     ]
   end
 

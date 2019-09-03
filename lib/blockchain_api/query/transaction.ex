@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Query.Transaction do
   import Ecto.Query, warn: false
 
   # number of previous blocks to look for poc request txns
-  @past_poc_req_blocks 30
+  @past_poc_req_blocks 5
 
   alias BlockchainAPI.{
     Repo,
