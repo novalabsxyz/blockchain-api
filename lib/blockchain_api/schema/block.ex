@@ -13,10 +13,7 @@ defmodule BlockchainAPI.Schema.Block do
     field :height, :integer, null: false
 
     has_many :transactions, Transaction, foreign_key: :block_height, references: :height
-<<<<<<< HEAD
 
-=======
->>>>>>> Add txns field to blocks attrs, sort blocks desc
     timestamps()
   end
 

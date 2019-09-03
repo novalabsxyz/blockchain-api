@@ -1,11 +1,8 @@
 defmodule BlockchainAPI.Schema.Transaction do
   use Ecto.Schema
   import Ecto.Changeset
-<<<<<<< HEAD
-  alias BlockchainAPI.{Util, Schema.Transaction, Schema.Block}
-=======
-  alias BlockchainAPI.{Util, Schema.Block, Schema.Transaction}
->>>>>>> Add txns field to blocks attrs, sort blocks desc
+  alias BlockchainAPI.{Schema.Block, Schema.Transaction, Util}
+
   @fields [:id, :hash, :type, :block_height]
 
   @derive {Phoenix.Param, key: :hash}
@@ -17,10 +14,7 @@ defmodule BlockchainAPI.Schema.Transaction do
     field :status, :string, null: false, default: "cleared"
 
     belongs_to :block, Block, define_field: false, foreign_key: :height
-<<<<<<< HEAD
 
-=======
->>>>>>> Add txns field to blocks attrs, sort blocks desc
     timestamps()
   end
 
