@@ -18,27 +18,27 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     list_query()
     |> filter_before(before, limit)
     |> Repo.all()
-    |> format_elections()
+    |> encode()
   end
 
   def list(%{"before" => before}) do
     list_query()
     |> filter_before(before, @default_limit)
     |> Repo.all()
-    |> format_elections()
+    |> encode()
   end
 
   def list(%{"limit" => limit}) do
     list_query()
     |> limit(^limit)
     |> Repo.all()
-    |> format_elections()
+    |> encode()
   end
 
   def list(_) do
     list_query()
     |> Repo.all()
-    |> format_elections()
+    |> encode()
   end
 
   def get!(hash) do
@@ -109,8 +109,8 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> limit(^limit)
   end
 
-  defp format_elections([]), do: []
-  defp format_elections(entries), do: Enum.map(entries, &encode_entry/1)
+  defp encode([]), do: []
+  defp encode(entries), do: Enum.map(entries, &encode_entry/1)
 
   defp encode_entry(%{election_transaction: etxn, blocks: blocks}) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
