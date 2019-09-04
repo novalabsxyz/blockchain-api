@@ -30,7 +30,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     Logger.info("Notifying for weekly rewards")
     RewardTxn.get_from_last_week()
     |> Enum.map(fn reward ->
-      @notifier_client.post(reward_data(reward), message(reward), %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
+      @notifier_client.post(reward_data(reward), message(reward), reward.account, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
     end)
     :timer.apply_after(@interval, __MODULE__, :send_notifications, [])
   end
