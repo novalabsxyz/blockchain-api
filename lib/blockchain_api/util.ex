@@ -54,10 +54,10 @@ defmodule BlockchainAPI.Util do
     |> :h3.to_geo()
   end
 
-  def h3_to_string(nil), do: nil
-  def h3_to_string(location) do
+  def h3_to_string(location) when is_integer(location) do
       to_string(:h3.to_string(location))
   end
+  def h3_to_string(_), do: nil
 
   def h3_from_string(index) do
     index |> String.to_charlist() |> :h3.from_string()
