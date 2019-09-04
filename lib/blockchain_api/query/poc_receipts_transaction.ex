@@ -2,8 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  @default_limit 50
-  @max_limit 100
+  @default_limit 100
+  @max_limit 500
 
   alias BlockchainAPI.{
     Util,
@@ -13,8 +13,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.Transaction,
     Schema.Hotspot,
     Schema.Block,
-    Cache,
-    Query
+    Cache
   }
 
   #==================================================================
@@ -25,18 +24,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     challenges
   end
 
-  def create(attrs \\ %{}) do
-    %POCReceiptsTransaction{}
-    |> POCReceiptsTransaction.changeset(attrs)
-    |> Repo.insert()
-  end
-
   def issued() do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Util.current_time()
-
-    receipt_issued_count_query(start, finish)
-    |> Repo.one!()
+    Cache.Util.get(:challenge_cache, :issued, &set_issued/0, :timer.minutes(2))
   end
 
   def show(id) do
@@ -71,6 +60,12 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.one()
   end
 
+  def create(attrs \\ %{}) do
+    %POCReceiptsTransaction{}
+    |> POCReceiptsTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
   #==================================================================
   # Helper functions
   #==================================================================
@@ -85,21 +80,21 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     {:commit, data}
   end
 
+  defp set_issued() do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+
+    data = receipt_issued_count_query(start, finish) |> Repo.one()
+
+    {:commit, data}
+  end
+
   defp set_list({:challenges, params}) do
-    challenges = path_query()
-                 |> receipt_query()
-                 |> maybe_filter(params)
-                 |> Repo.all()
-                 |> encode()
-    ongoing = Query.Transaction.get_ongoing_poc_requests()
-    {successful, failed} = aggregate_challenges(challenges)
-    data = %{
-      challenges: challenges,
-      total_ongoing: ongoing,
-      issued: issued(),
-      successful: successful,
-      failed: failed
-    }
+    data = path_query()
+           |> receipt_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
     {:commit, {:challenges, data}}
   end
 

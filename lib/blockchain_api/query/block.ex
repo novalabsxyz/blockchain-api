@@ -46,7 +46,7 @@ defmodule BlockchainAPI.Query.Block do
   end
 
   defp set_list({:blocks, params}) do
-    data = list_query()
+    data = base_query()
            |> maybe_filter(params)
            |> Repo.all()
            |> encode()
@@ -54,22 +54,10 @@ defmodule BlockchainAPI.Query.Block do
   end
 
   defp get_by_height(height) do
-    query = from(
-      block in Block,
-      full_join: txn in Transaction,
-      on: block.height == txn.block_height,
-      where: block.height == ^height,
-      group_by: block.id,
-      order_by: [desc: block.height],
-      select: %{
-        hash: block.hash,
-        height: block.height,
-        time: block.time,
-        round: block.round,
-        txns: count(txn.id)
-      })
-
-    query |> Repo.one() |> encode()
+    base_query()
+    |> where([b], b.height == ^height)
+    |> Repo.one()
+    |> encode()
   end
 
   # Encoding helpers
@@ -85,18 +73,17 @@ defmodule BlockchainAPI.Query.Block do
   end
 
   # Query helpers
-  defp list_query() do
+  defp base_query() do
     from(
       block in Block,
-      full_join: txn in Transaction,
+      left_join: txn in Transaction,
       on: block.height == txn.block_height,
-      group_by: block.id,
+      group_by: [block.id, block.time, block.hash],
       order_by: [desc: block.height],
       select: %{
         hash: block.hash,
         height: block.height,
         time: block.time,
-        round: block.round,
         txns: count(txn.id)
       })
   end

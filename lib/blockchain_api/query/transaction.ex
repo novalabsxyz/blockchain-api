@@ -2,6 +2,9 @@ defmodule BlockchainAPI.Query.Transaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
+  # number of previous blocks to look for poc request txns
+  @past_poc_req_blocks 5
+
   alias BlockchainAPI.{
     Repo,
     Schema.Block,
@@ -187,18 +190,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_ongoing_poc_requests() do
-    from(
-      block in Block,
-      left_join: txn in Transaction,
-      on: block.height == txn.block_height,
-      where: txn.type == "poc_request",
-      having: block.height == max(block.height),
-      group_by: block.height,
-      order_by: [desc: block.height],
-      limit: 1,
-      select: count(txn)
-    )
-    |> Repo.one
+    Cache.Util.get(:txn_cache, :ongoing, &set_ongoing/0, :timer.minutes(2))
   end
 
   #==================================================================
@@ -208,6 +200,35 @@ defmodule BlockchainAPI.Query.Transaction do
   # Cache helper
   defp set_by_height(block_height) do
     data = get_by_height(block_height)
+    {:commit, data}
+  end
+
+  defp set_ongoing() do
+    ongoing_subquery =
+      from(
+        txn in Transaction,
+        where: txn.type == "poc_request",
+        left_join: req in POCRequestTransaction,
+        on: txn.hash == req.hash,
+        left_join: rx in POCReceiptsTransaction,
+        on: req.id == rx.poc_request_transactions_id and is_nil(rx.id),
+        group_by: txn.block_height,
+        order_by: [desc: txn.block_height],
+        limit: @past_poc_req_blocks,
+        select: %{count: count(txn.block_height)}
+      )
+
+    q = from(
+      q in subquery(ongoing_subquery),
+      select: sum(q.count)
+    )
+
+    data = case Repo.one(q) do
+      nil -> 0
+      res ->
+        Decimal.to_integer(res)
+    end
+
     {:commit, data}
   end
 
