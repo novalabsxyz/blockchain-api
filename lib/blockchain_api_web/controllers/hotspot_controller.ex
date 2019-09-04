@@ -15,9 +15,14 @@ defmodule BlockchainAPIWeb.HotspotController do
   end
 
   def show(conn, %{"address" => address}) do
-    hotspot = address
-              |> Util.string_to_bin()
-              |> Query.Hotspot.get!()
+    hotspot =
+      with address <- Util.string_to_bin(address),
+           hotspot when not is_nil(hotspot) <- Query.Hotspot.get(address) do
+        hotspot
+      else
+        _ -> %{}
+      end
+
     render(conn, "show.json", hotspot: hotspot)
   end
 

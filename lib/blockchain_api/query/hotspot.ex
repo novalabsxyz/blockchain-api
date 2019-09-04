@@ -13,6 +13,12 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.all()
   end
 
+  def get(address) do
+    Hotspot
+    |> where([h], h.address == ^address)
+    |> Repo.one()
+  end
+
   def get!(address) do
     Hotspot
     |> where([h], h.address == ^address)
