@@ -25,33 +25,10 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.one()
   end
 
-  def activity_for(address, %{"before" => before, "limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
+  def list(address, params) do
     address
     |> activity_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def activity_for(address, %{"before" => before}=_params) do
-    address
-    |> activity_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def activity_for(address, %{"limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    address
-    |> activity_query()
-    |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def activity_for(address, %{}) do
-    address
-    |> activity_query()
-    |> limit(^@default_limit)
+    |> maybe_filter(params)
     |> Repo.all()
     |> encode()
   end
@@ -60,12 +37,6 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     HotspotActivity
     |> where([ha], ha.gateway == ^address)
     |> order_by([ha], [desc: ha.id])
-  end
-
-  defp filter_before(query, before, limit) do
-    query
-    |> where([ha], ha.id < ^before)
-    |> limit(^limit)
   end
 
   defp encode([]), do: []
@@ -112,5 +83,26 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       reward_block_height: entry.reward_block_height,
       reward_block_time: entry.reward_block_time
     }
+  end
+
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
+    query
+    |> where([ha], ha.id < ^before)
+    |> limit(^limit)
+  end
+  defp maybe_filter(query, %{"before" => before}=_params) do
+    query
+    |> where([ha], ha.id < ^before)
+    |> limit(@default_limit)
+  end
+  defp maybe_filter(query, %{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
+    query
+    |> limit(^limit)
+  end
+  defp maybe_filter(query, %{}) do
+    query
+    |> limit(@default_limit)
   end
 end

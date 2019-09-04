@@ -4,9 +4,7 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   alias BlockchainAPI.{
     Repo,
-    Query,
-    Schema.POCRequestTransaction,
-    Schema.Block
+    Schema.POCRequestTransaction
   }
 
   def list(_params) do
@@ -25,12 +23,6 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.onion == ^onion)
     |> Repo.one!
-  end
-
-  def ongoing(params) do
-    height = from(b in Block, select: (max(b.height) - 1)) |> Repo.one!()
-    txns = Query.Transaction.at_height(height, params)
-    length(Enum.filter(txns, fn(txn) -> txn.type == "poc_request" end))
   end
 
   def create(attrs \\ %{}) do

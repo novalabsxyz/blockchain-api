@@ -2,8 +2,8 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  @default_limit 50
-  @max_limit 100
+  @default_limit 100
+  @max_limit 500
 
   alias BlockchainAPI.{
     Util,
@@ -12,70 +12,28 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.POCPathElement,
     Schema.Transaction,
     Schema.Hotspot,
-    Schema.Block
+    Schema.Block,
+    Cache
   }
 
-  def show!(id) do
-    path_query()
-    |> receipt_query(id)
-    |> Repo.one!()
-    |> encode_entry()
+  #==================================================================
+  # Public functions
+  #==================================================================
+  def list(params) do
+    {:challenges, challenges} = Cache.Util.get(:challenge_cache, {:challenges, params}, &set_list/1, :timer.minutes(2))
+    challenges
   end
 
-  def list(_) do
-    POCReceiptsTransaction
-    |> Repo.all()
+  def issued() do
+    Cache.Util.get(:challenge_cache, :issued, &set_issued/0, :timer.minutes(2))
   end
 
-  def challenges(%{"before" => before, "limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    path_query()
-    |> receipt_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{"before" => before}=_params) do
-    path_query()
-    |> receipt_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{"limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    path_query()
-    |> receipt_query()
-    |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def challenges(%{}) do
-    path_query()
-    |> receipt_query()
-    |> limit(^@default_limit)
-    |> Repo.all()
-    |> encode()
+  def show(id) do
+    Cache.Util.get(:challenge_cache, id, &set_id/1, :timer.minutes(2))
   end
 
-  def issued do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Util.current_time()
-
-    receipt_issued_count_query(start, finish)
-    |> Repo.one!()
-  end
-
-  def get!(hash) do
-    POCReceiptsTransaction
-    |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
-    |> Repo.one!
-  end
-
-  def create(attrs \\ %{}) do
-    %POCReceiptsTransaction{}
-    |> POCReceiptsTransaction.changeset(attrs)
-    |> Repo.insert()
+  def get(hash) do
+    Cache.Util.get(:challenge_cache, hash, &set_hash/1, :timer.minutes(2))
   end
 
   def aggregate_challenges(challenges) do
@@ -102,11 +60,64 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     |> Repo.one()
   end
 
+  def create(attrs \\ %{}) do
+    %POCReceiptsTransaction{}
+    |> POCReceiptsTransaction.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  #==================================================================
+  # Helper functions
+  #==================================================================
+  # Cache helpers
+  def set_id(id) do
+    data = get_by_id(id)
+    {:commit, data}
+  end
+
+  def set_hash(hash) do
+    data = get_by_hash(hash)
+    {:commit, data}
+  end
+
+  defp set_issued() do
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+
+    data = receipt_issued_count_query(start, finish) |> Repo.one()
+
+    {:commit, data}
+  end
+
+  defp set_list({:challenges, params}) do
+    data = path_query()
+           |> receipt_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
+    {:commit, {:challenges, data}}
+  end
+
+  defp get_by_id(id) do
+    path_query()
+    |> receipt_query(id)
+    |> Repo.one()
+    |> encode_entry()
+  end
+
+  defp get_by_hash(hash) do
+    POCReceiptsTransaction
+    |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
+    |> Repo.one()
+  end
+
+  # Encoding helpers
   defp encode([]), do: []
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
 
+  defp encode_entry(nil), do: nil
   defp encode_entry(%{challenge: entry, height: height, hotspot: nil, block: block}) do
     # Used ONLY for testing
     # If there is no hotspot to encode, what do we even do
@@ -230,6 +241,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       end)
   end
 
+  # Query Helpers
   defp path_query() do
     from(
       path in POCPathElement,
@@ -284,9 +296,25 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     )
   end
 
-  defp filter_before(query, before, limit) do
+  # Filter helpers
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     query
     |> where([poc_rx], poc_rx.id < ^before)
     |> limit(^limit)
+  end
+  defp maybe_filter(query, %{"before" => before}=_params) do
+    query
+    |> where([poc_rx], poc_rx.id < ^before)
+    |> limit(@default_limit)
+  end
+  defp maybe_filter(query, %{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
+    query
+    |> limit(^limit)
+  end
+  defp maybe_filter(query, %{}) do
+    query
+    |> limit(@default_limit)
   end
 end

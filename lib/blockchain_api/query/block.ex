@@ -1,66 +1,34 @@
 defmodule BlockchainAPI.Query.Block do
   @moduledoc false
   import Ecto.Query, warn: false
+
   @default_limit 100
   @max_limit 1000
 
-  alias BlockchainAPI.{Repo, Util, Schema.Block, Schema.Transaction}
+  alias BlockchainAPI.{
+    Repo,
+    Util,
+    Schema.Block,
+    Schema.Transaction,
+    Cache
+  }
 
-  def list(%{"before" => before, "limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    list_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def list(%{"before" => before}=_params) do
-    list_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def list(%{"limit" => limit0}=_params) do
-    limit = min(@max_limit, String.to_integer(limit0))
-    list_query()
-    |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-  def list(%{}) do
-    list_query()
-    |> limit(^@default_limit)
-    |> Repo.all()
-    |> encode()
+  #==================================================================
+  # Public functions
+  #==================================================================
+  def list(params) do
+    {:blocks, blocks} = Cache.Util.get(:block_cache, {:blocks, params}, &set_list/1, :timer.minutes(2))
+    blocks
   end
 
-  def get!(height) do
-    query = from(
-      block in Block,
-      full_join: txn in Transaction,
-      on: block.height == txn.block_height,
-      where: block.height == ^height,
-      group_by: block.id,
-      order_by: [desc: block.height],
-      select: %{
-        hash: block.hash,
-        height: block.height,
-        time: block.time,
-        round: block.round,
-        txns: count(txn.id)
-      })
-
-    query |> Repo.one!() |> encode()
+  def get(height) do
+    Cache.Util.get(:block_cache, height, &set_height/1, :timer.minutes(2))
   end
 
   def create(attrs \\ %{}) do
     %Block{}
     |> Block.changeset(attrs)
     |> Repo.insert()
-  end
-
-  def get_latest() do
-    query = from block in Block, select: max(block.height)
-    Repo.all(query)
   end
 
   def get_latest_height() do
@@ -71,6 +39,28 @@ defmodule BlockchainAPI.Query.Block do
   #==================================================================
   # Helper functions
   #==================================================================
+  # Cache helpers
+  defp set_height(height) do
+    data = get_by_height(height)
+    {:commit, data}
+  end
+
+  defp set_list({:blocks, params}) do
+    data = base_query()
+           |> maybe_filter(params)
+           |> Repo.all()
+           |> encode()
+    {:commit, {:blocks, data}}
+  end
+
+  defp get_by_height(height) do
+    base_query()
+    |> where([b], b.height == ^height)
+    |> Repo.one()
+    |> encode()
+  end
+
+  # Encoding helpers
   defp encode(nil), do: nil
   defp encode(%{hash: hash}=block) do
     %{block | hash: Util.bin_to_string(hash)}
@@ -82,25 +72,40 @@ defmodule BlockchainAPI.Query.Block do
     end)
   end
 
-  defp list_query() do
+  # Query helpers
+  defp base_query() do
     from(
       block in Block,
-      full_join: txn in Transaction,
+      left_join: txn in Transaction,
       on: block.height == txn.block_height,
-      group_by: block.id,
+      group_by: [block.id, block.time, block.hash],
       order_by: [desc: block.height],
       select: %{
         hash: block.hash,
         height: block.height,
         time: block.time,
-        round: block.round,
         txns: count(txn.id)
       })
   end
 
-  defp filter_before(query, before, limit) do
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
     query
     |> where([block], block.height < ^before)
     |> limit(^limit)
+  end
+  defp maybe_filter(query, %{"before" => before}=_params) do
+    query
+    |> where([block], block.height < ^before)
+    |> limit(@default_limit)
+  end
+  defp maybe_filter(query, %{"limit" => limit0}=_params) do
+    limit = min(@max_limit, String.to_integer(limit0))
+    query
+    |> limit(^limit)
+  end
+  defp maybe_filter(query, %{}) do
+    query
+    |> limit(@default_limit)
   end
 end

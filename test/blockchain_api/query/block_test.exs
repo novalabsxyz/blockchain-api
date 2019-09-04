@@ -26,7 +26,7 @@ defmodule BlockchainAPI.BlockTest do
 
     test "get_block!/1 returns the block with given id" do
       block = block_fixture()
-      b = Query.Block.get!(block.height)
+      b = Query.Block.get(block.height)
       assert b.height == block.height and b.time == block.time
     end
 

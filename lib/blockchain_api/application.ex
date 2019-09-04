@@ -17,6 +17,8 @@ defmodule BlockchainAPI.Application do
   import PendingLocation, only: [submit_location_queue: 0]
   import PendingCoinbase, only: [submit_coinbase_queue: 0]
 
+  import Cachex.Spec
+
   def start(_type, _args) do
     # Blockchain Supervisor Options
     base_dir = ~c(data)
@@ -66,19 +68,23 @@ defmodule BlockchainAPI.Application do
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
       {Notifier, []},
-      {RewardsNotifier, []}
+      {RewardsNotifier, []},
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:challenge_cache, [limit: cache_limit()]]}, id: :challenge_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:block_cache, [limit: cache_limit()]]}, id: :block_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:txn_cache, [limit: cache_limit()]]}, id: :txn_cache),
+      Supervisor.child_spec(Cachex, start: {Cachex, :start_link, [:account_txn_cache, [limit: cache_limit()]]}, id: :account_txn_cache),
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
     {:ok, sup} = Supervisor.start_link(children, opts)
 
-    :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_queue(submit_payment_queue(), queue: {EctoPollQueue, queue_args(env, PendingPayment)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
-    :ok = Honeydew.start_queue(submit_gateway_queue(), queue: {EctoPollQueue, queue_args(PendingGateway)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_queue(submit_gateway_queue(), queue: {EctoPollQueue, queue_args(env, PendingGateway)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
-    :ok = Honeydew.start_queue(submit_location_queue(), queue: {EctoPollQueue, queue_args(PendingLocation)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_queue(submit_location_queue(), queue: {EctoPollQueue, queue_args(env, PendingLocation)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
-    :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
+    :ok = Honeydew.start_queue(submit_coinbase_queue(), queue: {EctoPollQueue, queue_args(env, PendingCoinbase)}, failure_mode: Honeydew.FailureMode.Abandon)
     :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
 
     {:ok, sup}
@@ -102,10 +108,21 @@ defmodule BlockchainAPI.Application do
     |> Enum.map(&String.to_charlist/1)
   end
 
-  defp queue_args(schema) do
-    # NOTE: Check for new jobs every 5s, this query is frequent but quite inexpensive
-    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 2)
+  defp queue_args(:prod, schema) do
+    # Check for new jobs every 2s, this query is frequent but quite inexpensive
+    poll_interval = Application.get_env(:ecto_poll_queue, :interval, :timer.seconds(2))
     [schema: schema, repo: Repo, poll_interval: poll_interval]
+  end
+  defp queue_args(_, schema) do
+    # Check for test and dev env pending txns every 30 minutes
+    # No need for prod level checking here
+    poll_interval = Application.get_env(:ecto_poll_queue, :interval, :timer.minutes(30))
+    [schema: schema, repo: Repo, poll_interval: poll_interval]
+  end
+
+  defp cache_limit() do
+    # maximum 5000 entries, LRW eviction, trim to 2500
+    limit(size: 5000, policy: Cachex.Policy.LRW, reclaim: 0.5)
   end
 
 end

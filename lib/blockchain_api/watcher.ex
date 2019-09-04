@@ -84,26 +84,21 @@ defmodule BlockchainAPI.Watcher do
   #==================================================================
   defp add_block(block, chain, ledger, sync_flag, env) do
     height = :blockchain_block.height(block)
-    try do
-      Query.Block.get!(height)
-    rescue
-      _error in Ecto.NoResultsError ->
-        case Query.Block.get_latest() do
-          [nil] ->
-            # nothing in the db yet
-            Committer.commit(block, ledger, height, sync_flag, env)
-          [last_known_height] ->
-            case height > last_known_height do
-              true ->
-                Range.new(last_known_height + 1, height)
-                |> Enum.map(fn h ->
-                  {:ok, b} = :blockchain.get_block(h, chain)
-                  h = :blockchain_block.height(b)
-                  Committer.commit(b, ledger, h, sync_flag, env)
-                end)
-              false ->
-                :ok
-            end
+    case Query.Block.get_latest_height() do
+      nil ->
+        # nothing in the db yet
+        Committer.commit(block, ledger, height, sync_flag, env)
+      last_known_height ->
+        case height > last_known_height do
+          true ->
+            Range.new(last_known_height + 1, height)
+            |> Enum.map(fn h ->
+              {:ok, b} = :blockchain.get_block(h, chain)
+              h = :blockchain_block.height(b)
+              Committer.commit(b, ledger, h, sync_flag, env)
+            end)
+          false ->
+            :ok
         end
     end
   end
