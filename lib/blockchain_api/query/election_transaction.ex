@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     Util
   }
 
-  @default_limit 100
+  @default_limit 20
 
   def list(%{"before" => before, "limit" => limit}) do
     list_query()
@@ -67,19 +67,15 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp list_query do
     members_subquery = members_subquery()
     from(
-      e1 in ElectionTransaction,
+      et in ElectionTransaction,
+      join: t in Transaction,
+      on: et.hash == t.hash,
+      where: t.type == "election",
+      left_join: b in Block,
+      on: b.height == t.block_height,
       preload: [consensus_members: ^members_subquery],
-      join: t1 in Transaction,
-      on: e1.hash == t1.hash,
-      left_join: e2 in ElectionTransaction,
-      on: e2.id == e1.id + 1,
-      left_join: t2 in Transaction,
-      on: t2.hash == e2.hash,
-      left_join: b in subquery(blocks_subquery()),
-      on: b.height > t1.block_height and fragment("case when ? is null then true else ? <= ? end", t2.block_height, b.height, t2.block_height),
-      group_by: e1.id,
-      order_by: [desc: e1.id],
-      select: %{election_transaction: e1, blocks: fragment("json_agg(?)", b)}
+      order_by: [desc: et.id],
+      select: %{election_transaction: et, block: b}
     )
   end
 
@@ -112,22 +108,17 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode([]), do: []
   defp encode(entries), do: Enum.map(entries, &encode_entry/1)
 
-  defp encode_entry(%{election_transaction: etxn, blocks: blocks}) do
+  defp encode_entry(%{election_transaction: etxn, block: block}) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
-    blocks =
-      blocks
-      |> Stream.map(&Map.merge(Block.encode_model(&1), %{txns: &1["txns"]}))
-      |> Enum.sort(&Map.get(&1, :height) < Map.get(&2, :height))
+    block = Block.encode_model(block)
 
 
     %{
       id: etxn.id,
-      blocks_count: length(blocks),
       hash: Util.bin_to_string(etxn.hash),
-      start_time: List.first(blocks) |> Map.get(:time),
-      end_time: List.last(blocks) |> Map.get(:time),
+      start_time: block.time,
       members: members,
-      blocks: blocks
+      block: block
     }
   end
 

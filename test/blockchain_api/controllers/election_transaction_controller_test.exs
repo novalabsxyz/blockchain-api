@@ -24,18 +24,11 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           %{"address" => _, "score" => _},
           %{"address" => _, "score" => _}
         ],
-        "blocks" => [
-          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _},
-          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _},
-          %{"hash" => _, "height" => _, "round" => _, "time" => _, "txns" => _}
-        ],
+        "block" => %{"hash" => _, "height" => _, "round" => _, "time" => _},
         "id" => _,
-        "blocks_count" => _,
         "start_time" => _,
-        "end_time" => _,
         "hash" => _
       } = oldest_group
-      assert length(current_group["blocks"]) == 2
     end
 
     test "returns n consensus groups when limit param is set", %{conn: conn} do
