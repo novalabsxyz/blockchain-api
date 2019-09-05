@@ -64,4 +64,15 @@ defmodule BlockchainAPI.TestHelpers do
         c
       end)
   end
+
+  @account_valid_attrs %{balance: 1, address: "some address"}
+
+  def account_fixture(attrs \\ %{}) do
+      {:ok, account} =
+        attrs
+        |> Enum.into(@account_valid_attrs)
+        |> Query.Account.create()
+
+      account
+  end
 end
