@@ -27,3 +27,13 @@ config :blockchain_api,
   onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY"),
   onesignal_app_id: System.get_env("ONESIGNAL_APP_ID"),
   notifier_client: BlockchainAPI.NotifierClient
+
+# Configure your database
+config :blockchain_api, BlockchainAPI.Repo,
+  username: System.get_env("DATABASE_USER"),
+  password: System.get_env("DATABASE_PASS"),
+  database: System.get_env("DATABASE_NAME"),
+  hostname: System.get_env("DATABASE_HOST"),
+  pool_size: 20,
+  timeout: 120000,
+  log: false

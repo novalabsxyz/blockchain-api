@@ -1,0 +1,19 @@
+version: '3.5'
+
+services:
+  web:
+    image: "blockchain_api:latest"
+    ports:
+      - "80:4000" # In our .env file above, we chose port 4000
+    env_file:
+      - config/docker.env
+    depends_on:
+      - db
+  db:
+    image: postgres:10-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    env_file:
+      - config/docker.env
