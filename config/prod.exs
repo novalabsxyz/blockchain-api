@@ -18,40 +18,13 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
   check_origin: false,
-  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
-
-# cache_static_manifest: "priv/static/cache_manifest.json"
-
-config :blockchain_api, env: Mix.env()
-
-# Mostly secret information read from environment variables
-seed_nodes =
-  try do
-    Enum.map(String.split(System.get_env("SEED_NODES"), ","), &String.to_charlist/1)
-  rescue
-    _e ->
-      raise ArgumentError, message: "Export the env vars!"
-  end
-
-config :blockchain,
-  seed_nodes: seed_nodes,
-  seed_node_dns: String.to_charlist(System.get_env("SEED_NODE_DNS"))
-
-config :blockchain_api, BlockchainAPIWeb.Endpoint,
+  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
+  # cache_static_manifest: "priv/static/cache_manifest.json"
 
-config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
-config :blockchain_api, onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY")
-config :blockchain_api, onesignal_app_id: System.get_env("ONESIGNAL_APP_ID")
-config :blockchain_api, notifier_client: BlockchainAPI.NotifierClient
-
-# Configure your database
-config :blockchain_api, BlockchainAPI.Repo,
-  url: System.get_env("DATABASE_URL"),
-  username: System.get_env("DATABASE_USER"),
-  password: System.get_env("DATABASE_PASS"),
-  database: System.get_env("DATABASE_NAME"),
-  hostname: System.get_env("DATABASE_HOST"),
-  pool_size: 20,
-  timeout: 120_000,
-  log: false
+config :blockchain_api,
+  env: Mix.env(),
+  google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
+  onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY"),
+  onesignal_app_id: System.get_env("ONESIGNAL_APP_ID"),
+  notifier_client: BlockchainAPI.NotifierClient
