@@ -56,7 +56,7 @@ prod-console:
 
 # Test targets
 test:
-	MIX_ENV=test && $(MIX) test test/blockchain_api/controllers/stats_controller_test.exs --trace
+	MIX_ENV=test && $(MIX) test --trace
 
 testrelease:
 	export NO_ESCRIPT=1 MIX_ENV=test && $(MIX) distillery.release --env=test

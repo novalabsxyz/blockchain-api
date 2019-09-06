@@ -75,4 +75,20 @@ defmodule BlockchainAPI.TestHelpers do
 
       account
   end
+
+  def block_fixture(attrs \\ %{}) do
+      block_valid_attrs = %{
+        hash: :crypto.strong_rand_bytes(32),
+        round: :rand.uniform(99999999),
+        time: Util.current_time(),
+        height: :rand.uniform(99999999)
+      }
+
+      {:ok, block} =
+        attrs
+        |> Enum.into(block_valid_attrs)
+        |> Query.Block.create()
+
+      block
+  end
 end
