@@ -26,3 +26,11 @@ config :blockchain_api,
   env: Mix.env(),
   google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
   notifier_client: BlockchainAPI.FakeNotifierClient
+
+# Configure your database
+config :blockchain_api, BlockchainAPI.Repo,
+  url: System.get_env("DATABASE_URL"),
+  pool_size: 20,
+  timeout: 120000,
+  log: false
+
