@@ -35,42 +35,37 @@ defmodule BlockchainAPI.Query.Stats do
   def get_block_time(shift) do
     start = Util.shifted_unix_time(shift)
 
-    query_blocks_by_time(start, Util.current_time())
-    |> avg_block_interval()
+    query_block_interval(start, Util.current_time())
   end
 
-  defp query_blocks_by_time(start, finish) do
-    query =
+  defp query_block_interval(start, finish) do
+    interval_query =
       from(
-        b in Block,
-        where: b.time >= ^start,
-        where: b.time <= ^finish,
-        order_by: [desc: b.time],
+        b_0 in Block,
+        where: b_0.time >= ^start,
+        where: b_0.time <= ^finish,
+        left_join: b_1 in Block,
+        on: b_1.height == b_0.height - 1,
+        where: not is_nil(b_1.time),
+        order_by: [desc: b_0.height],
         select: %{
-          time: b.time
+          interval: b_0.time - b_1.time
         }
       )
 
-    query |> Repo.all()
-  end
+    query =
+      from(
+        sq in subquery(interval_query),
+        select: %{
+          avg_interval: avg(sq.interval)
+        }
+      )
 
-  defp avg_block_interval([]) do
-    0.0
-  end
+    %{avg_interval: avg_interval} = query |> Repo.one()
 
-  defp avg_block_interval(blocks) do
-    # assumes ordered desc
-    for {%{time: time_a}, i} <- Enum.with_index(blocks) do
-      case Enum.at(blocks, i + 1) do
-        %{time: time_b} -> time_a - time_b
-        nil -> nil
-      end
+    case avg_interval do
+      nil -> 0.0
+      avg_interval -> avg_interval |> Decimal.to_float()
     end
-    |> Enum.reject(&is_nil/1)
-    |> average()
-  end
-
-  defp average(list) do
-    Enum.sum(list) / length(list)
   end
 end

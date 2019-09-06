@@ -15,10 +15,12 @@ defmodule BlockchainAPI.Query.StatsTest do
 
   describe "block time" do
     test "get_block_time/1 given 24h shift returns avg block times" do
-      block_fixture(%{time: Util.shifted_unix_time(hours: -22)})
-      block_fixture(%{time: Util.shifted_unix_time(hours: -23)})
-      block_fixture(%{time: Util.shifted_unix_time(hours: -230)})
-      assert Stats.get_block_time(hours: -24) == 3600.0
+      block_fixture(%{time: Util.shifted_unix_time(seconds: -60), height: 3})
+      block_fixture(%{time: Util.shifted_unix_time(seconds: -125), height: 2})
+      block_fixture(%{time: Util.shifted_unix_time(seconds: -230), height: 1})
+      # intervals: 65, 105
+      # avg: 85
+      assert Stats.get_block_time(hours: -24) == 85.0
     end
   end
 end
