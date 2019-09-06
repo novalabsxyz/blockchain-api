@@ -58,15 +58,6 @@ prod-console:
 test:
 	MIX_ENV=test && $(MIX) test --trace
 
-testrelease:
-	export NO_ESCRIPT=1 MIX_ENV=test && $(MIX) distillery.release --env=test
-
-test-start:
-	./_build/test/rel/blockchain_api/bin/blockchain_api start
-
-test-console:
-	./_build/test/rel/blockchain_api/bin/blockchain_api console
-
 reset-test-db:
 	MIX_ENV=test && $(MIX) ecto.reset
 
