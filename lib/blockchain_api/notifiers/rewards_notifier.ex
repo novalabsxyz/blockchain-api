@@ -7,7 +7,6 @@ defmodule BlockchainAPI.RewardsNotifier do
     Util
   }
 
-  @notifier_client Application.fetch_env!(:blockchain_api, :notifier_client)
   @ticker "HLM"
 
   def start_link(_) do
@@ -41,7 +40,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     |> Enum.map(fn r ->
       reward = reward_data(r)
 
-      @notifier_client.post(reward, message(reward), reward.address, %{
+      Util.notifier_client().post(reward, message(reward), reward.address, %{
         delayed_option: "timezone",
         delivery_time_of_day: "10:00AM"
       })
@@ -61,4 +60,5 @@ defmodule BlockchainAPI.RewardsNotifier do
   defp message(reward) do
     "Your hotspots earned #{reward.amount} #{@ticker} from mining in the past week."
   end
+
 end
