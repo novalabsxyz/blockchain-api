@@ -42,7 +42,6 @@ defmodule BlockchainAPI.Schema.PendingPayment do
     |> validate_required(@fields)
     |> foreign_key_constraint(:payer)
     |> unique_constraint(:unique_pending_payment, name: :unique_pending_payment)
-    |> unique_constraint(:unique_pending_payment_nonce, name: :unique_pending_payment_nonce)
   end
 
   def encode_model(pending_payment) do
