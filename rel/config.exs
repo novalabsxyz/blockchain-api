@@ -38,6 +38,12 @@ environment :dev do
     ledger: "rel/commands/ledger",
     status: "rel/commands/status"
   ]
+  set config_providers: [
+    {Distillery.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/dev.exs"]}
+  ]
+  set overlays: [
+    {:copy, "rel/config/dev.exs", "etc/dev.exs"}
+  ]
 end
 
 environment :prod do
@@ -51,18 +57,11 @@ environment :prod do
     ledger: "rel/commands/ledger",
     status: "rel/commands/status"
   ]
-end
-
-environment :test do
-  set include_erts: false
-  set include_src: false
-  set cookie: :"r0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2oeY"
-  set vm_args: "rel/vm.args"
-  set commands: [
-    peer: "rel/commands/peer",
-    genesis: "rel/commands/genesis",
-    ledger: "rel/commands/ledger",
-    status: "rel/commands/status"
+  set config_providers: [
+    {Distillery.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/prod.exs"]}
+  ]
+  set overlays: [
+    {:copy, "rel/config/prod.exs", "etc/prod.exs"}
   ]
 end
 
