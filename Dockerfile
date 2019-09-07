@@ -17,7 +17,7 @@ ARG APP_NAME
 # The version of the application we are building (required)
 ARG APP_VSN
 # The environment to build with
-ARG MIX_ENV=prod
+ARG MIX_ENV
 
 #==========================================================
 # Set ENV using build args
@@ -32,7 +32,9 @@ ENV APP_NAME=${APP_NAME} \
 #==========================================================
 ENV LD_LIBRARY_PATH /usr/local/lib
 RUN apt-get update
-RUN apt-get install -y autoconf automake libtool flex bison libgmp-dev cmake build-essential libssl-dev
+RUN apt-get install -y curl locales autoconf automake libtool flex bison libgmp-dev cmake build-essential libssl-dev
+RUN locale-gen "en_US.UTF-8"
+ENV LANG=en_US.UTF-8
 RUN git clone -b stable https://github.com/jedisct1/libsodium.git
 RUN cd libsodium && ./configure --prefix=/usr && make check && make install && cd ..
 

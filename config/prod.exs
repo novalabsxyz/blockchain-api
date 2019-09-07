@@ -38,3 +38,6 @@ config :blockchain_api, BlockchainAPI.Repo,
   pool_size: 20,
   timeout: 120000,
   log: false
+
+config :blockchain,
+  base_dir: String.to_charlist("/var/data/prod/")

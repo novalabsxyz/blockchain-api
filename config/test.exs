@@ -33,4 +33,5 @@ config :blockchain_api,
 # Don't connect dev to seed nodes
 config :blockchain,
   seed_nodes: [],
-  seed_node_dns: ''
+  seed_node_dns: '',
+  base_dir: String.to_charlist("/var/data/test/")

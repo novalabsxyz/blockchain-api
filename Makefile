@@ -66,4 +66,9 @@ ci:
 
 # Build the Docker image
 docker-build:
-	docker build --build-arg APP_NAME=$(APP_NAME) --build-arg APP_VSN=$(APP_VSN) -t helium/$(APP_NAME):$(APP_VSN)-$(BUILD) -t helium/$(APP_NAME):latest .
+	docker build \
+		--build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg MIX_ENV=$(MIX_ENV) \
+		-t helium/$(APP_NAME):$(APP_VSN)-$(BUILD) \
+		-t helium/$(APP_NAME):latest .

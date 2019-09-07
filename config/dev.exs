@@ -18,7 +18,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
   check_origin: false,
-  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]],
+  # force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
   # cache_static_manifest: "priv/static/cache_manifest.json"
 
@@ -36,3 +36,6 @@ config :blockchain_api, BlockchainAPI.Repo,
   pool_size: 20,
   timeout: 120000,
   log: false
+
+config :blockchain,
+  base_dir: String.to_charlist("/var/data/dev/")

@@ -21,8 +21,7 @@ defmodule BlockchainAPI.Application do
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
-    base_dir = ~c(data)
-
+    base_dir = Application.get_env(:blockchain, :base_dir, String.to_charlist("data"))
     swarm_key = to_charlist(:filename.join([base_dir, "blockchain_api", "swarm_key"]))
     :ok = :filelib.ensure_dir(swarm_key)
 
@@ -40,8 +39,8 @@ defmodule BlockchainAPI.Application do
           {pub_key, :libp2p_crypto.mk_ecdh_fun(priv_key), :libp2p_crypto.mk_sig_fun(priv_key)}
       end
 
-    seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
-    seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
+    seed_nodes = Application.get_env(:blockchain, :seed_nodes, [])
+    seed_node_dns = Application.get_env(:blockchain, :seed_node_dns, '')
     seed_addresses = dns_to_addresses(seed_node_dns)
 
     blockchain_sup_opts = [
@@ -52,7 +51,7 @@ defmodule BlockchainAPI.Application do
       {:base_dir, base_dir}
     ]
 
-    env = Application.fetch_env!(:blockchain_api, :env)
+    env = Application.get_env(:blockchain_api, :env, :test)
     watcher_worker_opts = [{:env, env}]
 
     # Children to start in test, dev and prod envs
