@@ -63,3 +63,7 @@ reset-test-db:
 
 ci:
 	export MIX_ENV=test PORT=4002 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
+
+# Build the Docker image
+docker-build:
+	docker build --build-arg APP_NAME=$(APP_NAME) --build-arg APP_VSN=$(APP_VSN) -t helium/$(APP_NAME):$(APP_VSN)-$(BUILD) -t helium/$(APP_NAME):latest .

@@ -1,19 +1,26 @@
 version: '3.5'
 
 services:
-  web:
-    image: "blockchain_api:latest"
-    ports:
-      - "80:4000" # In our .env file above, we chose port 4000
+  api:
+    build: .
+    image: "helium/blockchain_api:latest"
+    restart: always
+    volumes:
+      - /var/data/blockchain_api:/var/data
+    depends_on:
+      - postgres
     env_file:
       - config/docker.env
     depends_on:
-      - db
-  db:
-    image: postgres:10-alpine
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres
     ports:
-      - "5432"
+      - "4000:4000"
+  postgres:
+    build: ./postgres
+    image: helium/postgres:local
+    container_name: postgres
+    restart: always
+    volumes:
+      - /var/data/postgresql:/var/lib/postgresql/data
     env_file:
       - config/docker.env
