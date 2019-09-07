@@ -5,9 +5,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   alias BlockchainAPI.{
     Repo,
     Schema.Block,
-    Schema.ConsensusMember,
     Schema.ElectionTransaction,
-    Schema.Hotspot,
     Schema.Transaction,
     Util
   }
@@ -41,6 +39,16 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> encode()
   end
 
+  def get(hash) do
+    hash = Util.string_to_bin(hash)
+    from(
+      e in ElectionTransaction,
+      preload: [:consensus_members],
+      where: e.hash == ^hash
+    )
+    |> Repo.one()
+    |> encode_entry()
+  end
   def get!(hash) do
     from(
       e in ElectionTransaction,
@@ -65,37 +73,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   defp list_query do
-    members_subquery = members_subquery()
     from(
-      et in ElectionTransaction,
+      from et in ElectionTransaction,
       join: t in Transaction,
-      on: et.hash == t.hash,
-      where: t.type == "election",
+      on: t.hash == et.hash,
       left_join: b in Block,
-      on: b.height == t.block_height,
-      preload: [consensus_members: ^members_subquery],
-      order_by: [desc: et.id],
-      select: %{election_transaction: et, block: b}
-    )
-  end
-
-  defp members_subquery do
-    from(
-      cm in ConsensusMember,
-      left_join: h in Hotspot,
-      on: cm.address == h.address,
-      select: %{address: cm.address, score: h.score}
-    )
-  end
-
-  defp blocks_subquery do
-    from(
-      b in Block,
-      left_join: t in Transaction,
       on: t.block_height == b.height,
-      group_by: b.id,
-      order_by: [desc: b.height],
-      select: %{height: b.height, hash: b.hash, round: b.round, time: b.time, txns: count(t.id)}
+      order_by: [desc: t.id],
+      select: %{etxn: et, block: b}
     )
   end
 
@@ -108,19 +93,30 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode([]), do: []
   defp encode(entries), do: Enum.map(entries, &encode_entry/1)
 
-  defp encode_entry(%{election_transaction: etxn, block: block}) do
-    members = Enum.map(etxn.consensus_members, &encode_member/1)
-    block = Block.encode_model(block)
-
-
+  defp encode_entry(%{etxn: etxn, block: block}) do
     %{
       id: etxn.id,
+      proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
-      start_time: block.time,
-      members: members,
-      block: block
+      election_height: etxn.election_height,
+      delay: etxn.delay,
+      start_time: block.time
     }
   end
+
+  defp encode_entry(entry) when not is_nil(entry) do
+    members = Enum.map(entry.consensus_members, &encode_member/1)
+
+    %{
+      members: members,
+      proof: Util.bin_to_string(entry.proof),
+      hash: Util.bin_to_string(entry.hash),
+      election_height: entry.election_height,
+      delay: entry.delay
+    }
+  end
+
+  defp encode_entry(nil), do: %{}
 
   defp encode_member(%{address: address, score: score}) do
     %{address: Util.bin_to_string(address), score: score}

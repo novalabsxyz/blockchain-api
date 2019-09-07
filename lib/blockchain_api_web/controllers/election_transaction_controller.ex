@@ -6,7 +6,17 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
-    consensus_groups = Query.ElectionTransaction.list(params)
-    render(conn, "index.json", groups: consensus_groups)
+    elections = Query.ElectionTransaction.list(params)
+    render(conn, "index.json", elections: elections)
+  end
+
+  def show(conn, %{"hash" => hash}) do
+    election =
+      case Query.ElectionTransaction.get(hash) do
+        nil -> %{}
+        election -> election
+      end
+
+    render(conn, "show.json", election: election)
   end
 end

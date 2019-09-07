@@ -1,58 +1,94 @@
 defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
   use BlockchainAPIWeb.ConnCase
 
+  import Ecto.Query
+
   alias BlockchainAPI.{
     Query,
     Repo,
-    Schema.ElectionTransaction
+    Schema.ElectionTransaction,
+    Util
   }
 
   describe "index/2" do
     setup [:insert_election_transactions]
 
-    test "returns list of conensus groups", %{conn: conn} do
-      %{"data" => [current_group|_] = groups} =
+    test "returns list of conensus elections", %{conn: conn} do
+      %{"data" => elections} =
         conn
-        |> get(Routes.groups_path(conn, :index, %{}))
+        |> get(Routes.election_transaction_path(conn, :index, %{}))
         |> json_response(200)
 
-      oldest_group = List.last(groups)
-      assert length(groups) == 10
+      oldest_election = List.last(elections)
+      assert length(elections) == 10
       assert %{
-        "members" => [
-          %{"address" => _, "score" => _},
-          %{"address" => _, "score" => _},
-          %{"address" => _, "score" => _}
-        ],
-        "block" => %{"hash" => _, "height" => _, "round" => _, "time" => _},
+        "delay" => _,
         "id" => _,
+        "election_height" => _,
+        "proof" => _,
         "start_time" => _,
         "hash" => _
-      } = oldest_group
+      } = oldest_election
     end
 
-    test "returns n consensus groups when limit param is set", %{conn: conn} do
-      %{"data" => [group|_] = groups} =
+    test "returns n consensus elections when limit param is set", %{conn: conn} do
+      %{"data" => elections} =
         conn
-        |> get(Routes.groups_path(conn, :index, %{limit: 4}))
+        |> get(Routes.election_transaction_path(conn, :index, %{limit: 4}))
         |> json_response(200)
 
-      assert length(groups) == 4
+      assert length(elections) == 4
     end
 
-    test "returns prior consensus groups when before param is set", %{conn: conn} do
+    test "returns prior consensus elections when before param is set", %{conn: conn} do
       first_id =
         ElectionTransaction
         |> Repo.all()
         |> hd()
         |> Map.get(:id)
 
-      %{"data" =>  groups} =
+      %{"data" => elections} =
         conn
-        |> get(Routes.groups_path(conn, :index, %{before: first_id + 1}))
+        |> get(Routes.election_transaction_path(conn, :index, %{before: first_id + 1}))
         |> json_response(200)
 
-      assert length(groups) == 1
+      assert length(elections) == 1
+    end
+  end
+
+  describe "show/2" do
+    setup [:insert_election_transactions]
+
+    test "returns election transaction by hash", %{conn: conn} do
+      etxn =
+        from(
+          e in ElectionTransaction,
+          limit: 1
+        )
+        |> Repo.one()
+
+      %{"data" => resp} =
+        conn
+        |> get(Routes.election_transaction_path(conn, :show, Util.bin_to_string(etxn.hash)))
+        |> json_response(200)
+
+      assert %{
+        "delay" => _,
+        "election_height" => _,
+        "hash" => _,
+        "proof" => _,
+        "members" => [_,_,_]
+      } = resp
+    end
+
+    test "returns empty map when no election transaction matches hash", %{conn: conn} do
+      fake_hash = :crypto.strong_rand_bytes(32) |> Util.bin_to_string()
+      %{"data" => resp} =
+        conn
+        |> get(Routes.election_transaction_path(conn, :show, fake_hash))
+        |> json_response(200)
+
+      assert resp == %{}
     end
   end
 
@@ -119,7 +155,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           hash: :crypto.strong_rand_bytes(32),
           type: "payment"
         })
-      {:ok, members: [cm1, cm2, cm3], blocks: [b1, b2, b3], group: et}
+      {:ok, members: [cm1, cm2, cm3], blocks: [b1, b2, b3], etxn: et}
     end)
   end
 end
