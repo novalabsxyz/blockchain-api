@@ -31,17 +31,17 @@ defmodule BlockchainAPI.Query.AccountBalance do
   # Helper functions
   #==================================================================
   defp get_account_balances_daily(address) do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    start = Util.shifted_unix_time(hours: -24)
     query_account_balance(address, start, Util.current_time())
   end
 
   defp get_account_balances_weekly(address) do
-    start = Timex.now() |> Timex.shift(days: -7) |> Timex.to_unix()
+    start = Util.shifted_unix_time(days: -7)
     query_account_balance(address, start, Util.current_time())
   end
 
   defp get_account_balances_monthly(address) do
-    start = Timex.now() |> Timex.shift(days: -30) |> Timex.to_unix()
+    start = Util.shifted_unix_time(days: -30)
     query_account_balance(address, start, Util.current_time())
   end
 

@@ -164,6 +164,10 @@ defmodule BlockchainAPI.Util do
     Timex.now() |> Timex.to_unix()
   end
 
+  def shifted_unix_time(shift) do
+    Timex.now() |> Timex.shift(shift) |> Timex.to_unix()
+  end
+
   @pi_over_180 3.14159265359 / 180.0
   @radius_of_earth_meters 6_371_008.8
 
