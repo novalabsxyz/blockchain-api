@@ -25,6 +25,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         "delay" => _,
         "id" => _,
         "election_height" => _,
+        "block_height" => _,
         "proof" => _,
         "start_time" => _,
         "hash" => _
@@ -75,6 +76,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
       assert %{
         "delay" => _,
         "election_height" => _,
+        "block_height" => _,
         "hash" => _,
         "proof" => _,
         "members" => [_,_,_]

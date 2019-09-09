@@ -23,9 +23,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   def get(hash) do
     hash = Util.string_to_bin(hash)
     from(
-      e in ElectionTransaction,
+      et in ElectionTransaction,
+      where: et.hash == ^hash,
+      join: t in Transaction,
+      on: et.hash  == t.hash,
+      left_join: b in Block,
+      on: t.block_height == b.height,
       preload: [:consensus_members],
-      where: e.hash == ^hash
+      select: %{etxn: et, block: b}
     )
     |> Repo.one()
     |> encode_entry()
@@ -88,28 +93,43 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   defp encode([]), do: []
-  defp encode(entries), do: Enum.map(entries, &encode_entry/1)
+  defp encode(entries), do: Enum.map(entries, &encode_list_entry/1)
 
-  defp encode_entry(%{etxn: etxn, block: block}) do
+  defp encode_list_entry(%{etxn: etxn, block: block}) do
     %{
       id: etxn.id,
       proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
+      block_height: block.height,
       delay: etxn.delay,
       start_time: block.time
     }
   end
 
-  defp encode_entry(entry) when not is_nil(entry) do
-    members = Enum.map(entry.consensus_members, &encode_member/1)
+  defp encode_entry(%{etxn: etxn, block: block}) do
+    members = Enum.map(etxn.consensus_members, &encode_member/1)
 
     %{
       members: members,
-      proof: Util.bin_to_string(entry.proof),
-      hash: Util.bin_to_string(entry.hash),
-      election_height: entry.election_height,
-      delay: entry.delay
+      proof: Util.bin_to_string(etxn.proof),
+      hash: Util.bin_to_string(etxn.hash),
+      election_height: etxn.election_height,
+      start_time: block.time,
+      block_height: block.height,
+      delay: etxn.delay
+    }
+  end
+
+  defp encode_entry(etxn) when not is_nil(etxn) do
+    members = Enum.map(etxn.consensus_members, &encode_member/1)
+
+    %{
+      members: members,
+      proof: Util.bin_to_string(etxn.proof),
+      hash: Util.bin_to_string(etxn.hash),
+      election_height: etxn.election_height,
+      delay: etxn.delay
     }
   end
 
