@@ -12,10 +12,10 @@ defmodule BlockchainAPI.NotifierClient do
     ]
   end
 
-  defp to_payload(data, message, _send_address, opts) do
+  defp to_payload(data, message, send_address, opts) do
     %{
       :app_id => Application.fetch_env!(:blockchain_api, :onesignal_app_id),
-      :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => data.address}],
+      :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => send_address}],
       :contents => %{:en => message},
       :data => data
     }
