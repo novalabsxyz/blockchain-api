@@ -12,29 +12,10 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
   @default_limit 20
 
-  def list(%{"before" => before, "limit" => limit}) do
-    list_query()
-    |> filter_before(before, limit)
-    |> Repo.all()
-    |> encode()
-  end
 
-  def list(%{"before" => before}) do
+  def list(params) do
     list_query()
-    |> filter_before(before, @default_limit)
-    |> Repo.all()
-    |> encode()
-  end
-
-  def list(%{"limit" => limit}) do
-    list_query()
-    |> limit(^limit)
-    |> Repo.all()
-    |> encode()
-  end
-
-  def list(_) do
-    list_query()
+    |> maybe_filter(params)
     |> Repo.all()
     |> encode()
   end
@@ -84,10 +65,26 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     )
   end
 
-  defp filter_before(query, before, limit) do
+  defp maybe_filter(query, %{"before" => before, "limit" => limit}) do
     query
     |> where([et], et.id < ^before)
     |> limit(^limit)
+  end
+
+  defp maybe_filter(query, %{"before" => before}) do
+    query
+    |> where([et], et.id < ^before)
+    |> limit(@default_limit)
+  end
+
+  defp maybe_filter(query, %{"limit" => limit}) do
+    query
+    |> limit(^limit)
+  end
+
+  defp maybe_filter(query, _) do
+    query
+    |> limit(@default_limit)
   end
 
   defp encode([]), do: []
