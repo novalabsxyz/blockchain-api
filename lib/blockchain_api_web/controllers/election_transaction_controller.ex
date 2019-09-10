@@ -12,7 +12,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
 
   def show(conn, %{"hash" => hash}) do
     election =
-      case Query.ElectionTransaction.get(hash) do
+      case Query.ElectionTransaction.get_consensus_group(hash) do
         nil -> %{}
         election -> election
       end
