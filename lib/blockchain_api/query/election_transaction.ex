@@ -68,7 +68,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       where: t.block_height > ^start_block.height,
       left_join: b in Block,
       where: b.height == t.block_height,
-      order_by: [desc: b.id],
+      order_by: [asc: b.id],
       limit: 1,
       select: {b.time, b.height}
     )
