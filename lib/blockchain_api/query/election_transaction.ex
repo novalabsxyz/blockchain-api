@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{
+    Query,
     Repo,
     Schema.Block,
     Schema.ElectionTransaction,
@@ -38,7 +39,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       join: t in Transaction,
       on: et.hash  == t.hash,
       left_join: b in Block,
-      on: t.block_height == b.height,
+      on: b.height == t.block_height + 1,
       preload: [:consensus_members],
       select: %{etxn: et, start_block: b}
     )
@@ -76,14 +77,11 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     blocks_count =
       case end_height do
         nil ->
-          from(
-            b in Block,
-            where: b.height > ^end_height,
-            select: sum(b.id)
-          )
-        _ -> end_height - start_block.height
+          Query.Block.get_latest_height() - start_block.height
+        _ ->
+          end_height - start_block.height
       end
-    Map.put(group, :end_block, %{time: end_time, blocks_count: blocks_count})
+    Map.put(group, :end_block, %{end_time: end_time, blocks_count: blocks_count})
   end
 
   def with_end_block(nil), do: nil
@@ -94,9 +92,9 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       join: t in Transaction,
       on: t.hash == et.hash,
       left_join: b in Block,
-      on: t.block_height == b.height,
+      on: b.height == t.block_height + 1,
       order_by: [desc: t.id],
-      select: %{etxn: et, block: b}
+      select: %{etxn: et, start_block: b}
     )
   end
 
@@ -125,13 +123,13 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode([]), do: []
   defp encode(entries), do: Enum.map(entries, &encode_list_entry/1)
 
-  defp encode_list_entry(%{etxn: etxn, block: block}) do
+  defp encode_list_entry(%{etxn: etxn, start_block: block}) do
     %{
       id: etxn.id,
       proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
-      block_height: block.height,
+      start_height: block.height,
       delay: etxn.delay,
       start_time: block.time
     }
@@ -146,9 +144,9 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
       start_time: start_block.time,
-      end_time: end_block.time,
+      end_time: end_block.end_time,
       blocks_count: end_block.blocks_count,
-      block_height: start_block.height,
+      start_height: start_block.height,
       delay: etxn.delay
     }
   end
