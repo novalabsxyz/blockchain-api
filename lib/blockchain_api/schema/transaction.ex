@@ -1,7 +1,8 @@
 defmodule BlockchainAPI.Schema.Transaction do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.Transaction, Schema.Block}
+  alias BlockchainAPI.{Schema.Block, Schema.Transaction, Util}
+
   @fields [:id, :hash, :type, :block_height]
 
   @derive {Phoenix.Param, key: :hash}

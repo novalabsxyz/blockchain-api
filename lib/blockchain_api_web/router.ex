@@ -30,6 +30,7 @@ defmodule BlockchainAPIWeb.Router do
     resources "/gateway_transactions", GatewayController, only: [:index, :show], param: "hash"
     resources "/location_transactions", LocationController, only: [:index, :show], param: "hash"
     resources "/challenges", ChallengeController, only: [:index, :show], param: "id"
+    resources "/elections", ElectionTransactionController, only: [:index, :show], param: "hash"
 
     get "/pending_gateways", PendingGatewayController, :show
     get "/pending_locations", PendingLocationController, :show
