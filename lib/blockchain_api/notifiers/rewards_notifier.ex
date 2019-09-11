@@ -2,7 +2,10 @@ defmodule BlockchainAPI.RewardsNotifier do
   use Task
   require Logger
 
-  alias BlockchainAPI.Query.RewardTxn
+  alias BlockchainAPI.{
+    Query.RewardTxn,
+    Util
+  }
 
   @notifier_client Application.fetch_env!(:blockchain_api, :notifier_client)
   @ticker "HLM"
@@ -29,16 +32,17 @@ defmodule BlockchainAPI.RewardsNotifier do
   def send_notifications do
     Logger.info("Notifying for weekly rewards")
     RewardTxn.get_from_last_week()
-    |> Enum.map(fn reward ->
-      @notifier_client.post(reward_data(reward), message(reward), reward.account, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
+    |> Enum.map(fn r ->
+      reward = reward_data(r)
+      @notifier_client.post(reward, message(reward), reward.address, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
     end)
     :timer.apply_after(@interval, __MODULE__, :send_notifications, [])
   end
 
   defp reward_data(reward) do
     %{
-      address: reward.account,
-      amount: reward.amount,
+      address: Util.bin_to_string(reward.account),
+      amount: Util.units(reward.amount),
       type: "receivedRewards"
     }
   end
