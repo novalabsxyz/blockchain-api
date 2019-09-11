@@ -69,6 +69,7 @@ defmodule BlockchainAPI.MixProject do
       {:distillery, "~> 2.0"},
       {:cors_plug, "~> 2.0"},
       {:logger_file_backend, "~> 0.0.10"},
+      {:uuid, "~> 1.1"},
 
       # blockchain requirements
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
