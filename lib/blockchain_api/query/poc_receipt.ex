@@ -14,4 +14,10 @@ defmodule BlockchainAPI.Query.POCReceipt do
     |> POCReceipt.changeset(attrs)
     |> Repo.insert()
   end
+
+  def list_for(hotspot_address) do
+    POCReceipt
+    |> where([p], p.gateway == ^hotspot_address)
+    |> Repo.all()
+  end
 end

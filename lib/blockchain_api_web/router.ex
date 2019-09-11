@@ -21,6 +21,8 @@ defmodule BlockchainAPIWeb.Router do
     resources "/hotspots", HotspotController, only: [:index, :show], param: "address" do
       resources "/activity", ActivityController, only: [:index]
       resources "/rewards", HotspotRewardController, only: [:index]
+      get "/receipts", HotspotController, :receipts
+      get "/witnesses", HotspotController, :witnesses
     end
 
     resources "/transactions", TransactionController, only: [:index, :show, :create], param: "hash"

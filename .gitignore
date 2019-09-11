@@ -35,7 +35,7 @@ blockchain_node-*.tar
 # variables.
 /config/prod.secret.exs
 /config/dev.secret.exs
-/config/docker.env
+/config/docker*.env
 
 /data*
 /log
