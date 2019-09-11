@@ -13,9 +13,14 @@ defmodule BlockchainAPI.Query.Stats do
   }
 
   def list() do
-    %{avg_time_interval: day_election_time, avg_block_interval: day_election_block} = get_election_time(hours: -24)
-    %{avg_time_interval: week_election_time, avg_block_interval: week_election_block} = get_election_time(days: -7)
-    %{avg_time_interval: month_election_time, avg_block_interval: month_election_block} = get_election_time(days: -30)
+    %{avg_time_interval: day_election_time, avg_block_interval: day_election_block} =
+      get_election_time(hours: -24)
+
+    %{avg_time_interval: week_election_time, avg_block_interval: week_election_block} =
+      get_election_time(days: -7)
+
+    %{avg_time_interval: month_election_time, avg_block_interval: month_election_block} =
+      get_election_time(days: -30)
 
     %{
       "token_supply" => %{
@@ -35,7 +40,7 @@ defmodule BlockchainAPI.Query.Stats do
         "24h" => day_election_block,
         "7d" => week_election_block,
         "30d" => month_election_block
-      },
+      }
     }
   end
 
