@@ -62,25 +62,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   def with_end_block(%{start_block: start_block} = group) do
-    {end_time, end_height} = from(
-      t in Transaction,
-      where: t.type == "election",
-      where: t.block_height > ^start_block.height,
-      left_join: b in Block,
-      where: b.height == t.block_height,
-      order_by: [asc: b.id],
-      limit: 1,
-      select: {b.time, b.height}
-    )
-    |> Repo.one()
-
-    blocks_count =
-      case end_height do
+    {end_time, blocks_count} =
+      case start_block |> end_block_query() |> Repo.one() do
         nil ->
-          Query.Block.get_latest_height() - start_block.height
-        _ ->
-          end_height - start_block.height
+          {nil, Query.Block.get_latest_height() - start_block.height}
+        {end_time, end_height} ->
+          {end_time, end_height - start_block.height}
       end
+
     Map.put(group, :end_block, %{end_time: end_time, blocks_count: blocks_count})
   end
 
@@ -98,6 +87,18 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     )
   end
 
+  defp end_block_query(start_block) do
+    from(
+      t in Transaction,
+      where: t.type == "election",
+      where: t.block_height > ^start_block.height,
+      left_join: b in Block,
+      where: b.height == t.block_height,
+      order_by: [asc: b.id],
+      limit: 1,
+      select: {b.time, b.height}
+    )
+  end
   defp maybe_filter(query, %{"before" => before, "limit" => limit}) do
     query
     |> where([et], et.id < ^before)

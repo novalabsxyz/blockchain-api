@@ -86,6 +86,33 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
       } = resp
     end
 
+    test "returns last election transaction", %{conn: conn} do
+      etxn =
+        from(
+          e in ElectionTransaction,
+          order_by: [desc: :id],
+          limit: 1
+        )
+        |> Repo.one()
+
+      %{"data" => resp} =
+        conn
+        |> get(Routes.election_transaction_path(conn, :show, Util.bin_to_string(etxn.hash)))
+        |> json_response(200)
+
+      assert %{
+        "delay" => _,
+        "election_height" => _,
+        "start_height" => _,
+        "hash" => _,
+        "proof" => _,
+        "start_time" => _,
+        "end_time" => _,
+        "blocks_count" => _,
+        "members" => [_,_,_]
+      } = resp
+    end
+
     test "returns empty map when no election transaction matches hash", %{conn: conn} do
       fake_hash = :crypto.strong_rand_bytes(32) |> Util.bin_to_string()
       %{"data" => resp} =
