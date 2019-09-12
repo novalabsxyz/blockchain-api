@@ -18,6 +18,7 @@ defmodule BlockchainAPI.Query.POCReceipt do
   def list_for(hotspot_address) do
     POCReceipt
     |> where([p], p.gateway == ^hotspot_address)
+    |> select([p], map(p, [:timestamp, :signal, :origin]))
     |> Repo.all()
   end
 end

@@ -34,7 +34,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   def receipts(conn, %{"hotspot_address" => address}) do
     receipts =
       with address <- Util.string_to_bin(address),
-           hotspot when not is_nil(hotspot) <- Query.Hotspot.get(address) do
+           hotspot when not is_nil(hotspot) <- Query.Hotspot.get!(address) do
         Query.POCReceipt.list_for(hotspot.address)
       else
         _ -> nil
@@ -48,7 +48,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   def witnesses(conn, %{"hotspot_address" => address}) do
     witnesses =
       with address <- Util.string_to_bin(address),
-           hotspot when not is_nil(hotspot) <- Query.Hotspot.get(address) do
+           hotspot when not is_nil(hotspot) <- Query.Hotspot.get!(address) do
         Query.POCWitness.list_for(hotspot.address)
       else
         _ -> nil

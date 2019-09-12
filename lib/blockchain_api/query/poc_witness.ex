@@ -18,6 +18,7 @@ defmodule BlockchainAPI.Query.POCWitness do
   def list_for(hotspot_address) do
     POCWitness
     |> where([w], w.gateway == ^hotspot_address)
+    |> select([w], map(w, [:timestamp, :signal, :distance]))
     |> Repo.all()
   end
 end
