@@ -89,22 +89,20 @@ defmodule BlockchainAPI.Committer do
   defp insert_or_update_all_account(ledger) do
     {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
 
-    maps =
-      ledger
-      |> :blockchain_ledger_v1.entries()
-      |> Enum.reduce(
-        [],
-        fn {address, entry}, acc ->
-          map = %{
-            nonce: :blockchain_ledger_entry_v1.nonce(entry),
-            balance: :blockchain_ledger_entry_v1.balance(entry),
-            address: address,
-            fee: fee
-          }
-
-          [map | acc]
-        end
-      )
+    maps = ledger
+           |> :blockchain_ledger_v1.entries()
+           |> Enum.reduce([],
+             fn ({address, entry}, acc) ->
+               map = %{
+                 nonce: :blockchain_ledger_entry_v1.nonce(entry),
+                 balance: :blockchain_ledger_entry_v1.balance(entry),
+                 security_nonce: :blockchain_ledger_security_entry_v1.nonce(entry),
+                 security_balance: :blockchain_ledger_security_entry_v1.balance(entry),
+                 data_credit_balance: :blockchain_ledger_data_credits_entry_v1.balance(entry),
+                 address: address,
+                 fee: fee}
+               [map | acc]
+             end)
 
     Repo.transaction(fn ->
       Enum.each(
