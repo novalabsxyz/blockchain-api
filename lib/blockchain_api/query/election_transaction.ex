@@ -3,6 +3,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{
+    Query,
     Repo,
     Schema.Block,
     Schema.ElectionTransaction,
@@ -20,21 +21,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> encode()
   end
 
-  def get(hash) do
-    hash = Util.string_to_bin(hash)
-    from(
-      et in ElectionTransaction,
-      where: et.hash == ^hash,
-      join: t in Transaction,
-      on: et.hash  == t.hash,
-      left_join: b in Block,
-      on: t.block_height == b.height,
-      preload: [:consensus_members],
-      select: %{etxn: et, block: b}
-    )
-    |> Repo.one()
-    |> encode_entry()
-  end
   def get!(hash) do
     from(
       e in ElectionTransaction,
@@ -43,6 +29,23 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     )
     |> Repo.one!()
     |> encode_entry()
+  end
+
+  def get_consensus_group(hash) do
+    hash = Util.string_to_bin(hash)
+    from(
+      et in ElectionTransaction,
+      where: et.hash == ^hash,
+      join: t in Transaction,
+      on: et.hash  == t.hash,
+      left_join: b in Block,
+      on: b.height == t.block_height + 1,
+      preload: [:consensus_members],
+      select: %{etxn: et, start_block: b}
+    )
+    |> Repo.one()
+    |> with_end_block()
+    |> encode_group_entry()
   end
 
   def create(attrs \\ %{}) do
@@ -58,18 +61,44 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> Enum.map(&encode_member/1)
   end
 
+  def with_end_block(%{start_block: start_block} = group) do
+    {end_time, blocks_count} =
+      case start_block |> end_block_query() |> Repo.one() do
+        nil ->
+          {nil, Query.Block.get_latest_height() - start_block.height}
+        {end_time, end_height} ->
+          {end_time, end_height - start_block.height}
+      end
+
+    Map.put(group, :end_block, %{end_time: end_time, blocks_count: blocks_count})
+  end
+
+  def with_end_block(nil), do: nil
+
   defp list_query do
     from(
       from et in ElectionTransaction,
       join: t in Transaction,
       on: t.hash == et.hash,
       left_join: b in Block,
-      on: t.block_height == b.height,
+      on: b.height == t.block_height + 1,
       order_by: [desc: t.id],
-      select: %{etxn: et, block: b}
+      select: %{etxn: et, start_block: b}
     )
   end
 
+  defp end_block_query(start_block) do
+    from(
+      t in Transaction,
+      where: t.type == "election",
+      where: t.block_height > ^start_block.height,
+      left_join: b in Block,
+      where: b.height == t.block_height,
+      order_by: [asc: b.id],
+      limit: 1,
+      select: {b.time, b.height}
+    )
+  end
   defp maybe_filter(query, %{"before" => before, "limit" => limit}) do
     query
     |> where([et], et.id < ^before)
@@ -95,19 +124,19 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode([]), do: []
   defp encode(entries), do: Enum.map(entries, &encode_list_entry/1)
 
-  defp encode_list_entry(%{etxn: etxn, block: block}) do
+  defp encode_list_entry(%{etxn: etxn, start_block: block}) do
     %{
       id: etxn.id,
       proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
-      block_height: block.height,
+      start_height: block.height,
       delay: etxn.delay,
       start_time: block.time
     }
   end
 
-  defp encode_entry(%{etxn: etxn, block: block}) do
+  defp encode_group_entry(%{etxn: etxn, start_block: start_block, end_block: end_block}) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
 
     %{
@@ -115,11 +144,15 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
-      start_time: block.time,
-      block_height: block.height,
+      start_time: start_block.time,
+      end_time: end_block.end_time,
+      blocks_count: end_block.blocks_count,
+      start_height: start_block.height,
       delay: etxn.delay
     }
   end
+
+  defp encode_group_entry(nil), do: %{}
 
   defp encode_entry(etxn) when not is_nil(etxn) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
