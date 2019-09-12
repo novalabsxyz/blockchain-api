@@ -34,8 +34,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     RewardTxn.get_from_last_week()
     |> Enum.map(fn r ->
       reward = reward_data(r)
-      external_id = UUID.uuid5(:oid, "#{reward.address}-#{Timex.today() |> Date.to_string()}")
-      @notifier_client.post(reward, message(reward), reward.address, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM", external_id: external_id})
+      @notifier_client.post(reward, message(reward), reward.address, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
     end)
     :timer.apply_after(@interval, __MODULE__, :send_notifications, [])
   end
