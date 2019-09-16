@@ -1,5 +1,9 @@
 .PHONY: all compile clean release devrelease test
 
+APP_NAME ?= `grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
+APP_VSN ?= `grep 'version:' mix.exs | cut -d '"' -f2`
+BUILD ?= `git rev-parse --short HEAD`
+
 MIX=$(shell which mix)
 
 all: set_rebar set_hex deps compile
@@ -64,11 +68,18 @@ reset-test-db:
 ci:
 	export MIX_ENV=test PORT=4002 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
 
-# Build the Docker image
-docker-build:
+# Build prod docker image
+docker-prod:
 	docker build \
 		--build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
-		--build-arg MIX_ENV=$(MIX_ENV) \
-		-t helium/$(APP_NAME):$(APP_VSN)-$(BUILD) \
-		-t helium/$(APP_NAME):latest .
+		--build-arg MIX_ENV=prod \
+		-t helium/$(APP_NAME):$(APP_VSN)-prod-$(BUILD) .
+
+# Build dev docker image
+docker-dev:
+	docker build \
+		--build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg MIX_ENV=dev \
+		-t helium/$(APP_NAME):$(APP_VSN)-dev-$(BUILD) .
