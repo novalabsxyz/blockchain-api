@@ -37,7 +37,8 @@ defmodule BlockchainAPI.Notifier do
             :blockchain_txn_payment_v1 ->
               Logger.info("Notifying for payments from block: #{:blockchain_block.height(block)}")
               PaymentsNotifier.send_notification(txn)
-              :blockchain_txn_add_gateway_v1
+
+            :blockchain_txn_add_gateway_v1 ->
               Logger.info("Notifying new hotspots from block: #{:blockchain_block.height(block)}")
 
               HotspotNotifier.send_new_hotspot_notification(
