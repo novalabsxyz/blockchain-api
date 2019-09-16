@@ -26,8 +26,8 @@ defmodule BlockchainAPI.Schema.Account do
 
   def encode_model(account) do
     %{
-      Map.take(account, @fields) |
-      address: Util.bin_to_string(account.address)
+      Map.take(account, @fields)
+      | address: Util.bin_to_string(account.address)
     }
   end
 

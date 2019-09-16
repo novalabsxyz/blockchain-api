@@ -6,14 +6,14 @@ defmodule BlockchainAPI.Query.PaymentTransaction do
 
   def list(_params) do
     PaymentTransaction
-    |> order_by([pt], [desc: pt.id])
+    |> order_by([pt], desc: pt.id)
     |> Repo.all()
   end
 
   def get!(hash) do
     PaymentTransaction
     |> where([pt], pt.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do

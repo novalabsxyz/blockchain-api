@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
   def get!(hash) do
     PendingLocation
     |> where([pl], pl.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def get_by_id!(id) do
@@ -31,7 +31,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
   def list_pending() do
     PendingLocation
     |> where([pl], pl.status == "pending")
-    |> Repo.all
+    |> Repo.all()
   end
 
   def get_by_owner(address) do
@@ -59,15 +59,16 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> format()
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
   defp format(entries) do
     entries
     |> Enum.map(&format_one/1)
   end
 
   defp format_one(nil), do: %{}
+
   defp format_one(entry) do
     Map.merge(entry, %{type: "location"})
   end

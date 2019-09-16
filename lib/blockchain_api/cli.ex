@@ -15,6 +15,7 @@ defmodule BlockchainAPI.CLI do
     case File.read(genesis_file) do
       {:ok, genesis_block} ->
         :blockchain_worker.integrate_genesis_block(:blockchain_block.deserialize(genesis_block))
+
       {:error, reason} ->
         IO.inspect("Error, reason: #{reason}")
         {:error, reason}
@@ -27,7 +28,9 @@ defmodule BlockchainAPI.CLI do
 
   def height() do
     case :blockchain_worker.blockchain() do
-      :undefined -> "undefined"
+      :undefined ->
+        "undefined"
+
       chain ->
         case :blockchain.height(chain) do
           :undefined -> "undefined"
@@ -35,6 +38,4 @@ defmodule BlockchainAPI.CLI do
         end
     end
   end
-
 end
-

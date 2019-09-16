@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.BlockView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.blocks, BlockView, "block.json"),
+      data: render_many(data.blocks, BlockView, "block.json")
     }
   end
 
@@ -15,5 +15,4 @@ defmodule BlockchainAPIWeb.BlockView do
   def render("block.json", %{block: block}) do
     block
   end
-
 end

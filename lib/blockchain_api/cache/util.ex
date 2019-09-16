@@ -7,5 +7,4 @@ defmodule BlockchainAPI.Cache.Util do
       data
     end
   end
-
 end

@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.AccountGatewayView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.account_gateways, AccountGatewayView, "account_gateway.json"),
+      data: render_many(data.account_gateways, AccountGatewayView, "account_gateway.json")
     }
   end
 
@@ -15,5 +15,4 @@ defmodule BlockchainAPIWeb.AccountGatewayView do
   def render("account_gateway.json", %{account_gateway: gateway}) do
     gateway
   end
-
 end

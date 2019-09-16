@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.SecurityView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.security_transactions, SecurityView, "security.json"),
+      data: render_many(data.security_transactions, SecurityView, "security.json")
     }
   end
 
@@ -15,5 +15,4 @@ defmodule BlockchainAPIWeb.SecurityView do
   def render("security.json", %{security: security}) do
     security
   end
-
 end

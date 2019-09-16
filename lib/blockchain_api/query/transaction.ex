@@ -28,15 +28,17 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def type(hash) do
-    Repo.one from t in Transaction,
-      where: t.hash == ^hash,
-      select: t.type
+    Repo.one(
+      from t in Transaction,
+        where: t.hash == ^hash,
+        select: t.type
+    )
   end
 
   def get!(txn_hash) do
     Transaction
     |> where([t], t.hash == ^txn_hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(block_height, attrs \\ %{}) do
@@ -61,7 +63,7 @@ defmodule BlockchainAPI.Query.Transaction do
         nonce: payment_transaction.nonce,
         amount: payment_transaction.amount,
         fee: payment_transaction.fee,
-        hash: payment_transaction.hash,
+        hash: payment_transaction.hash
       }
     )
     |> Repo.one!()
@@ -80,7 +82,7 @@ defmodule BlockchainAPI.Query.Transaction do
         time: block.time,
         payee: coinbase_transaction.payee,
         amount: coinbase_transaction.amount,
-        hash: coinbase_transaction.hash,
+        hash: coinbase_transaction.hash
       }
     )
     |> Repo.one!()
@@ -99,7 +101,7 @@ defmodule BlockchainAPI.Query.Transaction do
         time: block.time,
         payee: security_transaction.payee,
         amount: security_transaction.amount,
-        hash: security_transaction.hash,
+        hash: security_transaction.hash
       }
     )
     |> Repo.one!()
@@ -118,7 +120,7 @@ defmodule BlockchainAPI.Query.Transaction do
         time: block.time,
         payee: data_credit_transaction.payee,
         amount: data_credit_transaction.amount,
-        hash: data_credit_transaction.hash,
+        hash: data_credit_transaction.hash
       }
     )
     |> Repo.one!()
@@ -144,7 +146,6 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Repo.one!()
   end
 
-
   def get_gateway!(txn_hash) do
     from(
       transaction in Transaction,
@@ -161,7 +162,7 @@ defmodule BlockchainAPI.Query.Transaction do
         owner: gateway_transaction.owner,
         payer: gateway_transaction.payer,
         fee: gateway_transaction.fee,
-        staking_fee: gateway_transaction.staking_fee,
+        staking_fee: gateway_transaction.staking_fee
       }
     )
     |> Repo.one!()
@@ -183,7 +184,7 @@ defmodule BlockchainAPI.Query.Transaction do
         owner: location_transaction.owner,
         payer: location_transaction.payer,
         fee: location_transaction.fee,
-        location: location_transaction.location,
+        location: location_transaction.location
       }
     )
     |> Repo.one!()
@@ -193,9 +194,9 @@ defmodule BlockchainAPI.Query.Transaction do
     Cache.Util.get(:txn_cache, :ongoing, &set_ongoing/0, :timer.minutes(2))
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
 
   # Cache helper
   defp set_by_height(block_height) do
@@ -218,66 +219,71 @@ defmodule BlockchainAPI.Query.Transaction do
         select: %{count: count(txn.block_height)}
       )
 
-    q = from(
-      q in subquery(ongoing_subquery),
-      select: sum(q.count)
-    )
+    q =
+      from(
+        q in subquery(ongoing_subquery),
+        select: sum(q.count)
+      )
 
-    data = case Repo.one(q) do
-      nil -> 0
-      res ->
-        Decimal.to_integer(res)
-    end
+    data =
+      case Repo.one(q) do
+        nil ->
+          0
+
+        res ->
+          Decimal.to_integer(res)
+      end
 
     {:commit, data}
   end
 
   defp get_by_height(block_height) do
-    query = from(
-      block in Block,
-      where: block.height == ^block_height,
-      left_join: transaction in Transaction,
-      on: block.height == transaction.block_height,
-      left_join: coinbase_transaction in CoinbaseTransaction,
-      on: transaction.hash == coinbase_transaction.hash,
-      left_join: security_transaction in SecurityTransaction,
-      on: transaction.hash == security_transaction.hash,
-      left_join: data_credit_transaction in DataCreditTransaction,
-      on: transaction.hash == data_credit_transaction.hash,
-      left_join: election_transaction in ElectionTransaction,
-      on: transaction.hash == election_transaction.hash,
-      left_join: payment_transaction in PaymentTransaction,
-      on: transaction.hash == payment_transaction.hash,
-      left_join: gateway_transaction in GatewayTransaction,
-      on: transaction.hash == gateway_transaction.hash,
-      left_join: location_transaction in LocationTransaction,
-      on: transaction.hash == location_transaction.hash,
-      left_join: poc_request_transaction in POCRequestTransaction,
-      on: transaction.hash == poc_request_transaction.hash,
-      left_join: poc_receipts_transaction in POCReceiptsTransaction,
-      on: transaction.hash == poc_receipts_transaction.hash,
-      left_join: rewards_txn in RewardsTransaction,
-      on: transaction.hash == rewards_txn.hash,
-      order_by: [
-        desc: block.height,
-        desc: transaction.id,
-        desc: payment_transaction.nonce,
-        desc: location_transaction.nonce
-      ],
-      select: %{
-        time: block.time,
-        height: block.height,
-        coinbase: coinbase_transaction,
-        security: security_transaction,
-        data_credit: data_credit_transaction,
-        election: election_transaction,
-        payment: payment_transaction,
-        gateway: gateway_transaction,
-        location: location_transaction,
-        poc_request: poc_request_transaction,
-        poc_receipts: poc_receipts_transaction,
-        rewards: rewards_txn
-      })
+    query =
+      from(block in Block,
+        where: block.height == ^block_height,
+        left_join: transaction in Transaction,
+        on: block.height == transaction.block_height,
+        left_join: coinbase_transaction in CoinbaseTransaction,
+        on: transaction.hash == coinbase_transaction.hash,
+        left_join: security_transaction in SecurityTransaction,
+        on: transaction.hash == security_transaction.hash,
+        left_join: data_credit_transaction in DataCreditTransaction,
+        on: transaction.hash == data_credit_transaction.hash,
+        left_join: election_transaction in ElectionTransaction,
+        on: transaction.hash == election_transaction.hash,
+        left_join: payment_transaction in PaymentTransaction,
+        on: transaction.hash == payment_transaction.hash,
+        left_join: gateway_transaction in GatewayTransaction,
+        on: transaction.hash == gateway_transaction.hash,
+        left_join: location_transaction in LocationTransaction,
+        on: transaction.hash == location_transaction.hash,
+        left_join: poc_request_transaction in POCRequestTransaction,
+        on: transaction.hash == poc_request_transaction.hash,
+        left_join: poc_receipts_transaction in POCReceiptsTransaction,
+        on: transaction.hash == poc_receipts_transaction.hash,
+        left_join: rewards_txn in RewardsTransaction,
+        on: transaction.hash == rewards_txn.hash,
+        order_by: [
+          desc: block.height,
+          desc: transaction.id,
+          desc: payment_transaction.nonce,
+          desc: location_transaction.nonce
+        ],
+        select: %{
+          time: block.time,
+          height: block.height,
+          coinbase: coinbase_transaction,
+          security: security_transaction,
+          data_credit: data_credit_transaction,
+          election: election_transaction,
+          payment: payment_transaction,
+          gateway: gateway_transaction,
+          location: location_transaction,
+          poc_request: poc_request_transaction,
+          poc_receipts: poc_receipts_transaction,
+          rewards: rewards_txn
+        }
+      )
 
     query
     |> Repo.all()
@@ -290,6 +296,6 @@ defmodule BlockchainAPI.Query.Transaction do
     |> Enum.map(fn map -> :maps.filter(fn _, v -> not is_nil(v) end, map) end)
     |> Enum.reduce([], fn map, acc -> [Util.clean_txn_struct(map) | acc] end)
     |> Enum.reject(&is_nil/1)
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 end

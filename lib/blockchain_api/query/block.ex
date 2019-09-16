@@ -13,11 +13,13 @@ defmodule BlockchainAPI.Query.Block do
     Cache
   }
 
-  #==================================================================
+  # ==================================================================
   # Public functions
-  #==================================================================
+  # ==================================================================
   def list(params) do
-    {:blocks, blocks} = Cache.Util.get(:block_cache, {:blocks, params}, &set_list/1, :timer.minutes(2))
+    {:blocks, blocks} =
+      Cache.Util.get(:block_cache, {:blocks, params}, &set_list/1, :timer.minutes(2))
+
     blocks
   end
 
@@ -36,9 +38,9 @@ defmodule BlockchainAPI.Query.Block do
     Repo.one(query)
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
   # Cache helpers
   defp set_height(height) do
     data = get_by_height(height)
@@ -46,10 +48,12 @@ defmodule BlockchainAPI.Query.Block do
   end
 
   defp set_list({:blocks, params}) do
-    data = base_query()
-           |> maybe_filter(params)
-           |> Repo.all()
-           |> encode()
+    data =
+      base_query()
+      |> maybe_filter(params)
+      |> Repo.all()
+      |> encode()
+
     {:commit, {:blocks, data}}
   end
 
@@ -62,20 +66,21 @@ defmodule BlockchainAPI.Query.Block do
 
   # Encoding helpers
   defp encode(nil), do: nil
-  defp encode(%{hash: hash}=block) do
+
+  defp encode(%{hash: hash} = block) do
     %{block | hash: Util.bin_to_string(hash)}
   end
+
   defp encode(entries) when is_list(entries) do
     entries
-    |> Enum.map(fn %{hash: hash}=block ->
+    |> Enum.map(fn %{hash: hash} = block ->
       %{block | hash: Util.bin_to_string(hash)}
     end)
   end
 
   # Query helpers
   defp base_query() do
-    from(
-      block in Block,
+    from(block in Block,
       left_join: txn in Transaction,
       on: block.height == txn.block_height,
       group_by: [block.id, block.time, block.hash],
@@ -85,25 +90,31 @@ defmodule BlockchainAPI.Query.Block do
         height: block.height,
         time: block.time,
         txns: count(txn.id)
-      })
+      }
+    )
   end
 
-  defp maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0} = _params) do
     limit = min(@max_limit, String.to_integer(limit0))
+
     query
     |> where([block], block.height < ^before)
     |> limit(^limit)
   end
-  defp maybe_filter(query, %{"before" => before}=_params) do
+
+  defp maybe_filter(query, %{"before" => before} = _params) do
     query
     |> where([block], block.height < ^before)
     |> limit(@default_limit)
   end
-  defp maybe_filter(query, %{"limit" => limit0}=_params) do
+
+  defp maybe_filter(query, %{"limit" => limit0} = _params) do
     limit = min(@max_limit, String.to_integer(limit0))
+
     query
     |> limit(^limit)
   end
+
   defp maybe_filter(query, %{}) do
     query
     |> limit(@default_limit)

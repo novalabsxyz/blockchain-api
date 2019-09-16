@@ -36,10 +36,11 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   defp activity_query(address) do
     HotspotActivity
     |> where([ha], ha.gateway == ^address)
-    |> order_by([ha], [desc: ha.id])
+    |> order_by([ha], desc: ha.id)
   end
 
   defp encode([]), do: []
+
   defp encode(entries) do
     entries |> Enum.map(&encode_entry/1)
   end
@@ -85,22 +86,27 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     }
   end
 
-  defp maybe_filter(query, %{"before" => before, "limit" => limit0}=_params) do
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0} = _params) do
     limit = min(@max_limit, String.to_integer(limit0))
+
     query
     |> where([ha], ha.id < ^before)
     |> limit(^limit)
   end
-  defp maybe_filter(query, %{"before" => before}=_params) do
+
+  defp maybe_filter(query, %{"before" => before} = _params) do
     query
     |> where([ha], ha.id < ^before)
     |> limit(@default_limit)
   end
-  defp maybe_filter(query, %{"limit" => limit0}=_params) do
+
+  defp maybe_filter(query, %{"limit" => limit0} = _params) do
     limit = min(@max_limit, String.to_integer(limit0))
+
     query
     |> limit(^limit)
   end
+
   defp maybe_filter(query, %{}) do
     query
     |> limit(@default_limit)

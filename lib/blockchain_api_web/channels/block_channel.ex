@@ -10,5 +10,4 @@ defmodule BlockchainAPIWeb.BlockChannel do
     payload = block |> Block.encode_model()
     BlockchainAPIWeb.Endpoint.broadcast("block:update", "change", payload)
   end
-
 end

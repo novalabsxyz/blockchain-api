@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.POCReceipt do
   use Ecto.Schema
   import Ecto.Changeset
+
   alias BlockchainAPI.{
     Util,
     Schema.POCReceipt,
@@ -68,7 +69,7 @@ defmodule BlockchainAPI.Schema.POCReceipt do
       signal: :blockchain_poc_receipt_v1.signal(poc_receipt),
       data: :blockchain_poc_receipt_v1.data(poc_receipt),
       signature: :blockchain_poc_receipt_v1.signature(poc_receipt),
-      origin: to_string(:blockchain_poc_receipt_v1.origin(poc_receipt)),
+      origin: to_string(:blockchain_poc_receipt_v1.origin(poc_receipt))
     }
   end
 

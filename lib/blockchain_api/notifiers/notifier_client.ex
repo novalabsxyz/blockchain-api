@@ -8,14 +8,17 @@ defmodule BlockchainAPI.NotifierClient do
   defp headers() do
     [
       {"Content-Type", "application/json; charset=utf-8"},
-      {"Authorization", "Basic #{Application.fetch_env!(:blockchain_api, :onesignal_rest_api_key)}"}
+      {"Authorization",
+       "Basic #{Application.fetch_env!(:blockchain_api, :onesignal_rest_api_key)}"}
     ]
   end
 
   defp to_payload(data, message, send_address, opts) do
     %{
       :app_id => Application.fetch_env!(:blockchain_api, :onesignal_app_id),
-      :filters => [%{:field => "tag", :key => "address", :relation => "=", :value => send_address}],
+      :filters => [
+        %{:field => "tag", :key => "address", :relation => "=", :value => send_address}
+      ],
       :contents => %{:en => message},
       :data => data
     }

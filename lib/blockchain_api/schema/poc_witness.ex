@@ -1,6 +1,7 @@
 defmodule BlockchainAPI.Schema.POCWitness do
   use Ecto.Schema
   import Ecto.Changeset
+
   alias BlockchainAPI.{
     Util,
     Schema.POCWitness,
@@ -68,7 +69,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
       timestamp: :blockchain_poc_witness_v1.timestamp(poc_witness),
       signal: :blockchain_poc_witness_v1.signal(poc_witness),
       packet_hash: :blockchain_poc_witness_v1.packet_hash(poc_witness),
-      signature: :blockchain_poc_witness_v1.signature(poc_witness),
+      signature: :blockchain_poc_witness_v1.signature(poc_witness)
     }
   end
 

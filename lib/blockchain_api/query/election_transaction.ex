@@ -13,7 +13,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
   @default_limit 20
 
-
   def list(params) do
     list_query()
     |> maybe_filter(params)
@@ -33,11 +32,12 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
   def get_consensus_group(hash) do
     hash = Util.string_to_bin(hash)
+
     from(
       et in ElectionTransaction,
       where: et.hash == ^hash,
       join: t in Transaction,
-      on: et.hash  == t.hash,
+      on: et.hash == t.hash,
       left_join: b in Block,
       on: b.height == t.block_height + 1,
       preload: [:consensus_members],
@@ -66,6 +66,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       case start_block |> end_block_query() |> Repo.one() do
         nil ->
           {nil, Query.Block.get_latest_height() - start_block.height}
+
         {end_time, end_height} ->
           {end_time, end_height - start_block.height}
       end
@@ -78,12 +79,12 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp list_query do
     from(
       from et in ElectionTransaction,
-      join: t in Transaction,
-      on: t.hash == et.hash,
-      left_join: b in Block,
-      on: b.height == t.block_height + 1,
-      order_by: [desc: t.id],
-      select: %{etxn: et, start_block: b}
+        join: t in Transaction,
+        on: t.hash == et.hash,
+        left_join: b in Block,
+        on: b.height == t.block_height + 1,
+        order_by: [desc: t.id],
+        select: %{etxn: et, start_block: b}
     )
   end
 
@@ -99,6 +100,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       select: {b.time, b.height}
     )
   end
+
   defp maybe_filter(query, %{"before" => before, "limit" => limit}) do
     query
     |> where([et], et.id < ^before)

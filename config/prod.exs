@@ -10,15 +10,17 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 port = String.to_integer(System.get_env("PORT") || "4001")
+
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: port],
-  url: [host: (System.get_env("HOSTNAME") || "localhost"), port: port],
+  url: [host: System.get_env("HOSTNAME") || "localhost", port: port],
   server: true,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
   check_origin: false,
   force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
-  # cache_static_manifest: "priv/static/cache_manifest.json"
+
+# cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :blockchain_api, env: Mix.env()
 
@@ -37,6 +39,7 @@ config :blockchain,
 
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
+
 config :blockchain_api, google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY")
 config :blockchain_api, onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY")
 config :blockchain_api, onesignal_app_id: System.get_env("ONESIGNAL_APP_ID")
@@ -50,5 +53,5 @@ config :blockchain_api, BlockchainAPI.Repo,
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
   pool_size: 20,
-  timeout: 120000,
+  timeout: 120_000,
   log: false

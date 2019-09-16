@@ -19,13 +19,15 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     account_transaction
     |> cast(attrs, [:account_address, :txn_hash, :txn_type, :txn_status])
     |> validate_required([:account_address, :txn_hash, :txn_type, :txn_status])
+
     # |> unique_constraint(:unique_account_txn, name: :unique_account_txn)
   end
 
   def encode_model(account_transaction) do
-    %{Map.take(account_transaction, @fields) |
-      txn_hash: Util.bin_to_string(account_transaction.txn_hash),
-      account_address: Util.bin_to_string(account_transaction.account_address)
+    %{
+      Map.take(account_transaction, @fields)
+      | txn_hash: Util.bin_to_string(account_transaction.txn_hash),
+        account_address: Util.bin_to_string(account_transaction.account_address)
     }
   end
 
@@ -45,6 +47,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_coinbase_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_security_coinbase_v1, txn) do
     %{
       account_address: :blockchain_txn_security_coinbase_v1.payee(txn),
@@ -53,6 +56,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_security_coinbase_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_dc_coinbase_v1, txn) do
     %{
       account_address: :blockchain_txn_dc_coinbase_v1.payee(txn),
@@ -61,6 +65,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_dc_coinbase_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_add_gateway_v1, txn) do
     %{
       account_address: :blockchain_txn_add_gateway_v1.owner(txn),
@@ -69,6 +74,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_add_gateway_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_assert_location_v1, txn) do
     %{
       account_address: :blockchain_txn_assert_location_v1.owner(txn),
@@ -77,6 +83,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_assert_location_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_gen_gateway_v1, txn) do
     %{
       account_address: :blockchain_txn_gen_gateway_v1.owner(txn),
@@ -94,6 +101,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_payment_v1, :payer, txn) do
     %{
       account_address: :blockchain_txn_payment_v1.payer(txn),
@@ -102,6 +110,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_payment_v1.hash(txn)
     }
   end
+
   def map_cleared(:blockchain_txn_reward_v1, hash, txn) do
     %{
       account_address: :blockchain_txn_reward_v1.account(txn),
@@ -111,7 +120,6 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     }
   end
 
-
   def map_pending(:blockchain_txn_coinbase_v1, txn) do
     %{
       account_address: :blockchain_txn_coinbase_v1.payee(txn),
@@ -120,6 +128,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_coinbase_v1.hash(txn)
     }
   end
+
   def map_pending(:blockchain_txn_add_gateway_v1, txn) do
     %{
       account_address: :blockchain_txn_add_gateway_v1.owner(txn),
@@ -128,6 +137,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_add_gateway_v1.hash(txn)
     }
   end
+
   def map_pending(:blockchain_txn_assert_location_v1, txn) do
     %{
       account_address: :blockchain_txn_assert_location_v1.owner(txn),
@@ -136,6 +146,7 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
       txn_hash: :blockchain_txn_assert_location_v1.hash(txn)
     }
   end
+
   def map_pending(:blockchain_txn_payment_v1, txn) do
     %{
       account_address: :blockchain_txn_payment_v1.payer(txn),

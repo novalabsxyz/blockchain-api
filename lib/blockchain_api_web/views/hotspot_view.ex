@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.HotspotView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.hotspots, HotspotView, "hotspot.json"),
+      data: render_many(data.hotspots, HotspotView, "hotspot.json")
     }
   end
 
@@ -14,7 +14,7 @@ defmodule BlockchainAPIWeb.HotspotView do
 
   def render("search.json", data) do
     %{
-      data: render_many(data.results, HotspotView, "hotspot.json"),
+      data: render_many(data.results, HotspotView, "hotspot.json")
     }
   end
 

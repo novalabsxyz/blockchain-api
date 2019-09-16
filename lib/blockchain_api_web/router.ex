@@ -13,11 +13,16 @@ defmodule BlockchainAPIWeb.Router do
     end
 
     resources "/accounts", AccountController, only: [:index, :show], param: "address" do
-      resources "/transactions", AccountTransactionController, only: [:index], param: "account_address"
+      resources "/transactions", AccountTransactionController,
+        only: [:index],
+        param: "account_address"
+
       resources "/gateways", AccountGatewayController, only: [:index], param: "account_address"
     end
 
-    get "/hotspots/search", HotspotController, :search # This has to be before the resources
+    # This has to be before the resources
+    get "/hotspots/search", HotspotController, :search
+
     resources "/hotspots", HotspotController, only: [:index, :show], param: "address" do
       resources "/activity", ActivityController, only: [:index]
       resources "/rewards", HotspotRewardController, only: [:index]
@@ -25,7 +30,10 @@ defmodule BlockchainAPIWeb.Router do
       get "/witnesses", HotspotController, :witnesses
     end
 
-    resources "/transactions", TransactionController, only: [:index, :show, :create], param: "hash"
+    resources "/transactions", TransactionController,
+      only: [:index, :show, :create],
+      param: "hash"
+
     resources "/gateways", GatewayController, only: [:index, :show], param: "hash"
     resources "/coinbase_transactions", CoinbaseController, only: [:index, :show], param: "hash"
     resources "/payment_transactions", PaymentController, only: [:index, :show], param: "hash"
@@ -39,7 +47,6 @@ defmodule BlockchainAPIWeb.Router do
     get "/pending_payments", PendingPaymentController, :show
 
     get "/stats", StatsController, :show
-
   end
 
   scope "/", BlockchainAPIWeb do

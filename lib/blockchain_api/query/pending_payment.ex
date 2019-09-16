@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.PendingPayment do
   def list_pending() do
     PendingPayment
     |> where([pp], pp.status == "pending")
-    |> Repo.all
+    |> Repo.all()
   end
 
   def get!(hash) do
     PendingPayment
     |> where([pp], pp.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def get_by_id!(id) do
@@ -35,11 +35,12 @@ defmodule BlockchainAPI.Query.PendingPayment do
   end
 
   def get_by_address(address) do
-    query = from(
-      pp in PendingPayment,
-      where: pp.payee == ^address or pp.payer == ^address,
-      select: pp
-    )
+    query =
+      from(
+        pp in PendingPayment,
+        where: pp.payee == ^address or pp.payer == ^address,
+        select: pp
+      )
 
     query
     |> Repo.all()
@@ -75,17 +76,17 @@ defmodule BlockchainAPI.Query.PendingPayment do
     pp |> Repo.delete!()
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
   defp format(entries) do
     entries
     |> Enum.map(&format_one/1)
   end
 
   defp format_one(nil), do: %{}
+
   defp format_one(entry) do
     Map.merge(entry, %{type: "payment"})
   end
-
 end

@@ -6,14 +6,14 @@ defmodule BlockchainAPI.Query.CoinbaseTransaction do
 
   def list(_params) do
     CoinbaseTransaction
-    |> order_by([ct], [desc: ct.id])
+    |> order_by([ct], desc: ct.id)
     |> Repo.all()
   end
 
   def get!(hash) do
     CoinbaseTransaction
     |> where([ct], ct.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do

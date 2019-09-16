@@ -1,9 +1,10 @@
 use Mix.Config
 
 port = String.to_integer(System.get_env("PORT") || "4002")
+
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: port],
-  url: [host: (System.get_env("HOSTNAME") || "localhost"), port: port],
+  url: [host: System.get_env("HOSTNAME") || "localhost", port: port],
   server: true,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
