@@ -14,6 +14,7 @@ defmodule BlockchainAPI.Query.Stats do
   alias BlockchainAPI.Schema.{
     Account,
     Block,
+    ConsensusMember,
     ElectionTransaction,
     Transaction
   }
@@ -37,7 +38,7 @@ defmodule BlockchainAPI.Query.Stats do
         "total" => get_supply()
       },
       "block_time" => %{
-        "24h" => get_block_time(hours: -24),
+        "24h" => get_query_by_shift(&query_block_interval/2, hours: -24),
         "7d" => get_block_time(days: -7),
         "30d" => get_block_time(days: -30)
       },
@@ -50,6 +51,13 @@ defmodule BlockchainAPI.Query.Stats do
         "24h" => day_election_block,
         "7d" => week_election_block,
         "30d" => month_election_block
+      },
+      "leaders" => %{
+        "most_frequent_consensus_members" => %{
+          "24h" => get_query_by_shift(&query_frequent_concensus_members/2, hours: -24),
+          "7d" => get_query_by_shift(&query_frequent_concensus_members/2, days: -7),
+          "30d" => get_query_by_shift(&query_frequent_concensus_members/2, days: -30)
+        }
       }
     }
 
@@ -75,6 +83,12 @@ defmodule BlockchainAPI.Query.Stats do
     start = Util.shifted_unix_time(shift)
 
     query_election_interval(start, Util.current_time())
+  end
+
+  def get_query_by_shift(query, shift) do
+    start = Util.shifted_unix_time(shift)
+
+    query.(start, Util.current_time())
   end
 
   defp query_block_interval(start, finish) do
@@ -151,6 +165,34 @@ defmodule BlockchainAPI.Query.Stats do
       avg_block_interval: avg_block_interval |> normalize_interval(),
       avg_time_interval: avg_time_interval |> normalize_interval()
     }
+  end
+
+  defp query_frequent_concensus_members(start, finish) do
+    query =
+      from(
+        cm in ConsensusMember,
+        inner_join: et in ElectionTransaction,
+        on: et.id == cm.election_transactions_id,
+        inner_join: tx in Transaction,
+        on: tx.hash == et.hash,
+        inner_join: b in Block,
+        on: b.height == tx.block_height,
+        where: b.time >= ^start,
+        where: b.time <= ^finish,
+        group_by: cm.address,
+        order_by: [desc: fragment("count")],
+        limit: 5,
+        select: %{
+          count: fragment("count(*) as count"),
+          gateway: cm.gateway
+        }
+      )
+
+    query
+    |> Repo.all()
+    |> Enum.map(fn %{gateway: gateway} = m ->
+      m |> Map.put(:gateway, Util.bin_to_string(gateway))
+    end)
   end
 
   defp normalize_interval(interval) do
