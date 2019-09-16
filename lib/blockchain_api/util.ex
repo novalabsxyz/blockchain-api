@@ -297,6 +297,14 @@ defmodule BlockchainAPI.Util do
   """
   def notifier_client(), do: Application.fetch_env!(:blockchain_api, :notifier_client)
 
+  def units(amount) when is_float(amount) do
+    amount |> Decimal.from_float() |> Decimal.div(@bones) |> delimit_unit()
+  end
+
+  def units(amount) do
+    amount |> Decimal.div(@bones) |> delimit_unit()
+  end
+
   defp delimit_unit(units0) do
     unit_str = units0 |> Decimal.to_string()
 
