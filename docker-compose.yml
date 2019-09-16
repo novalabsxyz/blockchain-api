@@ -3,7 +3,7 @@ version: '3.5'
 services:
   app:
     build: .
-    image: "helium/blockchain_api:latest"
+    image: "helium/blockchain_api:${MIX_ENV}-latest"
     restart: always
     depends_on:
       - postgres

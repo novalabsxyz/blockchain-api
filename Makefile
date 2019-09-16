@@ -74,7 +74,7 @@ docker-prod:
 		--build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg MIX_ENV=prod \
-		-t helium/$(APP_NAME):$(APP_VSN)-prod-$(BUILD) .
+		-t helium/$(APP_NAME):prod-latest .
 
 # Build dev docker image
 docker-dev:
@@ -82,4 +82,4 @@ docker-dev:
 		--build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg MIX_ENV=dev \
-		-t helium/$(APP_NAME):$(APP_VSN)-dev-$(BUILD) .
+		-t helium/$(APP_NAME):dev-latest .

@@ -33,8 +33,12 @@ ENV APP_NAME=${APP_NAME} \
 ENV LD_LIBRARY_PATH /usr/local/lib
 RUN apt-get update
 RUN apt-get install -y curl locales autoconf automake libtool flex bison libgmp-dev cmake build-essential libssl-dev
-RUN locale-gen "en_US.UTF-8"
-ENV LANG=en_US.UTF-8
+# Set the locale
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
 RUN git clone -b stable https://github.com/jedisct1/libsodium.git
 RUN cd libsodium && ./configure --prefix=/usr && make check && make install && cd ..
 
@@ -52,9 +56,14 @@ RUN echo "StrictHostKeyChecking no " >> /root/.ssh/config
 RUN mix local.rebar --force && mix local.hex --force
 
 #==========================================================
-# Copy everything
+# Copy only required files
 #==========================================================
-COPY . .
+COPY mix.exs .
+COPY mix.lock .
+COPY config/ config/
+COPY lib/ lib/
+COPY rel/ rel/
+COPY priv/ priv/
 
 #==========================================================
 # Build Release
