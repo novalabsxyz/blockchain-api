@@ -1,5 +1,7 @@
 defmodule BlockchainAPI.Query.Block do
-  @moduledoc false
+  @moduledoc """
+  This module will query block information.
+  """
   import Ecto.Query, warn: false
 
   @default_limit 100
@@ -16,6 +18,30 @@ defmodule BlockchainAPI.Query.Block do
   # ==================================================================
   # Public functions
   # ==================================================================
+
+  @doc """
+  Get list of blocks with given `params`.
+
+  `params` is a map of string keys limit and/or before.
+
+  ## Examples
+
+    iex> BlockchainAPI.Query.Block.list %{"limit" => "2", "before" => "10"}
+      [
+        %{
+          hash: "12e33843hKKPTuVQkGA9h7Y2qZRsmmJEtXzym5GcJnMmUXqEGax",
+          height: 9,
+          time: 1564437093,
+          txns: 0
+        },
+        %{
+          hash: "1eVRXbseDhRJSSg3KnkCR5XSzsujET6GyNUzDE5dGrP9ro7cpW",
+          height: 8,
+          time: 1564437033,
+          txns: 0
+        }
+      ]
+  """
   def list(params) do
     {:blocks, blocks} =
       Cache.Util.get(:block_cache, {:blocks, params}, &set_list/1, :timer.minutes(2))
@@ -23,19 +49,41 @@ defmodule BlockchainAPI.Query.Block do
     blocks
   end
 
+  @doc """
+  Get block at given `height`
+
+  ## Examples
+
+    iex> BlockchainAPI.Query.Block.get(10)
+      %{
+        hash: "1NPjYurwS8LKRmSbpyvLXzb39qEUi8uAUpKdZ4Wf1MBefAAWst",
+        height: 10,
+        time: 1564437153,
+        txns: 0
+      }
+  """
   def get(height) do
     Cache.Util.get(:block_cache, height, &set_height/1, :timer.minutes(2))
   end
 
+  @doc """
+  Get latest block height.
+
+  ## Examples
+
+    iex> BlockchainAPI.Query.Block.get_latest_height
+      49362
+  """
+  def get_latest_height() do
+    query = from b in Block, select: max(b.height)
+    Repo.one(query)
+  end
+
+  @doc false
   def create(attrs \\ %{}) do
     %Block{}
     |> Block.changeset(attrs)
     |> Repo.insert()
-  end
-
-  def get_latest_height() do
-    query = from b in Block, select: max(b.height)
-    Repo.one(query)
   end
 
   # ==================================================================

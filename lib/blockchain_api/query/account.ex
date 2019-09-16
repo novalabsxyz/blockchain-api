@@ -1,5 +1,4 @@
 defmodule BlockchainAPI.Query.Account do
-  @moduledoc false
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{
@@ -11,12 +10,11 @@ defmodule BlockchainAPI.Query.Account do
     Schema.PendingLocation
   }
 
-  def create(attrs \\ %{}) do
-    %Account{}
-    |> Account.changeset(attrs)
-    |> Repo.insert()
-  end
+  @doc """
+  Get account from `address`.
 
+  Throw error if no account found.
+  """
   def get!(address) do
     Account
     |> where([a], a.address == ^address)
@@ -93,6 +91,13 @@ defmodule BlockchainAPI.Query.Account do
         # return the max of pending_nonce, account_nonce
         max(ledger_nonce, max(pending_nonce, account_nonce))
     end
+  end
+
+  @doc false
+  def create(attrs \\ %{}) do
+    %Account{}
+    |> Account.changeset(attrs)
+    |> Repo.insert()
   end
 
   # ==================================================================
