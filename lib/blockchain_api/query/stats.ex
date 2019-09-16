@@ -16,6 +16,7 @@ defmodule BlockchainAPI.Query.Stats do
     Block,
     ConsensusMember,
     ElectionTransaction,
+    RewardTxn,
     Transaction
   }
 
@@ -57,7 +58,12 @@ defmodule BlockchainAPI.Query.Stats do
           "24h" => get_query_by_shift(&query_frequent_concensus_members/2, hours: -24),
           "7d" => get_query_by_shift(&query_frequent_concensus_members/2, days: -7),
           "30d" => get_query_by_shift(&query_frequent_concensus_members/2, days: -30)
-        }
+        },
+        "top_grossing_hotspots" => %{
+          "24h" => get_query_by_shift(&query_top_grossing_hotspots/2, hours: -24),
+          "7d" => get_query_by_shift(&query_top_grossing_hotspots/2, days: -7),
+          "30d" => get_query_by_shift(&query_top_grossing_hotspots/2, days: -30)
+        },
       }
     }
 
@@ -168,7 +174,7 @@ defmodule BlockchainAPI.Query.Stats do
   end
 
   defp query_frequent_concensus_members(start, finish) do
-    query =
+    count_query =
       from(
         cm in ConsensusMember,
         inner_join: et in ElectionTransaction,
@@ -180,13 +186,72 @@ defmodule BlockchainAPI.Query.Stats do
         where: b.time >= ^start,
         where: b.time <= ^finish,
         group_by: cm.address,
-        order_by: [desc: fragment("count")],
-        limit: 5,
         select: %{
-          count: fragment("count(*) as count"),
-          gateway: cm.gateway
+          count: fragment("count(*)"),
+          gateway: cm.address,
         }
       )
+
+    rank_query = from(
+      cq in subquery(count_query),
+      select: %{
+        count: cq.count,
+        gateway: cq.gateway,
+        rank: rank() |> over(order_by: [desc: cq.count])
+      }
+    )
+
+    query = from(
+      rq in subquery(rank_query),
+      where: rq.rank == 1,
+      select: %{
+        count: rq.count,
+        gateway: rq.gateway
+      }
+    )
+
+    query
+    |> Repo.all()
+    |> Enum.map(fn %{gateway: gateway} = m ->
+      m |> Map.put(:gateway, Util.bin_to_string(gateway))
+    end)
+  end
+
+  defp query_top_grossing_hotspots(start, finish) do
+    sum_query =
+      from(
+        rt in RewardTxn,
+        inner_join: tx in Transaction,
+        on: tx.hash == rt.rewards_hash,
+        inner_join: b in Block,
+        on: b.height == tx.block_height,
+        where: b.time >= ^start,
+        where: b.time <= ^finish,
+        where: not is_nil(rt.gateway),
+        group_by: rt.gateway,
+        select: %{
+          sum: sum(rt.amount),
+          gateway: rt.gateway
+        }
+      )
+
+    rank_query = from(
+      sq in subquery(sum_query),
+      select: %{
+        sum: sq.sum,
+        gateway: sq.gateway,
+        rank: rank() |> over(order_by: [desc: sq.sum])
+      }
+    )
+
+    query = from(
+      rq in subquery(rank_query),
+      where: rq.rank == 1,
+      select: %{
+        sum: rq.sum,
+        gateway: rq.gateway
+      }
+    )
 
     query
     |> Repo.all()
