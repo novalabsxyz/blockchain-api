@@ -20,7 +20,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   check_origin: false,
   # force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]],
   secret_key_base: System.get_env("SECRET_KEY_BASE")
-  # cache_static_manifest: "priv/static/cache_manifest.json"
+
+# cache_static_manifest: "priv/static/cache_manifest.json"
 
 config :blockchain_api,
   env: Mix.env(),
@@ -34,7 +35,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
   pool_size: 20,
-  timeout: 120000,
+  timeout: 120_000,
   log: false
 
 config :blockchain,

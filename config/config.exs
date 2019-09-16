@@ -58,7 +58,11 @@ System.put_env("NO_ESCRIPT", "1")
 Code.compiler_options(ignore_module_conflict: true)
 
 config :blockchain,
-  seed_nodes: Enum.map(String.split("/ip4/34.222.64.221/tcp/2154,/ip4/34.208.255.251/tcp/2154", ","), &String.to_charlist/1),
+  seed_nodes:
+    Enum.map(
+      String.split("/ip4/34.222.64.221/tcp/2154,/ip4/34.208.255.251/tcp/2154", ","),
+      &String.to_charlist/1
+    ),
   seed_node_dns: String.to_charlist("seed.helium.foundation"),
   base_dir: String.to_charlist("/var/data/")
 

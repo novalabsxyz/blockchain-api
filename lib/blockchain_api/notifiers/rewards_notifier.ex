@@ -60,5 +60,4 @@ defmodule BlockchainAPI.RewardsNotifier do
   defp message(reward) do
     "Your hotspots earned #{reward.amount} #{@ticker} from mining in the past week."
   end
-
 end
