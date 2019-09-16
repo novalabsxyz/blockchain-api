@@ -4,19 +4,19 @@ defmodule PaymentsNotifierTest do
   alias BlockchainAPI.Util
 
   test "whole number far greater than bones" do
-    amount = 1000000000000000
+    amount = 1_000_000_000_000_000
     converted = Util.units(amount)
     assert converted == "10,000,000"
   end
 
   test "whole number greater than bones" do
-    amount = 1000000000
+    amount = 1_000_000_000
     converted = Util.units(amount)
     assert converted == "10"
   end
 
   test "decimal number greater than bones" do
-    amount = 1000000000.10
+    amount = 1_000_000_000.10
     converted = Util.units(amount)
     assert converted == "10.000000001"
   end

@@ -29,8 +29,8 @@ defmodule BlockchainAPI.Schema.Transaction do
 
   def encode_model(transaction) do
     %{
-      Map.take(transaction, @fields) |
-      hash: Util.bin_to_string(transaction.hash)
+      Map.take(transaction, @fields)
+      | hash: Util.bin_to_string(transaction.hash)
     }
   end
 

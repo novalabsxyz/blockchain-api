@@ -8,7 +8,8 @@ defmodule BlockchainAPIWeb.BlockController do
   def index(conn, params) do
     blocks = Query.Block.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       blocks: blocks
     )

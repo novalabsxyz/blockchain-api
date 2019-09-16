@@ -6,13 +6,13 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def index(conn, %{"account_address" => address}=params) do
-
+  def index(conn, %{"account_address" => address} = params) do
     bin_address = address |> Util.string_to_bin()
 
     txns = bin_address |> Query.AccountTransaction.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       account_transactions: txns
     )

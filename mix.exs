@@ -39,7 +39,6 @@ defmodule BlockchainAPI.MixProject do
     ]
   end
 
-
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support", "priv/tasks"]
   defp elixirc_paths(:dev), do: ["lib", "test/support", "priv/tasks"]
@@ -72,9 +71,11 @@ defmodule BlockchainAPI.MixProject do
 
       # blockchain requirements
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
-      {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
+      {:cuttlefish,
+       git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
-      {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
+      {:lager, "3.6.7",
+       [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
     ]
   end
 

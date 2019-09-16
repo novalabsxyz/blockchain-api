@@ -8,16 +8,18 @@ defmodule BlockchainAPIWeb.PaymentController do
   def index(conn, params) do
     txns = Query.PaymentTransaction.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       payment_transactions: txns
     )
   end
 
   def show(conn, %{"hash" => hash}) do
-    payment = hash
-              |> Util.string_to_bin()
-              |> Query.PaymentTransaction.get!()
+    payment =
+      hash
+      |> Util.string_to_bin()
+      |> Query.PaymentTransaction.get!()
 
     render(conn, "show.json", payment: payment)
   end

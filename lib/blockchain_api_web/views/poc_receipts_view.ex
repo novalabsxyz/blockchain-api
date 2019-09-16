@@ -4,7 +4,7 @@ defmodule BlockchainAPIWeb.POCReceiptsView do
 
   def render("index.json", data) do
     %{
-      data: render_many(data.poc_receipts, POCReceiptsView, "poc_receipts.json"),
+      data: render_many(data.poc_receipts, POCReceiptsView, "poc_receipts.json")
     }
   end
 

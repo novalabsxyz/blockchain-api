@@ -22,7 +22,12 @@ defmodule BlockchainAPI.RewardsNotifier do
     now = Timex.now(:utc)
     days_to_notification = 7 - Timex.days_to_beginning_of_week(now, "Tuesday")
     notification_day = Timex.shift(now, days: days_to_notification)
-    notification_time = Timex.to_datetime({{notification_day.year, notification_day.month, notification_day.day}, {0,0,0}}, "Etc/UTC")
+
+    notification_time =
+      Timex.to_datetime(
+        {{notification_day.year, notification_day.month, notification_day.day}, {0, 0, 0}},
+        "Etc/UTC"
+      )
 
     Timex.diff(notification_time, Timex.now(), :milliseconds)
     |> :timer.apply_after(__MODULE__, :send_notifications, [])
@@ -31,11 +36,17 @@ defmodule BlockchainAPI.RewardsNotifier do
   # send notifications to onesignal and set timer to send again in one week
   def send_notifications do
     Logger.info("Notifying for weekly rewards")
+
     RewardTxn.get_from_last_week()
     |> Enum.map(fn r ->
       reward = reward_data(r)
-      @notifier_client.post(reward, message(reward), reward.address, %{delayed_option: "timezone", delivery_time_of_day: "10:00AM"})
+
+      @notifier_client.post(reward, message(reward), reward.address, %{
+        delayed_option: "timezone",
+        delivery_time_of_day: "10:00AM"
+      })
     end)
+
     :timer.apply_after(@interval, __MODULE__, :send_notifications, [])
   end
 

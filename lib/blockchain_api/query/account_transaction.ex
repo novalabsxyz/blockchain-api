@@ -21,43 +21,64 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Cache
   }
 
-  #==================================================================
+  # ==================================================================
   # Public functions
-  #==================================================================
+  # ==================================================================
   def create(attrs \\ %{}) do
     %AccountTransaction{}
     |> AccountTransaction.changeset(attrs)
     |> Repo.insert()
   end
 
-  def list(address, %{"before" => _before, "limit" => _limit}=params) do
-    {:account_txns, _, account_txns} = Cache.Util.get(:account_txn_cache, {:account_txns, address, params}, &set_list/1, :timer.minutes(2))
+  def list(address, %{"before" => _before, "limit" => _limit} = params) do
+    {:account_txns, _, account_txns} =
+      Cache.Util.get(
+        :account_txn_cache,
+        {:account_txns, address, params},
+        &set_list/1,
+        :timer.minutes(2)
+      )
+
     account_txns
   end
-  def list(address, %{"before" => _before}=params) do
-    {:account_txns, _, account_txns} = Cache.Util.get(:account_txn_cache, {:account_txns, address, params}, &set_list/1, :timer.minutes(2))
+
+  def list(address, %{"before" => _before} = params) do
+    {:account_txns, _, account_txns} =
+      Cache.Util.get(
+        :account_txn_cache,
+        {:account_txns, address, params},
+        &set_list/1,
+        :timer.minutes(2)
+      )
+
     account_txns
   end
-  def list(address, %{"limit" => limit}=_params) do
+
+  def list(address, %{"limit" => limit} = _params) do
     pp = Query.PendingPayment.get_pending_by_address(address)
     pg = Query.PendingGateway.get_by_owner(address)
     pl = Query.PendingLocation.get_by_owner(address)
-    rest = address
-           |> list_query()
-           |> limit(^limit)
-           |> Repo.all()
-           |> format()
+
+    rest =
+      address
+      |> list_query()
+      |> limit(^limit)
+      |> Repo.all()
+      |> format()
 
     pp ++ pg ++ pl ++ rest
   end
+
   def list(address, %{}) do
     pp = Query.PendingPayment.get_pending_by_address(address)
     pg = Query.PendingGateway.get_by_owner(address)
     pl = Query.PendingLocation.get_by_owner(address)
-    rest = address
-           |> list_query()
-           |> Repo.all()
-           |> format()
+
+    rest =
+      address
+      |> list_query()
+      |> Repo.all()
+      |> format()
 
     pp ++ pg ++ pl ++ rest
   end
@@ -66,7 +87,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     AccountTransaction
     |> where([at], at.txn_hash == ^txn_hash)
     |> where([at], at.txn_status == "pending")
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def update_pending!(pending, attrs \\ %{}) do
@@ -84,85 +105,97 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   def get_gateways(address, _params \\ %{}) do
     current_height = Query.Block.get_latest_height()
 
-    status_query = from(
-      ha in HotspotActivity,
-      group_by: ha.gateway,
-      select: %{
-        gateway: ha.gateway,
-        challenge_height: max(ha.poc_req_txn_block_height)
-      }
-    )
+    status_query =
+      from(
+        ha in HotspotActivity,
+        group_by: ha.gateway,
+        select: %{
+          gateway: ha.gateway,
+          challenge_height: max(ha.poc_req_txn_block_height)
+        }
+      )
 
-    location_status_query = from(
-      lt in LocationTransaction,
-      group_by: lt.gateway,
-      left_join: t in Transaction,
-      on: t.hash == lt.hash,
-      select: %{
-        gateway: lt.gateway,
-        location_height: max(t.block_height)
-      }
-    )
+    location_status_query =
+      from(
+        lt in LocationTransaction,
+        group_by: lt.gateway,
+        left_join: t in Transaction,
+        on: t.hash == lt.hash,
+        select: %{
+          gateway: lt.gateway,
+          location_height: max(t.block_height)
+        }
+      )
 
-    query = from(
-      at in AccountTransaction,
-      where: at.account_address == ^address,
-      left_join: gt in GatewayTransaction,
-      on: at.account_address == gt.owner,
-      left_join: hotspot in Hotspot,
-      on: at.account_address == hotspot.owner,
-      where: gt.gateway == hotspot.address,
-      where: gt.owner == hotspot.owner,
-      where: at.txn_hash == gt.hash,
-      left_join: lt in LocationTransaction,
-      on: gt.gateway == lt.gateway,
-      left_join: s in subquery(status_query),
-      on: s.gateway == gt.gateway,
-      left_join: lsq in subquery(location_status_query),
-      on: lsq.gateway == gt.gateway,
-      left_join: gtx in Transaction,
-      on: gtx.hash == gt.hash,
-      distinct: hotspot.address,
-      order_by: [desc: lt.nonce, desc: hotspot.id],
-      select: %{
-        account_address: at.account_address,
-        added_height: gtx.block_height,
-        gateway: gt.gateway,
-        gateway_hash: gt.hash,
-        gateway_fee: gt.fee,
-        owner: gt.owner,
-        payer: gt.payer,
-        location: lt.location,
-        location_fee: lt.fee,
-        location_nonce: lt.nonce,
-        location_hash: lt.hash,
-        long_city: hotspot.long_city,
-        long_street: hotspot.long_street,
-        long_state: hotspot.long_state,
-        long_country: hotspot.long_country,
-        short_city: hotspot.short_city,
-        short_street: hotspot.short_street,
-        short_state: hotspot.short_state,
-        short_country: hotspot.short_country,
-        score: hotspot.score,
-        location_height: lsq.location_height,
-        status: fragment("CASE WHEN ? - ? < 35 THEN 'online' ELSE CASE WHEN ? - ? < 35 THEN 'online' ELSE 'offline' END END", ^current_height, s.challenge_height, ^current_height, lsq.location_height)
-      })
+    query =
+      from(at in AccountTransaction,
+        where: at.account_address == ^address,
+        left_join: gt in GatewayTransaction,
+        on: at.account_address == gt.owner,
+        left_join: hotspot in Hotspot,
+        on: at.account_address == hotspot.owner,
+        where: gt.gateway == hotspot.address,
+        where: gt.owner == hotspot.owner,
+        where: at.txn_hash == gt.hash,
+        left_join: lt in LocationTransaction,
+        on: gt.gateway == lt.gateway,
+        left_join: s in subquery(status_query),
+        on: s.gateway == gt.gateway,
+        left_join: lsq in subquery(location_status_query),
+        on: lsq.gateway == gt.gateway,
+        left_join: gtx in Transaction,
+        on: gtx.hash == gt.hash,
+        distinct: hotspot.address,
+        order_by: [desc: lt.nonce, desc: hotspot.id],
+        select: %{
+          account_address: at.account_address,
+          added_height: gtx.block_height,
+          gateway: gt.gateway,
+          gateway_hash: gt.hash,
+          gateway_fee: gt.fee,
+          owner: gt.owner,
+          payer: gt.payer,
+          location: lt.location,
+          location_fee: lt.fee,
+          location_nonce: lt.nonce,
+          location_hash: lt.hash,
+          long_city: hotspot.long_city,
+          long_street: hotspot.long_street,
+          long_state: hotspot.long_state,
+          long_country: hotspot.long_country,
+          short_city: hotspot.short_city,
+          short_street: hotspot.short_street,
+          short_state: hotspot.short_state,
+          short_country: hotspot.short_country,
+          score: hotspot.score,
+          location_height: lsq.location_height,
+          status:
+            fragment(
+              "CASE WHEN ? - ? < 35 THEN 'online' ELSE CASE WHEN ? - ? < 35 THEN 'online' ELSE 'offline' END END",
+              ^current_height,
+              s.challenge_height,
+              ^current_height,
+              lsq.location_height
+            )
+        }
+      )
 
     query
     |> Repo.all()
     |> clean_account_gateways()
   end
 
-  #==================================================================
+  # ==================================================================
   # Helper functions
-  #==================================================================
+  # ==================================================================
   defp set_list({:account_txns, address, params}) do
-    data = address
-           |> list_query()
-           |> maybe_filter(params)
-           |> Repo.all()
-           |> format()
+    data =
+      address
+      |> list_query()
+      |> maybe_filter(params)
+      |> Repo.all()
+      |> format()
+
     {:commit, {:account_txns, address, data}}
   end
 
@@ -172,6 +205,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       {lat, lng} = Util.h3_to_lat_lng(map.location)
       status = Query.HotspotStatus.consolidate_status(map.status, map.gateway)
       sync_percent = Query.HotspotStatus.sync_percent(map.gateway)
+
       map
       |> encoded_account_gateway_map()
       |> Map.merge(%{lat: lat, lng: lng, status: status, sync_percent: sync_percent})
@@ -179,14 +213,15 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   defp encoded_account_gateway_map(map) do
-    %{map |
-      account_address: Util.bin_to_string(map.account_address),
-      gateway: Util.bin_to_string(map.gateway),
-      gateway_hash: Util.bin_to_string(map.gateway_hash),
-      location_hash: Util.bin_to_string(map.location_hash),
-      owner: Util.bin_to_string(map.owner),
-      payer: Util.bin_to_string(map.payer),
-      score: Util.rounder(map.score, 4)
+    %{
+      map
+      | account_address: Util.bin_to_string(map.account_address),
+        gateway: Util.bin_to_string(map.gateway),
+        gateway_hash: Util.bin_to_string(map.gateway_hash),
+        location_hash: Util.bin_to_string(map.location_hash),
+        owner: Util.bin_to_string(map.owner),
+        payer: Util.bin_to_string(map.payer),
+        score: Util.rounder(map.score, 4)
     }
   end
 
@@ -223,48 +258,79 @@ defmodule BlockchainAPI.Query.AccountTransaction do
 
   defp format(entries) do
     entries
-    |> Enum.reduce([],
-      fn(entry, acc) ->
+    |> Enum.reduce(
+      [],
+      fn entry, acc ->
         case entry.txn_status do
           "cleared" ->
             case entry.txn_type do
               "payment" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_payment!()
-                      |> PaymentTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_payment!()
+                  |> PaymentTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
+
               "coinbase" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_coinbase!()
-                      |> CoinbaseTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_coinbase!()
+                  |> CoinbaseTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
+
               "security" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_security!()
-                      |> SecurityTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_security!()
+                  |> SecurityTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
+
               "data_credit" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_data_credit!()
-                      |> DataCreditTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_data_credit!()
+                  |> DataCreditTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
+
               "gateway" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_gateway!()
-                      |> GatewayTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_gateway!()
+                  |> GatewayTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
+
               "location" ->
-                res = entry.txn_hash
-                      |> Query.Transaction.get_location!()
-                      |> LocationTransaction.encode_model()
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_location!()
+                  |> LocationTransaction.encode_model()
+
                 [Map.merge(res, %{id: entry.id}) | acc]
-              "consensus_reward" -> merge_reward_entry(entry, acc)
-              "securities_reward" -> merge_reward_entry(entry, acc)
-              "poc_challengees_reward" -> merge_reward_entry(entry, acc)
-              "poc_challengers_reward" -> merge_reward_entry(entry, acc)
-              "poc_witnesses_reward" -> merge_reward_entry(entry, acc)
-              _ -> acc
+
+              "consensus_reward" ->
+                merge_reward_entry(entry, acc)
+
+              "securities_reward" ->
+                merge_reward_entry(entry, acc)
+
+              "poc_challengees_reward" ->
+                merge_reward_entry(entry, acc)
+
+              "poc_challengers_reward" ->
+                merge_reward_entry(entry, acc)
+
+              "poc_witnesses_reward" ->
+                merge_reward_entry(entry, acc)
+
+              _ ->
+                acc
             end
+
           "pending" ->
             case entry.txn_type do
               "payment" ->
@@ -275,6 +341,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                   _error in Ecto.NoResultsError ->
                     acc
                 end
+
               "coinbase" ->
                 try do
                   res = Query.PendingCoinbase.get!(entry.txn_hash)
@@ -283,6 +350,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                   _error in Ecto.NoResultsError ->
                     acc
                 end
+
               "gateway" ->
                 try do
                   res = Query.PendingGateway.get!(entry.txn_hash)
@@ -291,6 +359,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                   _error in Ecto.NoResultsError ->
                     acc
                 end
+
               "location" ->
                 try do
                   res = Query.PendingLocation.get!(entry.txn_hash)
@@ -301,27 +370,30 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                 end
             end
         end
-      end)
-      |> Enum.reverse()
+      end
+    )
+    |> Enum.reverse()
   end
 
   defp merge_reward_entry(entry, acc) do
     reward = Query.RewardTxn.get!(entry.txn_hash, entry.account_address, entry.txn_type)
-    res = RewardTxn.encode_model(reward)
-          |> Map.merge(%{height: reward.block_height, time: reward.block_time})
+
+    res =
+      RewardTxn.encode_model(reward)
+      |> Map.merge(%{height: reward.block_height, time: reward.block_time})
 
     [Map.merge(res, %{id: entry.id}) | acc]
   end
 
-  defp maybe_filter(query, %{"before" => before, "limit" => limit}=_params) do
+  defp maybe_filter(query, %{"before" => before, "limit" => limit} = _params) do
     query
     |> where([at], at.id < ^before)
     |> limit(^limit)
   end
-  defp maybe_filter(query, %{"before" => before}=_params) do
+
+  defp maybe_filter(query, %{"before" => before} = _params) do
     query
     |> where([at], at.id < ^before)
     |> limit(@default_limit)
   end
-
 end

@@ -15,14 +15,14 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
   def get!(hash) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.hash == ^hash)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   # NOTE: onions are supposed to always have a unique hash
   def get_by_onion(onion) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.onion == ^onion)
-    |> Repo.one!
+    |> Repo.one!()
   end
 
   def create(attrs \\ %{}) do

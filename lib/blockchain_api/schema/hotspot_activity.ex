@@ -46,7 +46,7 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     field :poc_score, :float, null: true
     field :poc_score_delta, :float, null: true
     field :rapid_decline, :boolean, null: true
-    field :in_consensus, :boolean, null: true, default: :false
+    field :in_consensus, :boolean, null: true, default: false
     field :election_id, :integer, null: true
     field :election_block_height, :integer, null: true
     field :election_txn_block_height, :integer, null: true
@@ -83,7 +83,7 @@ defmodule BlockchainAPI.Schema.HotspotActivity do
     |> Map.merge(%{
       gateway: Util.bin_to_string(hotspot_activity.address),
       poc_req_txn_hash: Util.bin_to_string(hotspot_activity.poc_req_txn_hash),
-      poc_rx_txn_hash: Util.bin_to_string(hotspot_activity.poc_rx_txn_hash),
+      poc_rx_txn_hash: Util.bin_to_string(hotspot_activity.poc_rx_txn_hash)
     })
   end
 

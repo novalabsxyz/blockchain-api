@@ -23,5 +23,4 @@ defmodule BlockchainAPI.PaymentsNotifier do
   defp message(units) do
     "You got #{units} #{@ticker}"
   end
-
 end

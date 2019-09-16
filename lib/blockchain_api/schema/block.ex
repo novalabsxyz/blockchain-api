@@ -22,7 +22,6 @@ defmodule BlockchainAPI.Schema.Block do
     block
     |> cast(attrs, [:hash, :height, :round, :time])
     |> validate_required([:hash, :height, :round, :time])
-    # |> unique_constraint(:hash, name: "block hash already exists")
     |> unique_constraint(:height, name: :unique_block_height)
     |> unique_constraint(:time, name: :unique_block_time)
   end
@@ -38,8 +37,8 @@ defmodule BlockchainAPI.Schema.Block do
 
   def encode_model(block) do
     %{
-      Map.take(block, @fields) |
-      hash: Util.bin_to_string(block.hash)
+      Map.take(block, @fields)
+      | hash: Util.bin_to_string(block.hash)
     }
   end
 
@@ -59,5 +58,4 @@ defmodule BlockchainAPI.Schema.Block do
       round: :blockchain_block.hbbft_round(block)
     }
   end
-
 end

@@ -6,8 +6,9 @@ defmodule BlockchainAPIWeb.PendingPaymentController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def show(conn, %{"payer" => payer, "nonce" => nonce}=_params) do
+  def show(conn, %{"payer" => payer, "nonce" => nonce} = _params) do
     pending_payment = Query.PendingPayment.get(Util.string_to_bin(payer), nonce)
+
     conn
     |> put_view(PaymentView)
     |> render("show.json", payment: pending_payment)

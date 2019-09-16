@@ -8,18 +8,19 @@ defmodule BlockchainAPIWeb.CoinbaseController do
   def index(conn, params) do
     txns = Query.CoinbaseTransaction.list(params)
 
-    render(conn,
+    render(
+      conn,
       "index.json",
       coinbase_transactions: txns
     )
   end
 
   def show(conn, %{"hash" => hash}) do
-    coinbase = hash
-               |> Util.string_to_bin()
-               |> Query.CoinbaseTransaction.get!()
+    coinbase =
+      hash
+      |> Util.string_to_bin()
+      |> Query.CoinbaseTransaction.get!()
 
     render(conn, "show.json", coinbase: coinbase)
   end
-
 end
