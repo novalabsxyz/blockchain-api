@@ -40,4 +40,4 @@ config :blockchain_api, BlockchainAPI.Repo,
   log: false
 
 config :blockchain,
-  base_dir: String.to_charlist("/var/data/prod/")
+  base_dir: String.to_charlist("/var/blockchain-api/data/prod/")

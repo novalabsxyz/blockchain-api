@@ -34,4 +34,4 @@ config :blockchain_api,
 config :blockchain,
   seed_nodes: [],
   seed_node_dns: '',
-  base_dir: String.to_charlist("/var/data/test/")
+  base_dir: String.to_charlist("/tmp/blockchain-api/test/")
