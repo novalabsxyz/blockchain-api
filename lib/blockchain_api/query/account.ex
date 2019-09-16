@@ -1,4 +1,8 @@
 defmodule BlockchainAPI.Query.Account do
+  @moduledoc """
+  Account query functions.
+  """
+
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{
@@ -13,7 +17,7 @@ defmodule BlockchainAPI.Query.Account do
   @doc """
   Get account from `address`.
 
-  Throw error if no account found.
+  Raise error if no account found.
   """
   def get!(address) do
     Account
@@ -21,6 +25,11 @@ defmodule BlockchainAPI.Query.Account do
     |> Repo.one!()
   end
 
+  @doc """
+  Get account using `address`.
+
+  Returns `{:ok, %Account{}}` or `nil`.
+  """
   def get(address) do
     Account
     |> where([a], a.address == ^address)
@@ -33,22 +42,40 @@ defmodule BlockchainAPI.Query.Account do
     |> Repo.update!()
   end
 
+  @doc """
+  List accounts, filter by `params`.
+
+  TODO: add the filter.
+  """
   def list(_params) do
     Account
     |> order_by([a], desc: a.id)
     |> Repo.all()
   end
 
+  @doc """
+  List all accounts.
+
+  TODO: remove this reduntant function.
+  """
   def list_all() do
     Account |> Repo.all()
   end
 
+  @doc """
+  Get pending transactions for an account `address`.
+  """
   def get_pending_transactions(address) do
     get_account_pending_payments(address) ++
       get_account_pending_gateways(address) ++
       get_account_pending_locations(address)
   end
 
+  @doc """
+  Get a speculative nonce for account `address`.
+
+  Used for creating a new payment transaction by app.
+  """
   def get_speculative_nonce(address) do
     query_pending_nonce =
       from(

@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.PaymentsNotifier do
+  @moduledoc false
+
   @ticker "HLM"
 
   alias BlockchainAPI.Util

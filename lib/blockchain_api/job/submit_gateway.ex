@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Job.SubmitGateway do
+  @moduledoc false
+
   alias BlockchainAPI.Query.PendingGateway
   alias BlockchainAPI.Util
   require Logger

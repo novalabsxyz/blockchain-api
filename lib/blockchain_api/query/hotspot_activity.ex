@@ -1,5 +1,8 @@
 defmodule BlockchainAPI.Query.HotspotActivity do
-  @moduledoc false
+  @moduledoc """
+  Hotspot Activity query functions.
+  """
+
   import Ecto.Query, warn: false
 
   @default_limit 100
@@ -7,12 +10,16 @@ defmodule BlockchainAPI.Query.HotspotActivity do
 
   alias BlockchainAPI.{Repo, Util, Schema.HotspotActivity}
 
+  @doc false
   def create(attrs \\ %{}) do
     %HotspotActivity{}
     |> HotspotActivity.changeset(attrs)
     |> Repo.insert()
   end
 
+  @doc """
+  Get last poc score of given hotspot `address`.
+  """
   def last_poc_score(address) do
     from(
       ha in HotspotActivity,
@@ -25,6 +32,11 @@ defmodule BlockchainAPI.Query.HotspotActivity do
     |> Repo.one()
   end
 
+  @doc """
+  List hotspot `address` activity information.
+
+  Filter by `params`.
+  """
   def list(address, params) do
     address
     |> activity_query()

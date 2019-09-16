@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Query.POCReceiptsTransactionTest do
+  @moduledoc false
+
   use BlockchainAPI.DataCase
   import BlockchainAPI.TestHelpers
 

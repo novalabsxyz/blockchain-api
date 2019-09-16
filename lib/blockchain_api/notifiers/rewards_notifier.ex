@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.RewardsNotifier do
+  @moduledoc false
+
   use Task
   require Logger
 

@@ -1,5 +1,8 @@
 defmodule BlockchainAPI.Query.HotspotReward do
-  @moduledoc false
+  @moduledoc """
+  Hotspot Reward query functions.
+  """
+
   import Ecto.Query, warn: false
 
   @default_limit 100
@@ -7,6 +10,13 @@ defmodule BlockchainAPI.Query.HotspotReward do
 
   alias BlockchainAPI.{Repo, Schema.RewardTxn}
 
+
+  @doc """
+  List hotspot rewards by `address`.
+
+  Filter by `params`.
+
+  """
   def list(address, params) do
     address
     |> list_query()

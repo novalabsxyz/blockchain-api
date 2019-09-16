@@ -1,4 +1,6 @@
 defmodule RewardsNotifierTest do
+  @moduledoc false
+
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.{

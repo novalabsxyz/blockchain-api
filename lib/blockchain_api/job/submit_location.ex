@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Job.SubmitLocation do
+  @moduledoc false
+
   alias BlockchainAPI.Query.PendingLocation
   alias BlockchainAPI.Util
   require Logger

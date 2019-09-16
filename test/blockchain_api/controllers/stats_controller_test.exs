@@ -1,4 +1,6 @@
 defmodule BlockchainAPIWeb.StatsControllerTest do
+  @moduledoc false
+
   use BlockchainAPIWeb.ConnCase
   alias BlockchainAPI.{Query, Util}
   import BlockchainAPI.TestHelpers

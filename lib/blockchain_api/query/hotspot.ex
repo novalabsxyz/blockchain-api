@@ -1,5 +1,8 @@
 defmodule BlockchainAPI.Query.Hotspot do
-  @moduledoc false
+  @moduledoc """
+  Hotspot query functions.
+  """
+
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{Repo, Util, Schema.Hotspot}
@@ -7,36 +10,61 @@ defmodule BlockchainAPI.Query.Hotspot do
   # Default search levenshtein distance threshold
   @threshold 1
 
+  @doc """
+  List all hotspots considering `params`.
+
+  TODO: Actually enable `params`.
+
+  `params` is a map with keys limit and/or before.
+
+  """
   def list(_params) do
     Hotspot
     |> order_by([h], desc: h.id)
     |> Repo.all()
   end
 
+  @doc """
+  Get hotspot by `address`.
+
+  Raise error if unable to get.
+  """
   def get!(address) do
     Hotspot
     |> where([h], h.address == ^address)
     |> Repo.one!()
   end
 
+  @doc false
   def create(attrs \\ %{}) do
     %Hotspot{}
     |> Hotspot.changeset(attrs)
     |> Repo.insert()
   end
 
+  @doc """
+  Update a hotspot record in DB.
+
+  Raise error otherwise.
+  """
   def update!(hotspot, attrs \\ %{}) do
     hotspot
     |> Hotspot.changeset(attrs)
     |> Repo.update!()
   end
 
+  @doc """
+  List all hotspots.
+  """
   def all() do
     Hotspot
     |> order_by([h], desc: h.id)
     |> Repo.all()
   end
 
+  @doc """
+  Get all hotspots without an asserted location.
+  """
   def all_no_loc() do
     Hotspot
     |> where([h], is_nil(h.location))
@@ -44,20 +72,23 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.all()
   end
 
-  # Search hotspots with fuzzy str match with Levenshtein distance
-
+  @doc """
+  Search hotspots with fuzzy str match with Levenshtein distance.
+  """
   def search(query_string) do
     query_string
     |> search(@threshold)
     |> format()
   end
 
+  @doc false
   defmacro levenshtein(str1, str2, threshold) do
     quote do
       levenshtein(unquote(str1), unquote(str2)) <= unquote(threshold)
     end
   end
 
+  @doc false
   defmacro levenshtein(str1, str2) do
     quote do
       fragment(

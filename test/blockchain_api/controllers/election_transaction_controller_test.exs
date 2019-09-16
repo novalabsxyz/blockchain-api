@@ -1,4 +1,6 @@
 defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
+  @moduledoc false
+
   use BlockchainAPIWeb.ConnCase
 
   import Ecto.Query

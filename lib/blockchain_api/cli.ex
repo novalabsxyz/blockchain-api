@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.CLI do
+  @moduledoc false
+
   def to_chars(list) do
     list
     |> List.flatten()

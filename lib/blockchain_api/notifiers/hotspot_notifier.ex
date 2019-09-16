@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.HotspotNotifier do
+  @moduledoc false
+
   @notifier_client Application.fetch_env!(:blockchain_api, :notifier_client)
 
   alias BlockchainAPI.{Schema.Hotspot, Util}

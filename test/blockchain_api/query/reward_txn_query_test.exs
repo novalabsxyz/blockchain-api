@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Query.RewardTxnTest do
+  @moduledoc false
+
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.Query

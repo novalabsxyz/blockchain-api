@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Query.StatsTest do
+  @moduledoc false
+
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.Query.Stats

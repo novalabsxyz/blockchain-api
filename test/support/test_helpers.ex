@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.TestHelpers do
+  @moduledoc false
+
   alias BlockchainAPI.{Query, Util}
 
   @num_challenges 1000

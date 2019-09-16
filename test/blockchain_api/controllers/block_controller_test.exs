@@ -1,4 +1,6 @@
 defmodule BlockchainAPIWeb.BlockControllerTest do
+  @moduledoc false
+
   use BlockchainAPIWeb.ConnCase
   alias BlockchainAPI.Query
 

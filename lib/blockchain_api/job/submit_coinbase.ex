@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Job.SubmitCoinbase do
+  @moduledoc false
+
   alias BlockchainAPI.Query.PendingCoinbase
   alias BlockchainAPI.Util
   require Logger

@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Util do
+  @moduledoc false
+
   use Timex
 
   alias BlockchainAPI.Schema.{

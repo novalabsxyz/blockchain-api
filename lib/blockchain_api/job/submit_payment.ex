@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.Job.SubmitPayment do
+  @moduledoc false
+
   alias BlockchainAPI.Query.PendingPayment
   alias BlockchainAPI.Util
   require Logger

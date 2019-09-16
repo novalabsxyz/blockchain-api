@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Query.Block do
   @moduledoc """
-  This module will query block information.
+  Block query functions.
   """
   import Ecto.Query, warn: false
 
@@ -14,10 +14,6 @@ defmodule BlockchainAPI.Query.Block do
     Schema.Transaction,
     Cache
   }
-
-  # ==================================================================
-  # Public functions
-  # ==================================================================
 
   @doc """
   Get list of blocks with given `params`.

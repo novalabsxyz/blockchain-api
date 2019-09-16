@@ -1,4 +1,6 @@
 defmodule BlockchainAPIWeb.ChallengeControllerTest do
+  @moduledoc false
+
   use BlockchainAPIWeb.ConnCase
   import BlockchainAPI.TestHelpers
   alias BlockchainAPI.{Query, Util}

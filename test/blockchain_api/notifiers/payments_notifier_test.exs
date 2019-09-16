@@ -1,4 +1,6 @@
 defmodule PaymentsNotifierTest do
+  @moduledoc false
+
   use ExUnit.Case
 
   alias BlockchainAPI.Util

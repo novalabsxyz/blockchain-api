@@ -1,4 +1,6 @@
 defmodule BlockchainAPI.NotifierClient do
+  @moduledoc false
+
   @url "https://onesignal.com/api/v1/notifications"
 
   def post(data, message, send_address, opts \\ %{}) do
