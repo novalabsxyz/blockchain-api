@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
 
     case :blockchain_txn_add_gateway_v1.owner(txn) do
       @blacklisted_owner ->
-        Logger.warn("You are blacklisted! #{inspect(txn)}")
+        Logger.error("You are blacklisted! #{inspect(txn)}")
       _ ->
 
         txn
