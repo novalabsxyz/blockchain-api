@@ -16,6 +16,9 @@ defmodule BlockchainAPI.Query.Stats do
     Block,
     ConsensusMember,
     ElectionTransaction,
+    POCPathElement,
+    POCReceiptsTransaction,
+    POCWitness,
     RewardTxn,
     Transaction
   }
@@ -64,6 +67,11 @@ defmodule BlockchainAPI.Query.Stats do
           "7d" => get_query_by_shift(&query_top_grossing_hotspots/2, days: -7),
           "30d" => get_query_by_shift(&query_top_grossing_hotspots/2, days: -30)
         },
+        "farthest_witness" => %{
+          "24h" => get_query_by_shift(&query_farthest_witness/2, hours: -24),
+          "7d" => get_query_by_shift(&query_farthest_witness/2, days: -7),
+          "30d" => get_query_by_shift(&query_farthest_witness/2, days: -30)
+        }
       }
     }
 
@@ -188,27 +196,29 @@ defmodule BlockchainAPI.Query.Stats do
         group_by: cm.address,
         select: %{
           count: fragment("count(*)"),
-          gateway: cm.address,
+          gateway: cm.address
         }
       )
 
-    rank_query = from(
-      cq in subquery(count_query),
-      select: %{
-        count: cq.count,
-        gateway: cq.gateway,
-        rank: rank() |> over(order_by: [desc: cq.count])
-      }
-    )
+    rank_query =
+      from(
+        cq in subquery(count_query),
+        select: %{
+          count: cq.count,
+          gateway: cq.gateway,
+          rank: rank() |> over(order_by: [desc: cq.count])
+        }
+      )
 
-    query = from(
-      rq in subquery(rank_query),
-      where: rq.rank == 1,
-      select: %{
-        count: rq.count,
-        gateway: rq.gateway
-      }
-    )
+    query =
+      from(
+        rq in subquery(rank_query),
+        where: rq.rank == 1,
+        select: %{
+          count: rq.count,
+          gateway: rq.gateway
+        }
+      )
 
     query
     |> Repo.all()
@@ -230,33 +240,96 @@ defmodule BlockchainAPI.Query.Stats do
         where: not is_nil(rt.gateway),
         group_by: rt.gateway,
         select: %{
-          sum: sum(rt.amount),
+          amount: sum(rt.amount),
           gateway: rt.gateway
         }
       )
 
-    rank_query = from(
-      sq in subquery(sum_query),
-      select: %{
-        sum: sq.sum,
-        gateway: sq.gateway,
-        rank: rank() |> over(order_by: [desc: sq.sum])
-      }
-    )
+    rank_query =
+      from(
+        sq in subquery(sum_query),
+        select: %{
+          amount: sq.amount,
+          gateway: sq.gateway,
+          rank: rank() |> over(order_by: [desc: sq.amount])
+        }
+      )
 
-    query = from(
-      rq in subquery(rank_query),
-      where: rq.rank == 1,
-      select: %{
-        sum: rq.sum,
-        gateway: rq.gateway
-      }
-    )
+    query =
+      from(
+        rq in subquery(rank_query),
+        where: rq.rank == 1,
+        select: %{
+          amount: rq.amount,
+          gateway: rq.gateway
+        }
+      )
 
     query
     |> Repo.all()
     |> Enum.map(fn %{gateway: gateway} = m ->
       m |> Map.put(:gateway, Util.bin_to_string(gateway))
+    end)
+  end
+
+  # select * from poc_witnesses pw
+  # inner join poc_path_elements pe
+  # on pe.id = pw.poc_path_elements_id
+  # inner join poc_receipts_transactions rt
+  # on rt.hash = pe.poc_receipts_transactions_hash
+  # inner join transactions tx
+  # on tx.hash = rt.hash
+  # inner join blocks b
+  # on b.height = tx.block_height
+  # WHERE (b.time >= 1568156776) AND (b.time <= 1568243176)
+  # order by pw.distance desc, b.time asc
+
+  defp query_farthest_witness(start, finish) do
+    distance_query =
+      from(
+        pw in POCWitness,
+        inner_join: pe in POCPathElement,
+        on: pe.id == pw.poc_path_elements_id,
+        inner_join: rt in POCReceiptsTransaction,
+        on: rt.hash == pe.poc_receipts_transactions_hash,
+        inner_join: tx in Transaction,
+        on: tx.hash == rt.hash,
+        inner_join: b in Block,
+        on: b.height == tx.block_height,
+        where: b.time >= ^start,
+        where: b.time <= ^finish,
+        select: %{
+          gateway: pw.gateway,
+          distance: pw.distance,
+          timestamp: pw.timestamp
+        }
+      )
+
+    rank_query =
+      from(
+        dq in subquery(distance_query),
+        select: %{
+          gateway: dq.gateway,
+          distance: dq.distance,
+          rank: rank() |> over(order_by: [desc: dq.distance, asc: dq.timestamp])
+        }
+      )
+
+    query =
+      from(
+        rq in subquery(rank_query),
+        where: rq.rank == 1,
+        select: %{
+          gateway: rq.gateway,
+          distance: rq.distance
+        }
+      )
+
+    query
+    |> Repo.all()
+    |> Enum.map(fn %{gateway: gateway, owner: owner} = m ->
+      m
+      |> Map.put(:gateway, Util.bin_to_string(gateway))
     end)
   end
 
