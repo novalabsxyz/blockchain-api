@@ -42,7 +42,7 @@ defmodule BlockchainAPI.Query.Stats do
         "total" => get_supply()
       },
       "block_time" => %{
-        "24h" => get_query_by_shift(&query_block_interval/2, hours: -24),
+        "24h" => get_block_time(hours: -24),
         "7d" => get_block_time(days: -7),
         "30d" => get_block_time(days: -30)
       },
@@ -272,18 +272,6 @@ defmodule BlockchainAPI.Query.Stats do
     end)
   end
 
-  # select * from poc_witnesses pw
-  # inner join poc_path_elements pe
-  # on pe.id = pw.poc_path_elements_id
-  # inner join poc_receipts_transactions rt
-  # on rt.hash = pe.poc_receipts_transactions_hash
-  # inner join transactions tx
-  # on tx.hash = rt.hash
-  # inner join blocks b
-  # on b.height = tx.block_height
-  # WHERE (b.time >= 1568156776) AND (b.time <= 1568243176)
-  # order by pw.distance desc, b.time asc
-
   defp query_farthest_witness(start, finish) do
     distance_query =
       from(
@@ -327,7 +315,7 @@ defmodule BlockchainAPI.Query.Stats do
 
     query
     |> Repo.all()
-    |> Enum.map(fn %{gateway: gateway, owner: owner} = m ->
+    |> Enum.map(fn %{gateway: gateway} = m ->
       m
       |> Map.put(:gateway, Util.bin_to_string(gateway))
     end)
