@@ -89,31 +89,71 @@ defmodule BlockchainAPI.Committer do
   defp insert_or_update_all_account(ledger) do
     {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
 
-    maps = ledger
-           |> :blockchain_ledger_v1.entries()
-           |> Enum.reduce([],
-             fn ({address, entry}, acc) ->
-               map = %{
-                 nonce: :blockchain_ledger_entry_v1.nonce(entry),
-                 balance: :blockchain_ledger_entry_v1.balance(entry),
-                 security_nonce: :blockchain_ledger_security_entry_v1.nonce(entry),
-                 security_balance: :blockchain_ledger_security_entry_v1.balance(entry),
-                 data_credit_balance: :blockchain_ledger_data_credits_entry_v1.balance(entry),
-                 address: address,
-                 fee: fee}
-               [map | acc]
-             end)
+    hlm_maps =
+      ledger
+      |> :blockchain_ledger_v1.entries()
+      |> Stream.map(fn {address, entry} ->
+        %{
+          nonce: :blockchain_ledger_entry_v1.nonce(entry),
+          balance: :blockchain_ledger_entry_v1.balance(entry),
+          address: address,
+          fee: fee
+        }
+      end)
+
+    security_maps =
+      ledger
+      |> :blockchain_ledger_v1.securities()
+      |> Stream.map(fn {address, entry} ->
+        %{
+          security_nonce: :blockchain_ledger_security_entry_v1.nonce(entry),
+          security_balance: :blockchain_ledger_security_entry_v1.balance(entry),
+          address: address
+        }
+      end)
+
+    data_credit_maps =
+      ledger
+      |> :blockchain_ledger_v1.dc_entries()
+      |> Stream.map(fn {address, entry} ->
+        %{
+          data_credit_balance: :blockchain_ledger_data_credits_entry_v1.balance(entry),
+          address: address
+        }
+      end)
+
+    account_maps =
+      hlm_maps
+      |> Stream.concat(security_maps)
+      |> Stream.concat(data_credit_maps)
+      |> Enum.reduce(%{}, fn entry, acc ->
+        case Map.get(acc, entry[:address]) do
+          nil ->
+            Map.put(acc, entry[:address], entry)
+
+          map ->
+            updated_entry = Map.merge(map, entry)
+            Map.put(acc, entry[:address], updated_entry)
+        end
+      end)
 
     Repo.transaction(fn ->
       Enum.each(
-        maps,
-        fn map ->
+        account_maps,
+        fn {_address, map} ->
           case Query.Account.get(map.address) do
             nil ->
               Account.changeset(%Account{}, map)
 
             account ->
-              Account.changeset(account, %{balance: map.balance, nonce: map.nonce, fee: map.fee})
+              Account.changeset(account, %{
+                balance: map.balance,
+                nonce: map.nonce,
+                fee: map.fee,
+                security_nonce: map.security_nonce,
+                security_balance: map.security_balance,
+                data_credit_balance: map.data_credit_balance
+              })
           end
           |> Repo.insert_or_update!()
         end
