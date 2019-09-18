@@ -13,7 +13,12 @@ defmodule BlockchainAPI.Job.SubmitPayment do
 
     case :blockchain_txn_payment_v1.payer(txn) do
       @blacklisted_owner ->
-        Logger.error("You are blacklisted! #{inspect(txn)}")
+        Logger.error("You are blacklisted! Job id: #{id}")
+
+        # Mark as error right away
+        pending_payment
+        |> PendingPayment.update!(%{status: "error"})
+
       _ ->
 
         txn

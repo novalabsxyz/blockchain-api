@@ -13,7 +13,12 @@ defmodule BlockchainAPI.Job.SubmitGateway do
 
     case :blockchain_txn_add_gateway_v1.owner(txn) do
       @blacklisted_owner ->
-        Logger.error("You are blacklisted! #{inspect(txn)}")
+        Logger.error("You are blacklisted! Job id: #{id}")
+
+        # Mark as error right away
+        pending_gateway
+        |> PendingGateway.update!(%{status: "error"})
+
       _ ->
 
         txn

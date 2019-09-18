@@ -13,7 +13,12 @@ defmodule BlockchainAPI.Job.SubmitLocation do
 
     case :blockchain_txn_assert_location_v1.owner(txn) do
       @blacklisted_owner ->
-        Logger.error("You are blacklisted! #{inspect(txn)}")
+        Logger.error("You are blacklisted! Job id: #{id}")
+
+        # Mark as error right away
+        pending_location
+        |> PendingLocation.update!(%{status: "error"})
+
       _ ->
 
         txn
