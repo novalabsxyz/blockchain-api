@@ -26,6 +26,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
           case res do
             :ok ->
               Logger.info("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} accepted!")
+              notify_gateway_success(txn)
 
               pending_gateway
               |> PendingGateway.update!(%{status: "cleared"})
@@ -36,6 +37,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
                   inspect(reason)
                 }"
                   )
+              notify_gateway_failure(txn, pending_gateway)
 
               pending_gateway
               |> PendingGateway.update!(%{status: "error"})
@@ -44,4 +46,21 @@ defmodule BlockchainAPI.Job.SubmitGateway do
     end
   end
 
+  defp notify_gateway_success(txn) do
+    type = :blockchain_txn.type(txn)
+    ledger =
+      :blockchain_worker.blockchain()
+      |> :blockchain.ledger()
+    HotspotNotifier.send_new_hotspot_notification(txn, type, ledger)
+  end
+
+  defp notify_gateway_failure(txn, pending_gateway) do
+    case Query.Hotspot.get(pending_gateway.gateway) do
+      nil ->
+        HotspotNotifier.send_add_hotspot_failed(:timed_out, pending_gateway)
+
+      _ ->
+        HotspotNotifier.send_add_hotspot_failed(:already_exists, pending_gateway)
+    end
+  end
 end

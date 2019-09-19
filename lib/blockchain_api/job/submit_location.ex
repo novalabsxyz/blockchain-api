@@ -36,6 +36,7 @@ defmodule BlockchainAPI.Job.SubmitLocation do
                   inspect(reason)
                 }"
               )
+              HotspotNotifier.send_confirm_location_failed(pending_location)
 
               pending_location
               |> PendingLocation.update!(%{status: "error"})
