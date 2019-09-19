@@ -84,7 +84,7 @@ defmodule BlockchainAPI.Util do
     case HTTPoison.get(
            "https://maps.googleapis.com/maps/api/geocode/json?latlng=#{lat},#{lng}&key=#{
              Application.get_env(:blockchain_api, :google_maps_secret)
-           }"
+           }", [], [ssl: [{:honor_cipher_order, :undefined}]]
          ) do
       {:ok, %{status_code: 200, body: body}} ->
         decoded_body = Jason.decode!(body)
