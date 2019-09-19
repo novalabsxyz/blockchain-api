@@ -1,5 +1,9 @@
 .PHONY: all compile clean release devrelease test
 
+APP_NAME ?= `grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g'`
+APP_VSN ?= `grep 'version:' mix.exs | cut -d '"' -f2`
+BUILD ?= `git rev-parse --short HEAD`
+
 MIX=$(shell which mix)
 
 all: set_rebar set_hex deps compile
@@ -33,14 +37,14 @@ dev-console:
 	./_build/dev/rel/blockchain_api/bin/blockchain_api console
 
 reset-dev-db:
-	MIX_ENV=dev && $(MIX) ecto.reset
+	export MIX_ENV=dev && $(MIX) ecto.reset
 
 # Prod targets
 release:
 	export NO_ESCRIPT=1 MIX_ENV=prod && $(MIX) distillery.release --env=prod
 
 reset-prod-db:
-	MIX_ENV=prod && $(MIX) ecto.reset
+	export MIX_ENV=prod && $(MIX) ecto.reset
 
 prod-interactive:
 	iex -S mix phx.server
@@ -56,19 +60,26 @@ prod-console:
 
 # Test targets
 test:
-	MIX_ENV=test && $(MIX) test --trace
-
-testrelease:
-	export NO_ESCRIPT=1 MIX_ENV=test && $(MIX) distillery.release --env=test
-
-test-start:
-	./_build/test/rel/blockchain_api/bin/blockchain_api start
-
-test-console:
-	./_build/test/rel/blockchain_api/bin/blockchain_api console
+	export MIX_ENV=test PORT=4002 && $(MIX) test --trace
 
 reset-test-db:
-	MIX_ENV=test && $(MIX) ecto.reset
+	export MIX_ENV=test && $(MIX) ecto.reset
 
 ci:
-	export PORT=4002 MIX_ENV=test NO_ESCRIPT=1 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
+	export MIX_ENV=test PORT=4002 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
+
+# Build prod docker image
+docker-prod:
+	docker build \
+		--build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg MIX_ENV=prod \
+		-t helium/$(APP_NAME):prod-latest .
+
+# Build dev docker image
+docker-dev:
+	docker build \
+		--build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg MIX_ENV=dev \
+		-t helium/$(APP_NAME):dev-latest .

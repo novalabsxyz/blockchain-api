@@ -1,14 +1,14 @@
 defmodule BlockchainAPIWeb.ChallengeControllerTest do
   use BlockchainAPIWeb.ConnCase
   import BlockchainAPI.TestHelpers
-  alias BlockchainAPI.{Query, Util}
+  alias BlockchainAPI.Query
 
   @default_limit 100
   @max_limit 500
 
   describe "test challenge controller" do
     setup do
-      challenges = insert_fake_challenges()
+      _challenges = insert_fake_challenges()
       :ok
     end
 

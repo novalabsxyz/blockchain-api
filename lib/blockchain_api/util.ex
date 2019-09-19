@@ -289,6 +289,14 @@ defmodule BlockchainAPI.Util do
     2 * :math.atan2(:math.sqrt(s), :math.sqrt(1 - s)) * @radius_of_earth_meters
   end
 
+  @doc """
+  Fetch notifier client from app env.
+
+  Due to the app being compiled, setting it as a module level param
+  causes issues when building the app in different environments.
+  """
+  def notifier_client(), do: Application.fetch_env!(:blockchain_api, :notifier_client)
+
   def units(amount) when is_float(amount) do
     amount |> Decimal.from_float() |> Decimal.div(@bones) |> delimit_unit()
   end

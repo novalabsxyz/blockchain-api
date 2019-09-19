@@ -1,0 +1,43 @@
+version: '3.5'
+
+services:
+  app:
+    build: .
+    image: "helium/blockchain_api:${MIX_ENV}-latest"
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - config/docker-${MIX_ENV}.env
+    depends_on:
+      - db_local
+    networks:
+      - nginx_network
+      - app_network
+  db_local:
+    build: ./postgres
+    image: helium/postgres:local
+    container_name: postgres
+    restart: always
+    volumes:
+      - /var/data/dev/postgresql:/var/lib/postgresql/data
+    env_file:
+      - config/docker-${MIX_ENV}.env
+    networks:
+      - app_network
+  nginx:
+    build: ./nginx
+    image: helium/nginx:local
+    volumes:
+      - ./nginx/lb.conf:/etc/nginx/conf.d/lb.conf
+    ports:
+      - "1313:8080"
+    networks:
+      - nginx_network
+    depends_on:
+      - app
+
+networks:
+  nginx_network:
+    external: true
+  app_network:

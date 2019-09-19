@@ -1,16 +1,44 @@
 #==========================================================
 # Build Stage
 #==========================================================
-FROM elixir:latest as build
-RUN apt-get update && apt-get install -y cmake doxygen
+ARG ELIXIR_VERSION=1.8.2
+FROM elixir:${ELIXIR_VERSION} as build
+
+#==========================================================
+# Use /opt as a typical convention
+#==========================================================
+WORKDIR /opt/app
+
+#==========================================================
+# Build requirements arguments
+#==========================================================
+# The name of your application/release (required)
+ARG APP_NAME
+# The version of the application we are building (required)
+ARG APP_VSN
+# The environment to build with
+ARG MIX_ENV
+
+#==========================================================
+# Set ENV using build args
+#==========================================================
+ENV APP_NAME=${APP_NAME} \
+    APP_VSN=${APP_VSN} \
+    MIX_ENV=${MIX_ENV} \
+    REPLACE_OS_VARS=true
 
 #==========================================================
 # Install core deps
 #==========================================================
-WORKDIR /tmp
 ENV LD_LIBRARY_PATH /usr/local/lib
 RUN apt-get update
-RUN apt-get install -y flex bison libgmp-dev cmake libsodium-dev
+RUN apt-get install -y curl locales autoconf automake libtool flex bison libgmp-dev cmake build-essential libssl-dev
+# Set the locale
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
 RUN git clone -b stable https://github.com/jedisct1/libsodium.git
 RUN cd libsodium && ./configure --prefix=/usr && make check && make install && cd ..
 
@@ -23,43 +51,26 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN echo "StrictHostKeyChecking no " >> /root/.ssh/config
 
 #==========================================================
-# Switch to app directory
+# Install build tools
 #==========================================================
-WORKDIR /opt/blockchain_api
+RUN mix local.rebar --force && mix local.hex --force
 
 #==========================================================
-# Copy everything
+# Copy only required files
 #==========================================================
-COPY . .
+COPY mix.exs .
+COPY mix.lock .
+COPY config/ config/
+COPY lib/ lib/
+COPY rel/ rel/
+COPY priv/ priv/
 
 #==========================================================
 # Build Release
 #==========================================================
-RUN rm -Rf _build \
-    && rm -Rf deps \
-    && mix local.rebar --force \
-    && mix local.hex --force \
-    && mix deps.get \
-    && make release
+RUN mix do deps.get, deps.compile, compile, distillery.release --verbose
 
 #==========================================================
-# Extract Release archive to /opt/export for copying in next stage
+# Start
 #==========================================================
-RUN APP_NAME="blockchain_api"  \
-    && RELEASE_DIR=`ls -d _build/prod/rel/$APP_NAME/releases/*/` \
-    && mkdir /opt/export \
-    && tar -xf "$RELEASE_DIR/$APP_NAME.tar.gz" -C /opt/export
-
-#==========================================================
-# Deployment Stage
-#==========================================================
-FROM elixir:latest
-
-COPY --from=build /opt/export/ .
-COPY --from=build /opt/blockchain_api/cmd .
-
-EXPOSE 4001
-ENV REPLACE_OS_VARS=true NO_ESCRIPT=1 PORT=4001 MIX_ENV=prod
-
-ENTRYPOINT ["/bin/blockchain_api"]
-CMD ["foreground"]
+CMD trap 'exit' INT; _build/${MIX_ENV}/rel/${APP_NAME}/bin/${APP_NAME} foreground

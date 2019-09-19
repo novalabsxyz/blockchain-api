@@ -8,14 +8,13 @@
 |> Enum.map(&Code.eval_file(&1))
 
 use Distillery.Releases.Config,
-    # This sets the default release built by `mix distillery.release`
-    default_release: :default,
-    # This sets the default environment used by `mix distillery.release`
-    default_environment: Mix.env()
+  # This sets the default release built by `mix distillery.release`
+  default_release: :default,
+  # This sets the default environment used by `mix distillery.release`
+  default_environment: Mix.env()
 
 # For a full list of config options for both releases
 # and environments, visit https://hexdocs.pm/distillery/config/distillery.html
-
 
 # You may define one or more environments in this file,
 # an environment's settings will override those of a release
@@ -29,41 +28,58 @@ environment :dev do
   # It is recommended that you build with MIX_ENV=prod and pass
   # the --env flag to Distillery explicitly if you want to use
   # dev mode.
-  set dev_mode: true
-  set include_erts: false
-  set cookie: :"3LZE[B!jg;PjXe$^E&QjHR^yK&BIHqa.}7/zp2})dm}Cek9B|I9X8i2e:{LKABQn"
-  set commands: [
-    peer: "rel/commands/peer",
-    genesis: "rel/commands/genesis",
-    ledger: "rel/commands/ledger",
-    status: "rel/commands/status"
-  ]
+  set(dev_mode: true)
+  set(include_erts: false)
+  set(cookie: :"3LZE[B!jg;PjXe$^E&QjHR^yK&BIHqa.}7/zp2})dm}Cek9B|I9X8i2e:{LKABQn")
+
+  set(
+    commands: [
+      peer: "rel/commands/peer",
+      genesis: "rel/commands/genesis",
+      ledger: "rel/commands/ledger",
+      status: "rel/commands/status"
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Distillery.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/dev.exs"]}
+    ]
+  )
+
+  set(
+    overlays: [
+      {:copy, "rel/config/dev.exs", "etc/dev.exs"}
+    ]
+  )
 end
 
 environment :prod do
-  set include_erts: true
-  set include_src: false
-  set cookie: :"q0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2oeY"
-  set vm_args: "rel/vm.args"
-  set commands: [
-    peer: "rel/commands/peer",
-    genesis: "rel/commands/genesis",
-    ledger: "rel/commands/ledger",
-    status: "rel/commands/status"
-  ]
-end
+  set(include_erts: true)
+  set(include_src: false)
+  set(cookie: :"q0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2oeY")
+  set(vm_args: "rel/vm.args")
 
-environment :test do
-  set include_erts: false
-  set include_src: false
-  set cookie: :"r0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2oeY"
-  set vm_args: "rel/vm.args"
-  set commands: [
-    peer: "rel/commands/peer",
-    genesis: "rel/commands/genesis",
-    ledger: "rel/commands/ledger",
-    status: "rel/commands/status"
-  ]
+  set(
+    commands: [
+      peer: "rel/commands/peer",
+      genesis: "rel/commands/genesis",
+      ledger: "rel/commands/ledger",
+      status: "rel/commands/status"
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Distillery.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/prod.exs"]}
+    ]
+  )
+
+  set(
+    overlays: [
+      {:copy, "rel/config/prod.exs", "etc/prod.exs"}
+    ]
+  )
 end
 
 # You may define one or more releases in this file.
@@ -72,10 +88,13 @@ end
 # will be used by default
 
 release :blockchain_api do
-  set version: current_version(:blockchain_api)
-  set applications: [
-    :runtime_tools
-  ]
-  set pre_start_hooks: "rel/hooks"
-end
+  set(version: current_version(:blockchain_api))
 
+  set(
+    applications: [
+      :runtime_tools
+    ]
+  )
+
+  set(pre_start_hooks: "rel/hooks")
+end
