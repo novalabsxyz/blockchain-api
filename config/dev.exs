@@ -40,3 +40,5 @@ config :blockchain_api, BlockchainAPI.Repo,
 
 config :blockchain,
   base_dir: String.to_charlist("/var/data/blockchain-api/dev/")
+
+config :appsignal, :config, active: true

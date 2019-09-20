@@ -17,7 +17,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "OOLfw0Ez2rPqx6IOAsgbvj+5SxUhPuZ1zm6mHP0t2ETXk/8gT0guAres57j9LffB",
   render_errors: [view: BlockchainAPIWeb.ErrorView, format: "json", accepts: ~w(json)],
-  pubsub: [name: BlockchainAPI.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: BlockchainAPI.PubSub, adapter: Phoenix.PubSub.PG2],
+  instrumenters: [Appsignal.Phoenix.Instrumenter]
 
 # Configures Elixir's Logger
 config :logger,
@@ -69,3 +70,5 @@ config :blockchain,
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
+
+import_config "appsignal.exs"
