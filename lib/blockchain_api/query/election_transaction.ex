@@ -61,6 +61,10 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     |> Enum.map(&encode_member/1)
   end
 
+  def with_end_block(%{start_block: nil} = group) do
+    Map.put(group, :end_block, %{end_time: nil, blocks_count: nil})
+  end
+
   def with_end_block(%{start_block: start_block} = group) do
     {end_time, blocks_count} =
       case start_block |> end_block_query() |> Repo.one() do
@@ -126,20 +130,32 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode([]), do: []
   defp encode(entries), do: Enum.map(entries, &encode_list_entry/1)
 
-  defp encode_list_entry(%{etxn: etxn, start_block: block}) do
+  defp encode_list_entry(%{etxn: etxn, start_block: start_block}) do
+    start_block =
+      case start_block do
+        nil -> %{height: nil, time: nil}
+        start_block -> start_block
+      end
+
     %{
       id: etxn.id,
       proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
-      start_height: block.height,
+      start_height: start_block.height,
       delay: etxn.delay,
-      start_time: block.time
+      start_time: start_block.time
     }
   end
 
   defp encode_group_entry(%{etxn: etxn, start_block: start_block, end_block: end_block}) do
     members = Enum.map(etxn.consensus_members, &encode_member/1)
+
+    start_block =
+      case start_block do
+        nil -> %{height: nil, time: nil}
+        start_block -> start_block
+      end
 
     %{
       members: members,
