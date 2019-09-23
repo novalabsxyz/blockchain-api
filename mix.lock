@@ -1,5 +1,5 @@
 %{
-  "appsignal": {:git, "git@github.com:vihu/appsignal-elixir.git", "3b34590fa0b158e1a8d940e07a5330e2962a2722", [branch: "rg/hackney-workaround"]},
+  "appsignal": {:git, "https://github.com/appsignal/appsignal-elixir", "35535d3fdaa74c77cb365d93adf0a71daf8d8951", [branch: "master"]},
   "artificery": {:hex, :artificery, "0.4.2", "3ded6e29e13113af52811c72f414d1e88f711410cac1b619ab3a2666bbd7efd4", [:mix], [], "hexpm"},
   "backoff": {:hex, :backoff, "1.1.6", "83b72ed2108ba1ee8f7d1c22e0b4a00cfe3593a67dbc792799e8cce9f42f796b", [:rebar3], [], "hexpm"},
   "base32": {:hex, :base32, "0.1.0", "044f6dc95709727ca2176f3e97a41ddaa76b5bc690d3536908618c0cb32616a2", [:rebar3], [], "hexpm"},
