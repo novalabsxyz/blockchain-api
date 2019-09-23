@@ -1,5 +1,6 @@
 defmodule BlockchainAPIWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :blockchain_api
+  use Appsignal.Phoenix
 
   socket "/socket", BlockchainAPIWeb.AccountSocket,
     websocket: true,
