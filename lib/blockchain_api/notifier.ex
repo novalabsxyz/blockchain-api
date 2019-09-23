@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Notifier do
   use GenServer
   require Logger
 
-  alias BlockchainAPI.{HotspotNotifier, PaymentsNotifier}
+  alias BlockchainAPI.PaymentsNotifier
 
   # ==================================================================
   # API
@@ -26,7 +26,7 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
-  def handle_cast({:notify, block, ledger}, state) do
+  def handle_cast({:notify, block, _ledger}, state) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok

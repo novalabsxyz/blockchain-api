@@ -1,6 +1,10 @@
 defmodule BlockchainAPI.Job.SubmitGateway do
-  alias BlockchainAPI.Query.PendingGateway
-  alias BlockchainAPI.Util
+  alias BlockchainAPI.{
+    Query.Hotspot,
+    Query.PendingGateway,
+    HotspotNotifier,
+    Util
+  }
   require Logger
 
   @blacklisted_owner BlockchainAPI.Util.string_to_bin("14CJX5YCRf94kbhL9PPn58SL9EzqUGsrALeaEar4UikM4EB3Mx7")
@@ -26,7 +30,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
           case res do
             :ok ->
               Logger.info("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} accepted!")
-              notify_gateway_success(txn)
+              notify_gateway_success(pending_gateway, txn)
 
               pending_gateway
               |> PendingGateway.update!(%{status: "cleared"})
@@ -37,7 +41,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
                   inspect(reason)
                 }"
                   )
-              notify_gateway_failure(txn, pending_gateway)
+              notify_gateway_failure(pending_gateway)
 
               pending_gateway
               |> PendingGateway.update!(%{status: "error"})
@@ -46,16 +50,12 @@ defmodule BlockchainAPI.Job.SubmitGateway do
     end
   end
 
-  defp notify_gateway_success(txn) do
-    type = :blockchain_txn.type(txn)
-    ledger =
-      :blockchain_worker.blockchain()
-      |> :blockchain.ledger()
-    HotspotNotifier.send_new_hotspot_notification(txn, type, ledger)
+  defp notify_gateway_success(pending_gateway, txn) do
+    HotspotNotifier.send_new_hotspot_notification(txn, pending_gateway)
   end
 
-  defp notify_gateway_failure(txn, pending_gateway) do
-    case Query.Hotspot.get(pending_gateway.gateway) do
+  defp notify_gateway_failure(pending_gateway) do
+    case Hotspot.get(pending_gateway.gateway) do
       nil ->
         HotspotNotifier.send_add_hotspot_failed(:timed_out, pending_gateway)
 

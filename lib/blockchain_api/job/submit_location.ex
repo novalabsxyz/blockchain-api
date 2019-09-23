@@ -1,6 +1,9 @@
 defmodule BlockchainAPI.Job.SubmitLocation do
-  alias BlockchainAPI.Query.PendingLocation
-  alias BlockchainAPI.Util
+  alias BlockchainAPI.{
+    HotspotNotifier,
+    Query.PendingLocation,
+    Util
+  }
   require Logger
 
   @blacklisted_owner BlockchainAPI.Util.string_to_bin("14CJX5YCRf94kbhL9PPn58SL9EzqUGsrALeaEar4UikM4EB3Mx7")
