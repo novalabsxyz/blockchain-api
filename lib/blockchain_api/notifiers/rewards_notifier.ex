@@ -42,7 +42,8 @@ defmodule BlockchainAPI.RewardsNotifier do
 
       Util.notifier_client().post(reward, message(reward), reward.address, %{
         delayed_option: "timezone",
-        delivery_time_of_day: "10:00AM"
+        delivery_time_of_day: "10:00AM",
+        external_id: UUID.uuid5(:oid, "#{reward.address}-#{Timex.today() |> Date.to_string()}")
       })
     end)
 

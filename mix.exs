@@ -70,6 +70,7 @@ defmodule BlockchainAPI.MixProject do
       {:logger_file_backend, "~> 0.0.10"},
       {:appsignal,
         git: "https://github.com/appsignal/appsignal-elixir", branch: "master"},
+      {:uuid, "~> 1.1"},
 
       # blockchain requirements
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
