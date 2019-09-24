@@ -54,7 +54,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
     |> Enum.reject(fn entry -> pending_txn_appeared_on_chain?(mod, entry, chain) end)
     |> Enum.filter(fn entry -> filter_long_standing?(entry, chain) end)
     |> Enum.map(fn p ->
-      Logger.info("Marking txn: #{Util.bin_to_string(p.hash)} as error, pending_txn_submission_height: #{p.submit_height}")
+      Logger.error("Marking txn: #{Util.bin_to_string(p.hash)} as error, pending_txn_submission_height: #{p.submit_height}")
       apply(mod, :update!, [p, %{status: "error"}])
     end)
   end
@@ -76,6 +76,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
           true ->
             # pending txn appeared on chain
             # mark it as cleared and return true for rejection
+            Logger.info("Marking txn: #{Util.bin_to_string(entry.hash)} as cleared!")
             apply(mod, :update!, [entry, %{status: "cleared"}])
             true
         end
