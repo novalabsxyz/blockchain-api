@@ -67,7 +67,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
         false
 
       true ->
-        txns_so_far = txn_hashes_since_pending_submission(entry.submit_height, entry.hash, chain)
+        txns_so_far = txn_hashes_since_pending_submission(entry.submit_height, chain_height, chain)
 
         case Enum.member?(txns_so_far, entry.hash) do
           false ->
