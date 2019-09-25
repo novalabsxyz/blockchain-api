@@ -62,7 +62,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
   defp pending_txn_appeared_on_chain?(mod, entry, chain) do
     case :blockchain.height(chain) do
       {:error, _} ->
-        Logger.error("Could not get chain_height")
+        Logger.error("Could not get chain_height for pending check")
         false
 
       {:ok, chain_height} ->
@@ -89,8 +89,14 @@ defmodule BlockchainAPI.PeriodicCleaner do
   end
 
   defp filter_long_standing?(entry, chain) do
-    chain_height = :blockchain.height(chain)
-    (chain_height - entry.submit_height) >= @max_height
+    case :blockchain.height(chain) do
+      {:error, _} ->
+        Logger.error("Could not get chain_height for long_standing check")
+        false
+
+      {:ok, chain_height} ->
+        (chain_height - entry.submit_height) >= @max_height
+    end
   end
 
   defp txn_hashes_since_pending_submission(p_height, chain_height, chain) do
