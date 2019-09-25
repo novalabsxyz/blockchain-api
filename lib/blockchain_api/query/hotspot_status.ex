@@ -1,8 +1,8 @@
 defmodule BlockchainAPI.Query.HotspotStatus do
   @moduledoc ~s(Get hotspot status using libp2p peer information)
 
-  # we consider 20 minutes as stale time delta
-  @stale_delta 1_200_000
+  # Consider 10 minutes as stale time delta
+  @stale_delta 6_00_000
 
   require Logger
   alias BlockchainAPI.Query
