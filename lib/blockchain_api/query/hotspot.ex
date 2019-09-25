@@ -58,66 +58,69 @@ defmodule BlockchainAPI.Query.Hotspot do
   def stats(address) do
     address = Util.string_to_bin(address)
 
-    challenges_completed =
-      %{
-        "24h" => challenges_completed(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => challenges_completed(address, Util.shifted_unix_time(days: -7)),
-        "30d" => challenges_completed(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => challenges_completed(address),
-      }
-
-    consensus_groups =
-      %{
-        "24h" => consensus_groups(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => consensus_groups(address, Util.shifted_unix_time(days: -7)),
-        "30d" => consensus_groups(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => consensus_groups(address),
-      }
-
-    hlm_earned =
-      %{
-        "24h" => hlm_earned(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => hlm_earned(address, Util.shifted_unix_time(days: -7)),
-        "30d" => hlm_earned(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => hlm_earned(address),
-      }
-
-    earning_percentile =
-      %{
-        "24h" => earning_percentile(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => earning_percentile(address, Util.shifted_unix_time(days: -7)),
-        "30d" => earning_percentile(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => earning_percentile(address),
-      }
-
-    challenges_witnessed =
-      %{
-        "24h" => challenges_witnessed(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => challenges_witnessed(address, Util.shifted_unix_time(days: -7)),
-        "30d" => challenges_witnessed(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => challenges_witnessed(address),
-      }
-
-    witnessed_percentile =
-      %{
-        "24h" => witnessed_percentile(address, Util.shifted_unix_time(hours: -24)),
-        "7d" => witnessed_percentile(address, Util.shifted_unix_time(days: -7)),
-        "30d" => witnessed_percentile(address, Util.shifted_unix_time(days: -30)),
-        "all_time" => witnessed_percentile(address),
-      }
-
-    furthest_witness  = furthest_witness(address)
-    furthest_witness_percentile = furthest_witness_percentile(address)
-
     %{
-      challenges_completed: challenges_completed,
-      consensus_groups: consensus_groups,
-      hlm_earned: hlm_earned,
-      earning_percentile: earning_percentile,
-      challenges_witnessed: challenges_witnessed,
-      witnessed_percentile: witnessed_percentile,
-      furthest_witness: furthest_witness,
-      furthest_witness_percentile: furthest_witness_percentile
+      challenges_completed: challenges_completed_stats(address),
+      consensus_groups: consensus_groups_stats(address),
+      hlm_earned: hlm_earned_stats(address),
+      earning_percentile: earning_percentile_stats(address),
+      challenges_witnessed: challenges_witnessed_stats(address),
+      witnessed_percentile: witnessed_percentile_stats(address),
+      furthest_witness: furthest_witness(address),
+      furthest_witness_percentile: furthest_witness_percentile(address)
+    }
+  end
+
+  defp challenges_completed_stats(address) do
+    %{
+      "24h" => challenges_completed(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => challenges_completed(address, Util.shifted_unix_time(days: -7)),
+      "30d" => challenges_completed(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => challenges_completed(address),
+    }
+  end
+
+  defp consensus_groups_stats(address) do
+    %{
+      "24h" => consensus_groups(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => consensus_groups(address, Util.shifted_unix_time(days: -7)),
+      "30d" => consensus_groups(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => consensus_groups(address),
+    }
+  end
+
+  defp hlm_earned_stats(address) do
+    %{
+      "24h" => hlm_earned(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => hlm_earned(address, Util.shifted_unix_time(days: -7)),
+      "30d" => hlm_earned(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => hlm_earned(address),
+    }
+  end
+
+  defp earning_percentile_stats(address) do
+    %{
+      "24h" => earning_percentile(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => earning_percentile(address, Util.shifted_unix_time(days: -7)),
+      "30d" => earning_percentile(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => earning_percentile(address),
+    }
+  end
+
+  defp challenges_witnessed_stats(address) do
+    %{
+      "24h" => challenges_witnessed(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => challenges_witnessed(address, Util.shifted_unix_time(days: -7)),
+      "30d" => challenges_witnessed(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => challenges_witnessed(address),
+    }
+  end
+
+  defp witnessed_percentile_stats(address) do
+    %{
+      "24h" => witnessed_percentile(address, Util.shifted_unix_time(hours: -24)),
+      "7d" => witnessed_percentile(address, Util.shifted_unix_time(days: -7)),
+      "30d" => witnessed_percentile(address, Util.shifted_unix_time(days: -30)),
+      "all_time" => witnessed_percentile(address),
     }
   end
 
