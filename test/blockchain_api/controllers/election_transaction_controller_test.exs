@@ -26,7 +26,6 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
                "id" => _,
                "election_height" => _,
                "start_height" => _,
-               "proof" => _,
                "start_time" => _,
                "hash" => _
              } = oldest_election
@@ -86,7 +85,6 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
                "election_height" => _,
                "start_height" => _,
                "hash" => _,
-               "proof" => _,
                "start_time" => _,
                "end_time" => _,
                "blocks_count" => _,
@@ -113,7 +111,6 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
                "election_height" => _,
                "start_height" => _,
                "hash" => _,
-               "proof" => _,
                "start_time" => _,
                "end_time" => _,
                "blocks_count" => _,

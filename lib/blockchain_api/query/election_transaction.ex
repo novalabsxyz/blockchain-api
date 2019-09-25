@@ -133,7 +133,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   defp encode_list_entry(%{etxn: etxn, start_time: start_time, start_height: start_height}) do
     %{
       id: etxn.id,
-      proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
       start_height: start_height,
@@ -147,7 +146,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
     %{
       members: members,
-      proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
       start_time: start_time,
@@ -165,7 +163,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
     %{
       members: members,
-      proof: Util.bin_to_string(etxn.proof),
       hash: Util.bin_to_string(etxn.hash),
       election_height: etxn.election_height,
       delay: etxn.delay
