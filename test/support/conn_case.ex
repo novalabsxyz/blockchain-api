@@ -20,6 +20,7 @@ defmodule BlockchainAPIWeb.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
       alias BlockchainAPIWeb.Router.Helpers, as: Routes
+      import BlockchainAPI.Factory
 
       # The default endpoint for testing
       @endpoint BlockchainAPIWeb.Endpoint
