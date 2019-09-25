@@ -21,7 +21,6 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
 
       oldest_election = List.last(elections)
       assert length(elections) == 10
-
       assert %{
                "delay" => _,
                "id" => _,
@@ -55,6 +54,14 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
         |> json_response(200)
 
       assert length(elections) == 1
+    end
+
+    test "returns elections when last block is an election block", %{conn: conn} do
+      insert_election(31)
+      %{"data" => elections} =
+        conn
+        |> get(Routes.election_transaction_path(conn, :index))
+        |> json_response(200)
     end
   end
 
@@ -113,8 +120,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
                "members" => [_, _, _]
              } = resp
     end
-
-    test "returns empty map when no election transaction matches hash", %{conn: conn} do
+test "returns empty map when no election transaction matches hash", %{conn: conn} do
       fake_hash = :crypto.strong_rand_bytes(32) |> Util.bin_to_string()
 
       %{"data" => resp} =
@@ -124,6 +130,15 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
 
       assert resp == %{}
     end
+
+    test "returns last election when it is in last block", %{conn: conn} do
+      {:ok, election_transaction} = insert_election(31)
+
+      %{"data" => resp} =
+        conn
+        |> get(Routes.election_transaction_path(conn, :show, Util.bin_to_string(election_transaction.hash)))
+        |> json_response(200)
+    end
   end
 
   defp insert_election_transactions(_) do
@@ -132,45 +147,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
       y = 3 * n - 1
       z = 3 * n
 
-      {:ok, b1} =
-        Query.Block.create(%{
-          hash: :crypto.strong_rand_bytes(32),
-          height: x,
-          round: x,
-          time: x
-        })
-
-      {:ok, t1} =
-        Query.Transaction.create(b1.height, %{
-          hash: :crypto.strong_rand_bytes(32),
-          type: "election"
-        })
-
-      {:ok, et} =
-        Query.ElectionTransaction.create(%{
-          hash: t1.hash,
-          proof: "proof#{x}",
-          delay: 1,
-          election_height: b1.height
-        })
-
-      {:ok, cm1} =
-        Query.ConsensusMember.create(%{
-          address: "address#{x}",
-          election_transactions_id: et.id
-        })
-
-      {:ok, cm2} =
-        Query.ConsensusMember.create(%{
-          address: "address#{y}",
-          election_transactions_id: et.id
-        })
-
-      {:ok, cm3} =
-        Query.ConsensusMember.create(%{
-          address: "address#{z}",
-          election_transactions_id: et.id
-        })
+      insert_election(x)
 
       {:ok, b2} =
         Query.Block.create(%{
@@ -199,8 +176,49 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
           hash: :crypto.strong_rand_bytes(32),
           type: "payment"
         })
-
-      {:ok, members: [cm1, cm2, cm3], blocks: [b1, b2, b3], etxn: et}
     end)
+  end
+
+  defp insert_election(n) do
+    {:ok, b1} =
+      Query.Block.create(%{
+        hash: :crypto.strong_rand_bytes(32),
+        height: n,
+        round: n,
+        time: n
+      })
+
+    {:ok, t1} =
+      Query.Transaction.create(b1.height, %{
+        hash: :crypto.strong_rand_bytes(32),
+        type: "election"
+      })
+
+    {:ok, et} =
+      Query.ElectionTransaction.create(%{
+        hash: t1.hash,
+        proof: "proof#{n}",
+        delay: 1,
+        election_height: b1.height
+      })
+
+    {:ok, _cm1} =
+      Query.ConsensusMember.create(%{
+        address: "address#{n}",
+        election_transactions_id: et.id
+      })
+
+    {:ok, _cm2} =
+      Query.ConsensusMember.create(%{
+        address: "address#{n+1}",
+        election_transactions_id: et.id
+      })
+
+    {:ok, _cm3} =
+      Query.ConsensusMember.create(%{
+        address: "address#{n+2}",
+        election_transactions_id: et.id
+      })
+    {:ok, et}
   end
 end
