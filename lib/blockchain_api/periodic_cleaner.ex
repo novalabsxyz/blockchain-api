@@ -60,25 +60,30 @@ defmodule BlockchainAPI.PeriodicCleaner do
   end
 
   defp pending_txn_appeared_on_chain?(mod, entry, chain) do
-    chain_height = :blockchain.height(chain)
-
-    case chain_height >= entry.submit_height do
-      false ->
+    case :blockchain.height(chain) do
+      {:error, _} ->
+        Logger.error("Could not get chain_height")
         false
 
-      true ->
-        txns_so_far = txn_hashes_since_pending_submission(entry.submit_height, chain_height, chain)
-
-        case Enum.member?(txns_so_far, entry.hash) do
+      {:ok, chain_height} ->
+        case chain_height >= entry.submit_height do
           false ->
             false
 
           true ->
+            txns_so_far = txn_hashes_since_pending_submission(entry.submit_height, chain_height, chain)
+
+            case Enum.member?(txns_so_far, entry.hash) do
+              false ->
+                false
+
+              true ->
             # pending txn appeared on chain
             # mark it as cleared and return true for rejection
-            Logger.info("Marking txn: #{Util.bin_to_string(entry.hash)} as cleared!")
-            apply(mod, :update!, [entry, %{status: "cleared"}])
-            true
+                Logger.info("Marking txn: #{Util.bin_to_string(entry.hash)} as cleared!")
+                apply(mod, :update!, [entry, %{status: "cleared"}])
+                true
+            end
         end
     end
   end
