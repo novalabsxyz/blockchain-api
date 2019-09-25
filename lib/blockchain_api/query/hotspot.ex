@@ -56,6 +56,8 @@ defmodule BlockchainAPI.Query.Hotspot do
   end
 
   def stats(address) do
+    address = Util.string_to_bin(address)
+
     challenges_completed =
       %{
         "24h" => challenges_completed(address, Util.shifted_unix_time(hours: -24)),
@@ -244,8 +246,6 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.one()
   end
 
-  # Percentage of accounts this address has outearned
-  #Fix?: Only looks at hotspots that have earned reward, maybe not all hotspots?
   defp earning_percentile(address, start_time \\ 0) do
     ranking =
       from(
@@ -256,7 +256,7 @@ defmodule BlockchainAPI.Query.Hotspot do
         on: t.block_height == b.height,
         where: b.time >= ^start_time,
         group_by: rt.gateway,
-        order_by: [asc: sum(rt.amount)],
+        order_by: [desc: sum(rt.amount)],
         select: rt.gateway
       )
       |> Repo.all()
@@ -274,14 +274,13 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.one()
   end
 
-  #Fix: Only looks at hotspots that have participated as witness, not all hotspots
   defp witnessed_percentile(address, start_time \\ 0) do
     ranking =
       from(
         pw in POCWitness,
         where: pw.timestamp >= ^start_time,
         group_by: pw.gateway,
-        order_by: [asc: count(pw.id)],
+        order_by: [desc: count(pw.id)],
         select: pw.gateway
       )
       |> Repo.all()
@@ -303,7 +302,7 @@ defmodule BlockchainAPI.Query.Hotspot do
       from(
         pw in POCWitness,
         group_by: pw.gateway,
-        order_by: [asc: max(pw.distance)],
+        order_by: [desc: max(pw.distance)],
         select: pw.gateway
       )
       |> Repo.all()
@@ -314,10 +313,23 @@ defmodule BlockchainAPI.Query.Hotspot do
   defp get_percentile([], _), do: 0
 
   defp get_percentile(ranking, address) do
-    ranking
-    |> Enum.find_index(& &1 == address)
-    |> Kernel./(length(ranking))
-    |> Kernel.*(100)
-    |> Kernel.round()
+    case num_hotspots() do
+      1 ->
+        100
+
+      n ->
+        index = Enum.find_index(ranking, & &1 == address)
+        (n - index - 1) / (n - 1)
+        |> Kernel.*(100)
+        |> Kernel.round()
+    end
+  end
+
+  defp num_hotspots do
+    from(
+      h in Hotspot,
+      select: count(h.id)
+    )
+    |> Repo.one()
   end
 end
