@@ -247,6 +247,7 @@ defmodule BlockchainAPI.Query.Hotspot do
       select: sum(rt.amount)
     )
     |> Repo.one()
+    |> Kernel.||(0)
   end
 
   defp earning_percentile(address, start_time \\ 0) do
