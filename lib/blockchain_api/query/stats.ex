@@ -3,7 +3,13 @@ defmodule BlockchainAPI.Query.Stats do
   import Ecto.Query, warn: false
   use Timex
 
-  alias BlockchainAPI.{Repo, Util}
+  # NOTE: Set stats cache timeout to 30 minutes.
+  # This is far higher than what we set for other caches,
+  # simply because we expect the stats to change less often
+  # and don't want to bog the API with calls to DB.
+  @cache_timeout :timer.minutes(30)
+
+  alias BlockchainAPI.{Repo, Util, Cache}
 
   alias BlockchainAPI.Schema.{
     Account,
@@ -13,6 +19,10 @@ defmodule BlockchainAPI.Query.Stats do
   }
 
   def list() do
+    Cache.Util.get(:stats_cache, :stats, &set_list/0, @cache_timeout)
+  end
+
+  defp set_list() do
     %{avg_time_interval: day_election_time, avg_block_interval: day_election_block} =
       get_election_time(hours: -24)
 
@@ -22,7 +32,7 @@ defmodule BlockchainAPI.Query.Stats do
     %{avg_time_interval: month_election_time, avg_block_interval: month_election_block} =
       get_election_time(days: -30)
 
-    %{
+    data = %{
       "token_supply" => %{
         "total" => get_supply()
       },
@@ -42,6 +52,8 @@ defmodule BlockchainAPI.Query.Stats do
         "30d" => month_election_block
       }
     }
+
+    {:commit, data}
   end
 
   def get_supply() do
