@@ -22,14 +22,6 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     elections
   end
 
-  def set_list({:elections, params}) do
-    data =  list_query()
-            |> maybe_filter(params)
-            |> Repo.all()
-            |> encode()
-    {:commit, {:elections, data}}
-  end
-
   def get!(hash) do
     from(
       e in ElectionTransaction,
@@ -89,6 +81,14 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   end
 
   def with_end_block(nil), do: nil
+
+  defp set_list({:elections, params}) do
+    data =  list_query()
+            |> maybe_filter(params)
+            |> Repo.all()
+            |> encode()
+    {:commit, {:elections, data}}
+  end
 
   defp list_query do
     from(
