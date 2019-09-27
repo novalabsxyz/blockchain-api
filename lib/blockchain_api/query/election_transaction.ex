@@ -8,16 +8,26 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     Schema.Block,
     Schema.ElectionTransaction,
     Schema.Transaction,
-    Util
+    Util,
+    Cache
   }
 
-  @default_limit 20
+  @default_limit 50
+  @cache_timeout :timer.minutes(25)
 
   def list(params) do
-    list_query()
-    |> maybe_filter(params)
-    |> Repo.all()
-    |> encode()
+    {:elections, elections} =
+      Cache.Util.get(:election_cache, {:elections, params}, &set_list/1, @cache_timeout)
+
+    elections
+  end
+
+  def set_list({:elections, params}) do
+    data =  list_query()
+            |> maybe_filter(params)
+            |> Repo.all()
+            |> encode()
+    {:commit, {:elections, data}}
   end
 
   def get!(hash) do

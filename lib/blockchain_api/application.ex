@@ -92,6 +92,10 @@ defmodule BlockchainAPI.Application do
       Supervisor.child_spec(Cachex,
         start: {Cachex, :start_link, [:stats_cache, [limit: cache_limit()]]},
         id: :stats_cache
+      ),
+      Supervisor.child_spec(Cachex,
+        start: {Cachex, :start_link, [:election_cache, [limit: cache_limit()]]},
+        id: :election_cache
       )
     ]
 
