@@ -12,7 +12,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
     Cache
   }
 
-  @default_limit 50
+  @default_limit 20
   @cache_timeout :timer.minutes(5)
 
   def list(params) do
