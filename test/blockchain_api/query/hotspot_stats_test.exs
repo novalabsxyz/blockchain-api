@@ -1,4 +1,4 @@
-defmodule BlockchainAPI.Query.HotspotTest do
+defmodule BlockchainAPI.Query.HotspotStatsTest do
   use BlockchainAPI.DataCase
 
   alias BlockchainAPI.{
@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Query.HotspotTest do
     Util
   }
 
-  describe "stats/1" do
+  describe "challenges_completed_map/1" do
     test "it returns challenges_completed" do
       hotspot_address =
         insert(:poc_receipt)
@@ -22,7 +22,9 @@ defmodule BlockchainAPI.Query.HotspotTest do
         "all_time" => 1
       }
     end
+  end
 
+  describe "consensus_groups_map/1" do
     test "it returns consensus groups" do
       hotspot_address =
         insert(:consensus_member)
@@ -38,7 +40,9 @@ defmodule BlockchainAPI.Query.HotspotTest do
         "all_time" => 1
       }
     end
+  end
 
+  describe "hlm_earned_map/1" do
     test "it returns hlm earned" do
       rt0 = insert(:reward_txn)
       rt1 = insert(:reward_txn, gateway: rt0.gateway)
@@ -55,7 +59,9 @@ defmodule BlockchainAPI.Query.HotspotTest do
         "all_time" => rewards_total
       }
     end
+  end
 
+  describe "earning_percentile_map/1" do
     test "it returns earning_percentile" do
       rt_a = insert(:reward_txn, amount: 1)
       rt_b = insert(:reward_txn, amount: 2)
@@ -96,6 +102,23 @@ defmodule BlockchainAPI.Query.HotspotTest do
       }
     end
 
+    test "it returns 0 percentile when hotspot has no witnesses" do
+      hotspot = insert(:hotspot)
+      insert(:reward_txn)
+      insert(:reward_txn)
+
+      %{earning_percentile: earning_percentile} = Query.Hotspot.stats(Util.bin_to_string(hotspot.address))
+
+      assert earning_percentile == %{
+        "24h" => 0,
+        "7d" => 0,
+        "30d" => 0,
+        "all_time" => 0
+      }
+    end
+  end
+
+  describe "challenges_witnesses_map/1" do
     test "it returns challenges witnessed" do
       hotspot_address =
         insert(:poc_witness)
@@ -111,7 +134,9 @@ defmodule BlockchainAPI.Query.HotspotTest do
         "all_time" => 1
       }
     end
+  end
 
+  describe "witnessed_percentile_map/1" do
     test "it returns witnessed percentile" do
       # Each insert creates a new hotspot (8), but only 3 are associated with a poc witness
 
@@ -152,6 +177,23 @@ defmodule BlockchainAPI.Query.HotspotTest do
       }
     end
 
+    test "it returns 0 percentile when hotspot has no witnesses" do
+      hotspot = insert(:hotspot)
+      insert(:poc_witness)
+      insert(:poc_witness)
+
+      %{witnessed_percentile: witnessed_percentile} = Query.Hotspot.stats(Util.bin_to_string(hotspot.address))
+
+      assert witnessed_percentile == %{
+        "24h" => 0,
+        "7d" => 0,
+        "30d" => 0,
+        "all_time" => 0
+      }
+    end
+  end
+
+  describe "furthest_witness/1" do
     test "it returns furthest witness" do
       pocw = insert(:poc_witness, distance: 5)
       pe = insert(:poc_path_element, challengee: pocw.gateway, challengee_owner: pocw.owner, challengee_loc: pocw.location)
@@ -161,7 +203,9 @@ defmodule BlockchainAPI.Query.HotspotTest do
 
       assert furthest_witness == 10
     end
+  end
 
+  describe "furthest_witness_percentile/1" do
     test "it returns furthest witness percentile" do
       pocw_a = insert(:poc_witness, distance: 10)
       pocw_b = insert(:poc_witness, distance: 30)

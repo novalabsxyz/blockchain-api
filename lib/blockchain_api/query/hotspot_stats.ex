@@ -176,15 +176,15 @@ defmodule BlockchainAPI.Query.HotspotStats do
   defp get_percentile([], _), do: 0
 
   defp get_percentile(ranking, address) do
-    case num_hotspots() do
-      1 ->
-        100
-
-      n ->
-        index = Enum.find_index(ranking, & &1 == address)
-        (n - index - 1) / (n - 1)
-        |> Kernel.*(100)
-        |> Kernel.round()
+    n = num_hotspots()
+    with true <- n > 1,
+         index when is_integer(index) <- Enum.find_index(ranking, & &1 == address) do
+      (n - index - 1) / (n - 1)
+      |> Kernel.*(100)
+      |> Kernel.round()
+    else
+      _ ->
+        0
     end
   end
 
