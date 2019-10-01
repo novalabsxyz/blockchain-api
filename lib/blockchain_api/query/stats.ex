@@ -25,6 +25,8 @@ defmodule BlockchainAPI.Query.Stats do
 
   def list() do
     Cache.Util.get(:stats_cache, :stats, &set_list/0, @cache_timeout)
+    # {:commit, data} = set_list()
+    # data
   end
 
   defp set_list() do
@@ -184,15 +186,16 @@ defmodule BlockchainAPI.Query.Stats do
   defp query_frequent_concensus_members(start, finish) do
     count_query =
       from(
-        cm in ConsensusMember,
-        inner_join: et in ElectionTransaction,
-        on: et.id == cm.election_transactions_id,
+        b in Block,
         inner_join: tx in Transaction,
-        on: tx.hash == et.hash,
-        inner_join: b in Block,
         on: b.height == tx.block_height,
+        inner_join: et in ElectionTransaction,
+        on: tx.hash == et.hash,
+        inner_join: cm in ConsensusMember,
+        on: et.id == cm.election_transactions_id,
         where: b.time >= ^start,
         where: b.time <= ^finish,
+        where: tx.type == "election",
         group_by: cm.address,
         select: %{
           count: fragment("count(*)"),
@@ -230,11 +233,12 @@ defmodule BlockchainAPI.Query.Stats do
   defp query_top_grossing_hotspots(start, finish) do
     sum_query =
       from(
-        rt in RewardTxn,
+        b in Block,
         inner_join: tx in Transaction,
-        on: tx.hash == rt.rewards_hash,
-        inner_join: b in Block,
         on: b.height == tx.block_height,
+        inner_join: rt in RewardTxn,
+        on: tx.hash == rt.rewards_hash,
+        where: tx.type == "rewards",
         where: b.time >= ^start,
         where: b.time <= ^finish,
         where: not is_nil(rt.gateway),
@@ -276,16 +280,8 @@ defmodule BlockchainAPI.Query.Stats do
     distance_query =
       from(
         pw in POCWitness,
-        inner_join: pe in POCPathElement,
-        on: pe.id == pw.poc_path_elements_id,
-        inner_join: rt in POCReceiptsTransaction,
-        on: rt.hash == pe.poc_receipts_transactions_hash,
-        inner_join: tx in Transaction,
-        on: tx.hash == rt.hash,
-        inner_join: b in Block,
-        on: b.height == tx.block_height,
-        where: b.time >= ^start,
-        where: b.time <= ^finish,
+        where: pw.timestamp / 1000000000 >= ^start,
+        where: pw.timestamp / 1000000000 <= ^finish,
         select: %{
           gateway: pw.gateway,
           distance: pw.distance,
@@ -326,5 +322,11 @@ defmodule BlockchainAPI.Query.Stats do
       nil -> 0.0
       interval -> interval |> Decimal.to_float()
     end
+  end
+
+  defp print_sql(queryable) do
+    {query, params} = Ecto.Adapters.SQL.to_sql(:all, Repo, queryable)
+    IO.puts("#{query}, #{inspect(params)}")
+    queryable
   end
 end
