@@ -26,22 +26,7 @@ defmodule BlockchainAPI.Watcher do
   @impl true
   def init(args) do
     :ok = :blockchain_event.add_handler(self())
-
-    state =
-      case Keyword.get(args, :env) do
-        :test ->
-          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "test", "genesis"])
-          %{chain: load_chain(genesis_file), env: :test}
-
-        :dev ->
-          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
-          %{chain: load_chain(genesis_file), env: :dev}
-
-        :prod ->
-          genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod", "genesis"])
-          %{chain: load_chain(genesis_file), env: :prod}
-      end
-
+    state = init_state(args)
     {:ok, state}
   end
 
@@ -130,4 +115,25 @@ defmodule BlockchainAPI.Watcher do
         nil
     end
   end
+
+  defp init_state(args) do
+    case Keyword.get(args, :env) do
+      :test ->
+        genesis_file = Path.join([:code.priv_dir(:blockchain_api), "test", "genesis"])
+        %{chain: load_chain(genesis_file), env: :test}
+
+      :dev ->
+        genesis_file = Path.join([:code.priv_dir(:blockchain_api), "dev", "genesis"])
+        %{chain: load_chain(genesis_file), env: :dev}
+
+      :prod ->
+        genesis_file = Path.join([:code.priv_dir(:blockchain_api), "prod", "genesis"])
+        %{chain: load_chain(genesis_file), env: :prod}
+
+      :pescadero ->
+        genesis_file = Path.join([:code.priv_dir(:blockchain_api), "pescadero", "genesis"])
+        %{chain: load_chain(genesis_file), env: :pescadero}
+    end
+  end
+
 end

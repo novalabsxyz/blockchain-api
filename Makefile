@@ -39,6 +39,22 @@ dev-console:
 reset-dev-db:
 	export MIX_ENV=dev && $(MIX) ecto.reset
 
+# Pescadero targets
+pescadero-release:
+	export MIX_ENV=pescadero && $(MIX) distillery.release --env=pescadero
+
+pescadero-start:
+	./_build/pescadero/rel/blockchain_api/bin/blockchain_api start
+
+pescadero-foreground:
+	./_build/pescadero/rel/blockchain_api/bin/blockchain_api foreground
+
+pescadero-console:
+	./_build/pescadero/rel/blockchain_api/bin/blockchain_api console
+
+reset-pescadero-db:
+	export MIX_ENV=pescadero && $(MIX) ecto.reset
+
 # Prod targets
 release:
 	export NO_ESCRIPT=1 MIX_ENV=prod && $(MIX) distillery.release --env=prod
