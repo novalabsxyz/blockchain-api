@@ -1,6 +1,6 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{Query, Committer}
+  alias BlockchainAPI.{Cache, Committer, Query}
 
   @me __MODULE__
   require Logger
@@ -107,7 +107,9 @@ defmodule BlockchainAPI.Watcher do
             |> Enum.map(fn h ->
               {:ok, b} = :blockchain.get_block(h, chain)
               h = :blockchain_block.height(b)
-              Committer.commit(b, ledger, h, sync_flag, env)
+              with {:ok, _} <- Committer.commit(b, ledger, h, sync_flag, env) do
+                Cache.HotspotStats.update_cache()
+              end
             end)
 
           false ->

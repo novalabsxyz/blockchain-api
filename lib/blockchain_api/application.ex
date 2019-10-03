@@ -73,6 +73,7 @@ defmodule BlockchainAPI.Application do
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
       {Notifier, []},
+      {Cache.HotspotStats, []},
       {RewardsNotifier, []},
       Supervisor.child_spec(Cachex,
         start: {Cachex, :start_link, [:challenge_cache, [limit: cache_limit()]]},

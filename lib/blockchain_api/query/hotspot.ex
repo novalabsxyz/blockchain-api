@@ -53,14 +53,14 @@ defmodule BlockchainAPI.Query.Hotspot do
     address = Util.string_to_bin(address)
 
     %{
-      challenges_completed: HotspotStats.challenges_completed_map(address),
-      consensus_groups: HotspotStats.consensus_groups_map(address),
-      hlm_earned: HotspotStats.hlm_earned_map(address),
-      earning_percentile: HotspotStats.earning_percentile_map(address),
-      challenges_witnessed: HotspotStats.challenges_witnessed_map(address),
-      witnessed_percentile: HotspotStats.witnessed_percentile_map(address),
-      furthest_witness: HotspotStats.furthest_witness(address),
-      furthest_witness_percentile: HotspotStats.furthest_witness_percentile(address)
+      challenges_completed: HotspotStats.challenges_completed_map(),
+      consensus_groups: HotspotStats.consensus_groups_map(),
+      hlm_earned: HotspotStats.hlm_earned_map(),
+      earning_percentile: HotspotStats.earning_percentile_map(),
+      challenges_witnessed: HotspotStats.challenges_witnessed_map(),
+      witnessed_percentile: HotspotStats.witnessed_percentile_map(),
+      furthest_witness: HotspotStats.furthest_witness(),
+      furthest_witness_percentile: HotspotStats.furthest_witness_percentile()
     }
   end
 
