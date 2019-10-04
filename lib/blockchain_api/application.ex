@@ -6,7 +6,7 @@ defmodule BlockchainAPI.Application do
   use Application
   alias Honeydew.EctoPollQueue
   alias BlockchainAPI.Repo
-  alias BlockchainAPI.Watcher
+  alias BlockchainAPI.{Cache, Watcher}
   alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
   alias BlockchainAPI.{Notifier, RewardsNotifier}
   alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase}

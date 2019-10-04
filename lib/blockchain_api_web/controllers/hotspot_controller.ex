@@ -64,7 +64,7 @@ defmodule BlockchainAPIWeb.HotspotController do
   end
 
   def stats(conn, %{"hotspot_address" => address}) do
-    stats = Query.Hotspot.stats(address)
+    stats = Query.HotspotStats.individual_stats(address)
 
     render(conn, "stats.json", stats: stats)
   end
