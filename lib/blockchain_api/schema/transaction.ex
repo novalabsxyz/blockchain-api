@@ -54,6 +54,10 @@ defmodule BlockchainAPI.Schema.Transaction do
     %{type: "security", hash: :blockchain_txn_security_coinbase_v1.hash(txn)}
   end
 
+  def map(:blockchain_txn_security_exchange_v1, txn) do
+    %{type: "security_exchange", hash: :blockchain_txn_security_exchange_v1.hash(txn)}
+  end
+
   def map(:blockchain_txn_dc_coinbase_v1, txn) do
     %{type: "data_credit", hash: :blockchain_txn_dc_coinbase_v1.hash(txn)}
   end

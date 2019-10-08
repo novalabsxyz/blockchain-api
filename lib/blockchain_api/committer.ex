@@ -25,6 +25,7 @@ defmodule BlockchainAPI.Committer do
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.OUITransaction,
+    Schema.SecurityExchangeTransaction,
     Schema.Transaction,
     Util,
     Notifier
@@ -217,6 +218,9 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_security_coinbase_v1 ->
               insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
 
+            :blockchain_txn_security_exchange_v1 ->
+              insert_transaction(:blockchain_txn_security_exchange_v1, txn, height)
+
             :blockchain_txn_dc_coinbase_v1 ->
               insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height)
 
@@ -345,6 +349,13 @@ defmodule BlockchainAPI.Committer do
       Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
 
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
+  end
+
+  defp insert_transaction(:blockchain_txn_security_exchange_v1, txn, height) do
+    {:ok, _transaction_entry} =
+      Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_exchange_v1, txn))
+
+    {:ok, _} = Query.SecurityExchangeTransaction.create(SecurityExchangeTransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height) do
