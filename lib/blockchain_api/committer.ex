@@ -143,16 +143,24 @@ defmodule BlockchainAPI.Committer do
         fn {_address, map} ->
           case Query.Account.get(map.address) do
             nil ->
-              Account.changeset(%Account{}, map)
+              Account.changeset(%Account{}, %{
+                address: Map.fetch!(map, :address),
+                balance: Map.get(map, :balance, 0),
+                nonce: Map.get(map, :nonce, 0),
+                fee: Map.get(map, :fee, 0),
+                security_nonce: Map.get(map, :security_nonce, 0),
+                security_balance: Map.get(map, :security_balance, 0),
+                data_credit_balance: Map.get(map, :data_credit_balance, 0)
+              })
 
             account ->
               Account.changeset(account, %{
-                balance: map.balance,
-                nonce: map.nonce,
-                fee: map.fee,
-                security_nonce: map.security_nonce,
-                security_balance: map.security_balance,
-                data_credit_balance: map.data_credit_balance
+                balance: Map.get(map, :balance, 0),
+                nonce: Map.get(map, :nonce, 0),
+                fee: Map.get(map, :fee, 0),
+                security_nonce: Map.get(map, :security_nonce, 0),
+                security_balance: Map.get(map, :security_balance, 0),
+                data_credit_balance: Map.get(map, :data_credit_balance, 0)
               })
           end
           |> Repo.insert_or_update!()
