@@ -2,7 +2,8 @@ defmodule BlockchainAPI.Schema.Account do
   use Ecto.Schema
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.Account}
-  @fields [:id, :address, :name, :balance, :fee, :nonce]
+  @attrs [:address, :name, :balance, :fee, :nonce, :security_balance, :security_nonce, :data_credit_balance]
+  @fields [:id | @attrs]
 
   @derive {Phoenix.Param, key: :address}
   @derive {Jason.Encoder, only: @fields}
@@ -12,6 +13,9 @@ defmodule BlockchainAPI.Schema.Account do
     field :address, :binary, null: false
     field :fee, :integer, null: false, default: 0
     field :nonce, :integer, null: false, default: 0
+    field :security_balance, :integer, null: false, default: 0
+    field :security_nonce, :integer, null: false, default: 0
+    field :data_credit_balance, :integer, null: false, default: 0
 
     timestamps()
   end
@@ -19,8 +23,8 @@ defmodule BlockchainAPI.Schema.Account do
   @doc false
   def changeset(account, attrs) do
     account
-    |> cast(attrs, [:address, :name, :balance, :fee, :nonce])
-    |> validate_required([:address, :balance, :fee, :nonce])
+    |> cast(attrs, @attrs)
+    |> validate_required([:address, :balance, :fee, :nonce, :security_balance, :security_nonce, :data_credit_balance])
     |> unique_constraint(:address, name: :unique_account_address)
   end
 
