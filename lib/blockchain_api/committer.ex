@@ -141,27 +141,21 @@ defmodule BlockchainAPI.Committer do
       Enum.each(
         account_maps,
         fn {_address, map} ->
+          params = %{
+            balance: Map.get(map, :balance, 0),
+            nonce: Map.get(map, :nonce, 0),
+            fee: Map.get(map, :fee, 0),
+            security_nonce: Map.get(map, :security_nonce, 0),
+            security_balance: Map.get(map, :security_balance, 0),
+            data_credit_balance: Map.get(map, :data_credit_balance, 0)
+          }
+
           case Query.Account.get(map.address) do
             nil ->
-              Account.changeset(%Account{}, %{
-                address: Map.fetch!(map, :address),
-                balance: Map.get(map, :balance, 0),
-                nonce: Map.get(map, :nonce, 0),
-                fee: Map.get(map, :fee, 0),
-                security_nonce: Map.get(map, :security_nonce, 0),
-                security_balance: Map.get(map, :security_balance, 0),
-                data_credit_balance: Map.get(map, :data_credit_balance, 0)
-              })
+              Account.changeset(%Account{}, Map.put(params, :address, map.address))
 
             account ->
-              Account.changeset(account, %{
-                balance: Map.get(map, :balance, 0),
-                nonce: Map.get(map, :nonce, 0),
-                fee: Map.get(map, :fee, 0),
-                security_nonce: Map.get(map, :security_nonce, 0),
-                security_balance: Map.get(map, :security_balance, 0),
-                data_credit_balance: Map.get(map, :data_credit_balance, 0)
-              })
+              Account.changeset(account, params)
           end
           |> Repo.insert_or_update!()
         end
