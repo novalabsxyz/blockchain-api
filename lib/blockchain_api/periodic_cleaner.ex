@@ -6,7 +6,13 @@ defmodule BlockchainAPI.PeriodicCleaner do
   """
 
   use GenServer
-  alias BlockchainAPI.{Query, Util}
+  alias BlockchainAPI.{
+    Query,
+    HotspotNotifier,
+    Schema.PendingGateway,
+    Schema.PendingLocation,
+    Util
+  }
   require Logger
 
   @me __MODULE__
@@ -55,6 +61,7 @@ defmodule BlockchainAPI.PeriodicCleaner do
     |> Enum.filter(fn entry -> filter_long_standing?(entry, chain) end)
     |> Enum.map(fn p ->
       Logger.error("Marking txn: #{Util.bin_to_string(p.hash)} as error, pending_txn_submission_height: #{p.submit_height}")
+      send_failure_notifications(p)
       apply(mod, :update!, [p, %{status: "error"}])
     end)
   end
@@ -122,4 +129,16 @@ defmodule BlockchainAPI.PeriodicCleaner do
       |> List.flatten()
   end
 
+  defp send_failure_notifications(%PendingGateway{} = pg) do
+    case Query.Hotspot.get(pg.gateway) do
+      nil -> HotspotNotifier.send_add_hotspot_failed(:timed_out, pg)
+        _ -> HotspotNotifier.send_add_hotspot_failed(:already_exists, pg)
+    end
+  end
+
+  defp send_failure_notifications(%PendingLocation{} = pl) do
+    HotspotNotifier.send_confirm_location_failed(pl)
+  end
+
+  defp send_failure_notifications(_), do: :ok
 end
