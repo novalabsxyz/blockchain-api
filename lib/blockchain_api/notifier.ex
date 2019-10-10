@@ -48,7 +48,7 @@ defmodule BlockchainAPI.Notifier do
               Hotspot.map(:blockchain_txn_add_gateway_v1, txn, ledger)
               |> Map.get(:address)
               |> PendingGateway.get!()
-              |> HotspotNotifer.send_new_hotspot_notification()
+              |> HotspotNotifier.send_new_hotspot_notification()
 
             _ ->
               :ok
