@@ -7,7 +7,7 @@ defmodule BlockchainAPI.RewardsNotifier do
     Util
   }
 
-  @ticker "HLM"
+  @ticker "HNT"
 
   def start_link(_) do
     Task.start_link(__MODULE__, :schedule_notifications, [])

@@ -1,5 +1,5 @@
 defmodule BlockchainAPI.PaymentsNotifier do
-  @ticker "HLM"
+  @ticker "HNT"
 
   alias BlockchainAPI.Util
 
