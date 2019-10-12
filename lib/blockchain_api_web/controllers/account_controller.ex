@@ -39,7 +39,7 @@ defmodule BlockchainAPIWeb.AccountController do
       # This account does not exist in the database, hence we return some default values
       _error in Ecto.NoResultsError ->
         {:ok, fee} =
-          Watcher.chain()
+          :blockchain_worker.blockchain()
           |> :blockchain.ledger()
           |> :blockchain_ledger_v1.transaction_fee()
 
