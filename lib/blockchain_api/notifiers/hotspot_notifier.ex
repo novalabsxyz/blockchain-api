@@ -1,11 +1,11 @@
 defmodule BlockchainAPI.HotspotNotifier do
   alias BlockchainAPI.{Schema.Hotspot, Util}
 
-  def send_new_hotspot_notification(txn, pending_gateway) do
+  def send_new_hotspot_notification(pending_gateway) do
     data = %{
       hotspot_address: Util.bin_to_string(pending_gateway.gateway),
       owner: Util.bin_to_string(pending_gateway.owner),
-      hash: Util.bin_to_string(txn.hash),
+      hash: Util.bin_to_string(pending_gateway.hash),
       type: "addHotspotSuccess"
     }
     animal_name = Hotspot.animal_name(data.address)

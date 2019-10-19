@@ -50,8 +50,8 @@ defmodule BlockchainAPI.Job.SubmitGateway do
     end
   end
 
-  defp notify_gateway_success(pending_gateway, txn) do
-    HotspotNotifier.send_new_hotspot_notification(txn, pending_gateway)
+  defp notify_gateway_success(pending_gateway) do
+    HotspotNotifier.send_new_hotspot_notification(pending_gateway)
   end
 
   defp notify_gateway_failure(pending_gateway) do
