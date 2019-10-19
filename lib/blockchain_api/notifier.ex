@@ -2,7 +2,12 @@ defmodule BlockchainAPI.Notifier do
   use GenServer
   require Logger
 
-  alias BlockchainAPI.PaymentsNotifier
+  alias BlockchainAPI.{
+    HotspotNotifier,
+    PaymentsNotifier,
+    Query.PendingGateway,
+    Schema.Hotspot
+  }
 
   # ==================================================================
   # API
@@ -26,7 +31,7 @@ defmodule BlockchainAPI.Notifier do
   end
 
   @impl true
-  def handle_cast({:notify, block, _ledger}, state) do
+  def handle_cast({:notify, block, ledger}, state) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
@@ -37,6 +42,13 @@ defmodule BlockchainAPI.Notifier do
             :blockchain_txn_payment_v1 ->
               Logger.info("Notifying for payments from block: #{:blockchain_block.height(block)}")
               PaymentsNotifier.send_notification(txn)
+
+            :blockchain_txn_add_gateway_v1 ->
+              Logger.info("Notifying new hotspots from block: #{:blockchain_block.height(block)}")
+              Hotspot.map(:blockchain_txn_add_gateway_v1, txn, ledger)
+              |> Map.get(:address)
+              |> PendingGateway.get!()
+              |> HotspotNotifier.send_new_hotspot_notification()
 
             _ ->
               :ok
