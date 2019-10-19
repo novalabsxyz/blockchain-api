@@ -1,7 +1,7 @@
 defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.{Watcher, Util, Query, Schema}
+  alias BlockchainAPI.{Util, Query, Schema}
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
