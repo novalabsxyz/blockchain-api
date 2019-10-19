@@ -30,7 +30,7 @@ defmodule BlockchainAPI.Job.SubmitGateway do
           case res do
             :ok ->
               Logger.info("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} accepted!")
-              notify_gateway_success(pending_gateway, txn)
+              notify_gateway_success(pending_gateway)
 
               pending_gateway
               |> PendingGateway.update!(%{status: "cleared"})
