@@ -19,7 +19,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
     :lat,
     :lng,
     :score,
-    :score_update_height
+    :score_update_height,
+    :name
   ]
 
   @derive {Phoenix.Param, key: :address}
@@ -38,6 +39,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
     field :short_country, :string, null: false
     field :score, :float, null: false, default: 0.0
     field :score_update_height, :integer, null: false, default: 0
+    field :name, :string, default: "", null: false
 
     timestamps()
   end
@@ -60,7 +62,8 @@ defmodule BlockchainAPI.Schema.Hotspot do
         :short_country,
         :short_state,
         :score,
-        :score_update_height
+        :score_update_height,
+        :name
       ]
     )
     |> validate_required([:address, :owner, :score, :score_update_height])
@@ -118,9 +121,11 @@ defmodule BlockchainAPI.Schema.Hotspot do
   end
 
   def map(:blockchain_txn_add_gateway_v1, txn, _ledger) do
+    address = :blockchain_txn_add_gateway_v1.gateway(txn)
     %{
-      address: :blockchain_txn_add_gateway_v1.gateway(txn),
+      address: address,
       owner: :blockchain_txn_add_gateway_v1.owner(txn),
+      name: animal_name(address),
       location: nil
     }
   end
@@ -159,12 +164,25 @@ defmodule BlockchainAPI.Schema.Hotspot do
     end
   end
 
-  def animal_name(hotspot_address) do
-    {:ok, name} = :erl_angry_purple_tiger.animal_name(hotspot_address)
+  def animal_name(hotspot_address) when is_binary(hotspot_address) do
+    {:ok, name} = hotspot_address
+                  |> Util.bin_to_string()
+                  |> :erl_angry_purple_tiger.animal_name()
 
     name
+    |> to_string() # elixir does not automatically handle erlang charlists
     |> String.split("-")
     |> Enum.map(&String.capitalize/1)
     |> Enum.join(" ")
   end
+  def animal_name(hotspot_address) do
+    {:ok, name} = :erl_angry_purple_tiger.animal_name(hotspot_address)
+
+    name
+    |> to_string()
+    |> String.split("-")
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
+  end
+
 end
