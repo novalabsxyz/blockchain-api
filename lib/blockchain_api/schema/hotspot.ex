@@ -165,15 +165,9 @@ defmodule BlockchainAPI.Schema.Hotspot do
   end
 
   def animal_name(hotspot_address) when is_binary(hotspot_address) do
-    {:ok, name} = hotspot_address
-                  |> Util.bin_to_string()
-                  |> :erl_angry_purple_tiger.animal_name()
-
-    name
-    |> to_string() # elixir does not automatically handle erlang charlists
-    |> String.split("-")
-    |> Enum.map(&String.capitalize/1)
-    |> Enum.join(" ")
+    hotspot_address
+    |> Util.bin_to_string()
+    |> animal_name()
   end
   def animal_name(hotspot_address) do
     {:ok, name} = :erl_angry_purple_tiger.animal_name(hotspot_address)
