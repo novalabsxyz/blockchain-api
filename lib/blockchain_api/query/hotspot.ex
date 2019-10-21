@@ -37,6 +37,12 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.update!()
   end
 
+  def update(hotspot, attrs \\ %{}) do
+    hotspot
+    |> Hotspot.changeset(attrs)
+    |> Repo.update()
+  end
+
   def all() do
     Hotspot
     |> order_by([h], desc: h.id)
