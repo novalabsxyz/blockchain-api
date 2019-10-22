@@ -9,7 +9,7 @@ defmodule BlockchainAPI.HotspotNotifier do
       type: "addHotspotSuccess"
     }
     opts = %{external_id: UUID.uuid5(:oid, "#{pending_gateway.hash}success")}
-    animal_name = Hotspot.animal_name(data.hotspot_address)
+    animal_name = Hotspot.animal_name(pending_gateway.gateway)
     message = "#{animal_name} has been added to the network!"
     Util.notifier_client().post(data, message, data.owner, opts)
   end
@@ -43,7 +43,7 @@ defmodule BlockchainAPI.HotspotNotifier do
       type: "assertLocationFailure"
     }
     opts = %{external_id: UUID.uuid5(:oid, "#{pending_location.hash}failed")}
-    animal_name = Hotspot.animal_name(data.hotspot_address)
+    animal_name = Hotspot.animal_name(pending_location.gateway)
     message = "#{animal_name} Added Without Location Information."
     Util.notifier_client().post(data, message, data.owner, opts)
   end
