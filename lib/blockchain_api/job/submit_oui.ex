@@ -1,4 +1,4 @@
-defmodule BlockchainAPI.Job.SubmitOui do
+defmodule BlockchainAPI.Job.SubmitOUI do
   alias BlockchainAPI.Query.PendingOUI
   alias BlockchainAPI.Util
   require Logger
