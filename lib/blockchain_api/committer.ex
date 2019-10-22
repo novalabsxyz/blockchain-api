@@ -24,6 +24,7 @@ defmodule BlockchainAPI.Committer do
     Schema.RewardsTransaction,
     Schema.RewardTxn,
     Schema.SecurityTransaction,
+    Schema.OUITransaction,
     Schema.Transaction,
     Util,
     Notifier
@@ -235,6 +236,9 @@ defmodule BlockchainAPI.Committer do
                 :blockchain_block.time(block)
               )
 
+            :blockchain_txn_oui_v1 ->
+              insert_transaction(:blockchain_txn_oui_v1, txn, height)
+
             _ ->
               :ok
           end
@@ -390,6 +394,13 @@ defmodule BlockchainAPI.Committer do
             LocationTransaction.map(:blockchain_txn_gen_gateway_v1, txn)
           )
     end
+  end
+
+  defp insert_transaction(:blockchain_txn_oui_v1, txn, height) do
+    {:ok, _transaction_entry} =
+      Query.Transaction.create(height, Transaction.map(:blockchain_txn_oui_v1, txn))
+
+    {:ok, _} = Query.OUITransaction.create(OUITransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
