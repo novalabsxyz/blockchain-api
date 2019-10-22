@@ -1,12 +1,12 @@
 defmodule BlockchainAPI.Job.SubmitOui do
-  alias BlockchainAPI.Query.PendingOui
+  alias BlockchainAPI.Query.PendingOUI
   alias BlockchainAPI.Util
   require Logger
 
   def run(id) do
     Logger.debug("running pending_oui job: #{inspect(id)}")
 
-    pending_oui = PendingOui.get_by_id!(id)
+    pending_oui = PendingOUI.get_by_id!(id)
     txn = pending_oui.txn |> :blockchain_txn.deserialize()
 
     txn
@@ -16,7 +16,7 @@ defmodule BlockchainAPI.Job.SubmitOui do
           Logger.info("Txn: #{Util.bin_to_string(:blockchain_txn.hash(txn))} accepted!")
 
           pending_oui
-          |> PendingOui.update!(%{status: "cleared"})
+          |> PendingOUI.update!(%{status: "cleared"})
 
         {:error, reason} ->
           Logger.error(
@@ -26,7 +26,7 @@ defmodule BlockchainAPI.Job.SubmitOui do
           )
 
           pending_oui
-          |> PendingOui.update!(%{status: "error"})
+          |> PendingOUI.update!(%{status: "error"})
       end
     end)
   end

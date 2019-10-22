@@ -1,8 +1,8 @@
-defmodule BlockchainAPI.Schema.PendingOui do
+defmodule BlockchainAPI.Schema.PendingOUI do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias BlockchainAPI.{Util, Schema.PendingOui}
+  alias BlockchainAPI.{Util, Schema.PendingOUI}
 
   @fields [
     :hash,
@@ -12,7 +12,8 @@ defmodule BlockchainAPI.Schema.PendingOui do
     :staking_fee,
     :fee,
     :txn,
-    :submit_height
+    :submit_height,
+    :status
   ]
 
   @submit_oui_queue :submit_oui_queue
@@ -22,11 +23,12 @@ defmodule BlockchainAPI.Schema.PendingOui do
     field :hash, :binary, null: false
     field :owner, :binary, null: false
     field :addresses, {:array, :binary}, null: false, default: []
-    field :payer, :binary, null: false
+    field :payer, :binary, null: false, default: ""
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
+    field :status, :string, null: false, default: "pending"
 
     timestamps()
   end
@@ -51,10 +53,10 @@ defmodule BlockchainAPI.Schema.PendingOui do
     })
   end
 
-  defimpl Jason.Encoder, for: PendingOui do
+  defimpl Jason.Encoder, for: PendingOUI do
     def encode(pending_oui, opts) do
       pending_oui
-      |> PendingOui.encode_model()
+      |> PendingOUI.encode_model()
       |> Jason.Encode.map(opts)
     end
   end

@@ -1,30 +1,30 @@
-defmodule BlockchainAPI.Query.PendingOui do
+defmodule BlockchainAPI.Query.PendingOUI do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.PendingOui}
+  alias BlockchainAPI.{Repo, Schema.PendingOUI}
 
   def create(attrs \\ %{}) do
-    %PendingOui{}
-    |> PendingOui.changeset(attrs)
+    %PendingOUI{}
+    |> PendingOUI.changeset(attrs)
     |> Repo.insert()
   end
 
   def get!(hash) do
-    PendingOui
+    PendingOUI
     |> where([poui], poui.hash == ^hash)
     |> Repo.one!()
   end
 
   def get_by_id!(id) do
-    PendingOui
+    PendingOUI
     |> where([poui], poui.id == ^id)
     |> Repo.one!()
   end
 
   def update!(poui, attrs \\ %{}) do
     poui
-    |> PendingOui.changeset(attrs)
+    |> PendingOUI.changeset(attrs)
     |> Repo.update!()
   end
 end
