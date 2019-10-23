@@ -7,7 +7,13 @@ defmodule BlockchainAPI.Job.SubmitOUI do
     Logger.debug("running pending_oui job: #{inspect(id)}")
 
     pending_oui = PendingOUI.get_by_id!(id)
+
+    IO.inspect(pending_oui, label: :pending_oui)
+    IO.inspect(pending_oui.txn, label: :pending_oui_txn)
+
     txn = pending_oui.txn |> :blockchain_txn.deserialize()
+
+    IO.inspect(txn, label: :before_submit)
 
     txn
     |> :blockchain_worker.submit_txn(fn res ->

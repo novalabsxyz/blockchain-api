@@ -3,17 +3,17 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.OUITransaction}
 
+
   @required_fields [
     :hash,
     :owner,
     :addresses,
-    :payer,
     :fee,
     :staking_fee,
     :status
   ]
 
-  @fields [ :id | @required_fields]
+  @fields [:payer, :id | @required_fields]
 
   @derive {Phoenix.Param, key: :hash}
   @derive {Jason.Encoder, only: @fields}
@@ -21,7 +21,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
     field :hash, :binary, null: false
     field :owner, :binary, null: false
     field :addresses, {:array, :binary}, null: false, default: []
-    field :payer, :binary, null: false, default: ""
+    field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
     field :status, :string, null: false, default: "cleared"
@@ -32,7 +32,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   @doc false
   def changeset(oui, attrs) do
     oui
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @fields)
     |> validate_required(@required_fields)
     |> foreign_key_constraint(:hash)
   end

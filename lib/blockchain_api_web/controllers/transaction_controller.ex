@@ -154,6 +154,13 @@ defmodule BlockchainAPIWeb.TransactionController do
           :blockchain_txn_coinbase_v1 ->
             Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
 
+          :blockchain_txn_oui_v1 ->
+            IO.inspect(txn, label: :blockchain_txn_oui)
+            Schema.PendingOUI.map(txn, chain_height)
+            |> IO.inspect()
+            |> Query.PendingOUI.create()
+            |> IO.inspect()
+
           _ ->
             :ok
         end

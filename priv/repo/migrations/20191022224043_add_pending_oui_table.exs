@@ -6,9 +6,9 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingOUITable do
   def change do
     create table(:pending_ouis) do
       add :hash, :binary, null: false
-      add :owner, :bigint, null: false
+      add :owner, :binary, null: false
       add :addresses, {:array, :binary}, null: false, default: [] # can have empty addresses
-      add :payer, :binary, null: false, default: "" # can have an empty payer
+      add :payer, :binary, null: true # can have an empty payer
       add :staking_fee, :bigint, null: false, default: 0
       add :fee, :bigint, null: false, default: 0
       add :txn, :binary, null: false

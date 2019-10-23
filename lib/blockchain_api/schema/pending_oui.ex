@@ -1,20 +1,22 @@
 defmodule BlockchainAPI.Schema.PendingOUI do
   use Ecto.Schema
   import Ecto.Changeset
+  import Honeydew.EctoPollQueue.Schema
 
   alias BlockchainAPI.{Util, Schema.PendingOUI}
 
-  @fields [
+  @required [
     :hash,
     :owner,
     :addresses,
-    :payer,
     :staking_fee,
     :fee,
     :txn,
     :submit_height,
     :status
   ]
+
+  @fields [:payer | @required]
 
   @submit_oui_queue :submit_oui_queue
 
@@ -23,12 +25,14 @@ defmodule BlockchainAPI.Schema.PendingOUI do
     field :hash, :binary, null: false
     field :owner, :binary, null: false
     field :addresses, {:array, :binary}, null: false, default: []
-    field :payer, :binary, null: false, default: ""
+    field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
     field :status, :string, null: false, default: "pending"
+
+    honeydew_fields(@submit_oui_queue)
 
     timestamps()
   end
@@ -37,7 +41,7 @@ defmodule BlockchainAPI.Schema.PendingOUI do
   def changeset(pending_oui, attrs) do
     pending_oui
     |> cast(attrs, @fields)
-    |> validate_required(@fields)
+    |> validate_required(@required)
   end
 
   def encode_model(pending_oui) do
