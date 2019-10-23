@@ -44,7 +44,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
       hash: Util.bin_to_string(oui.hash),
       payer: Util.bin_to_string(oui.payee),
       owner: Util.bin_to_string(oui.owner),
-      addresses: Enum.map(fn(a) -> Util.bin_to_string(a) end, oui.addresses),
+      addresses: Enum.map(oui.addresses, fn(a) -> Util.bin_to_string(a) end),
       type: "oui"
     })
   end

@@ -52,7 +52,7 @@ defmodule BlockchainAPI.Schema.PendingOUI do
       hash: Util.bin_to_string(pending_oui.hash),
       owner: Util.bin_to_string(pending_oui.owner),
       payer: Util.bin_to_string(pending_oui.payer),
-      addresses: Enum.map(fn(a) -> Util.bin_to_string(a) end, pending_oui.addresses),
+      addresses: Enum.map(pending_oui.addresses, fn(a) -> Util.bin_to_string(a) end),
       type: "oui"
     })
   end
