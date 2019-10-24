@@ -42,7 +42,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
     |> Map.take(@fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(oui.hash),
-      payer: Util.bin_to_string(oui.payee),
+      payer: Util.bin_to_string(oui.payer),
       owner: Util.bin_to_string(oui.owner),
       addresses: Enum.map(oui.addresses, fn(a) -> Util.bin_to_string(a) end),
       type: "oui"

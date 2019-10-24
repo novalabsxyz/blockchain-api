@@ -13,7 +13,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     SecurityView,
     DataCreditView,
     ElectionView,
-    RewardsView
+    RewardsView,
+    OUIView
   }
 
   require Logger
@@ -103,6 +104,13 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(RewardsView)
         |> render("show.json", rewards: rewards)
+
+      "oui" ->
+        oui = Query.OUITransaction.get!(bin_hash)
+
+        conn
+        |> put_view(OUIView)
+        |> render("show.json", oui: oui)
 
       _ ->
         :error
