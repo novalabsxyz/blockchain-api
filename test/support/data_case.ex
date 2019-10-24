@@ -22,6 +22,7 @@ defmodule BlockchainAPI.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import BlockchainAPI.DataCase
+      import BlockchainAPI.Factory
     end
   end
 

@@ -79,7 +79,10 @@ defmodule BlockchainAPI.MixProject do
        git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:lager, "3.6.7",
-       [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
+       [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
+
+      # test requirements
+      {:ex_machina, "~> 2.3", only: :test}
     ]
   end
 

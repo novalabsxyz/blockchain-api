@@ -62,4 +62,10 @@ defmodule BlockchainAPIWeb.HotspotController do
     |> put_view(POCWitnessesView)
     |> render("index.json", poc_witnesses: witnesses)
   end
+
+  def stats(conn, %{"hotspot_address" => address}) do
+    stats = Query.Hotspot.stats(address)
+
+    render(conn, "stats.json", stats: stats)
+  end
 end

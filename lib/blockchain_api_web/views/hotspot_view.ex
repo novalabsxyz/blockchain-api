@@ -18,6 +18,10 @@ defmodule BlockchainAPIWeb.HotspotView do
     }
   end
 
+  def render("stats.json", %{stats: stats}) do
+    %{data: stats}
+  end
+
   def render("hotspot.json", %{hotspot: hotspot}) do
     hotspot
   end

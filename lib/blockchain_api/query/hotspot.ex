@@ -2,7 +2,12 @@ defmodule BlockchainAPI.Query.Hotspot do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Util, Schema.Hotspot}
+  alias BlockchainAPI.{
+    Query.HotspotStats,
+    Repo,
+    Schema.Hotspot,
+    Util
+  }
 
   # Default search levenshtein distance threshold
   @threshold 1
@@ -54,6 +59,21 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> where([h], is_nil(h.location))
     |> order_by([h], desc: h.id)
     |> Repo.all()
+  end
+
+  def stats(address) do
+    address = Util.string_to_bin(address)
+
+    %{
+      challenges_completed: HotspotStats.challenges_completed_map(address),
+      consensus_groups: HotspotStats.consensus_groups_map(address),
+      hlm_earned: HotspotStats.hlm_earned_map(address),
+      earning_percentile: HotspotStats.earning_percentile_map(address),
+      challenges_witnessed: HotspotStats.challenges_witnessed_map(address),
+      witnessed_percentile: HotspotStats.witnessed_percentile_map(address),
+      furthest_witness: HotspotStats.furthest_witness(address),
+      furthest_witness_percentile: HotspotStats.furthest_witness_percentile(address)
+    }
   end
 
   # Search hotspots with fuzzy str match with Levenshtein distance
