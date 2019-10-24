@@ -9,7 +9,8 @@ defmodule BlockchainAPI.Schema.OUITransaction do
     :addresses,
     :fee,
     :staking_fee,
-    :status
+    :status,
+    :oui
   ]
 
   @fields [:payer, :id | @required_fields]
@@ -23,6 +24,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
     field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
+    field :oui, :integer, null: false, default: 1
     field :status, :string, null: false, default: "cleared"
 
     timestamps()
@@ -75,6 +77,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
       addresses: :blockchain_txn_oui_v1.addresses(txn),
       staking_fee: :blockchain_txn_oui_v1.staking_fee(txn),
       fee: :blockchain_txn_oui_v1.fee(txn),
+      oui: :blockchain_txn_oui_v1.oui(txn)
     }
   end
 end

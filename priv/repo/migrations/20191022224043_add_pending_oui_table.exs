@@ -10,6 +10,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingOUITable do
       add :addresses, {:array, :binary}, null: false, default: [] # can have empty addresses
       add :payer, :binary, null: true # can have an empty payer
       add :staking_fee, :bigint, null: false, default: 0
+      add :oui, :bigint, null: false, default: 1
       add :fee, :bigint, null: false, default: 0
       add :txn, :binary, null: false
       add :submit_height, :bigint, null: false, default: 0

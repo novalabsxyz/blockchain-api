@@ -13,7 +13,8 @@ defmodule BlockchainAPI.Schema.PendingOUI do
     :fee,
     :txn,
     :submit_height,
-    :status
+    :status,
+    :oui
   ]
 
   @fields [:payer | @required]
@@ -28,6 +29,7 @@ defmodule BlockchainAPI.Schema.PendingOUI do
     field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
+    field :oui, :integer, null: false, default: 1
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
     field :status, :string, null: false, default: "pending"
@@ -74,6 +76,7 @@ defmodule BlockchainAPI.Schema.PendingOUI do
       addresses: :blockchain_txn_oui_v1.addresses(txn),
       staking_fee: :blockchain_txn_oui_v1.staking_fee(txn),
       fee: :blockchain_txn_oui_v1.fee(txn),
+      oui: :blockchain_txn_oui_v1.oui(txn),
       submit_height: submit_height,
       status: "pending"
     }
