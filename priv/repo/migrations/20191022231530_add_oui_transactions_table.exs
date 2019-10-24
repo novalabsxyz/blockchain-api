@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddOuiTransactionsTable do
     create table(:oui_transactions) do
       add :owner, :binary, null: false
       add :payer, :binary, null: true # can be empty payer
-      add :addresses, {:array, :binary}, null: false, default: [] # can have empty addresses
+      add :addresses, {:array, :string}, null: false, default: [] # can have empty addresses
       add :fee, :bigint, null: false, default: 0
       add :staking_fee, :bigint, null: false, default: 0
       add :oui, :bigint, null: false, default: 1

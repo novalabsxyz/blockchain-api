@@ -25,7 +25,7 @@ defmodule BlockchainAPI.Schema.PendingOUI do
   schema "pending_ouis" do
     field :hash, :binary, null: false
     field :owner, :binary, null: false
-    field :addresses, {:array, :binary}, null: false, default: []
+    field :addresses, {:array, :string}, null: false, default: []
     field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
@@ -54,7 +54,6 @@ defmodule BlockchainAPI.Schema.PendingOUI do
       hash: Util.bin_to_string(pending_oui.hash),
       owner: Util.bin_to_string(pending_oui.owner),
       payer: Util.bin_to_string(pending_oui.payer),
-      addresses: Enum.map(pending_oui.addresses, fn(a) -> Util.bin_to_string(a) end),
       type: "oui"
     })
   end

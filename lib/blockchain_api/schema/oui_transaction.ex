@@ -20,7 +20,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   schema "oui_transactions" do
     field :hash, :binary, null: false
     field :owner, :binary, null: false
-    field :addresses, {:array, :binary}, null: false, default: []
+    field :addresses, {:array, :string}, null: false, default: []
     field :payer, :binary, null: true # payer can be empty
     field :fee, :integer, null: false, default: 0
     field :staking_fee, :integer, null: false, default: 0
@@ -39,23 +39,12 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   end
 
   def encode_model(oui) do
-
-    addresses =
-      case oui.addresses do
-        [] ->
-          []
-
-        addrs ->
-          Enum.map(addrs, fn(a) -> Util.bin_to_string(a) end)
-      end
-
     oui
     |> Map.take(@fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(oui.hash),
       payer: Util.bin_to_string(oui.payer),
       owner: Util.bin_to_string(oui.owner),
-      addresses: addresses,
       type: "oui"
     })
   end
