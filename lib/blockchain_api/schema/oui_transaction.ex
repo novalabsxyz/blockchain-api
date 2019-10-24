@@ -3,7 +3,6 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.OUITransaction}
 
-
   @required_fields [
     :hash,
     :owner,
@@ -38,13 +37,23 @@ defmodule BlockchainAPI.Schema.OUITransaction do
   end
 
   def encode_model(oui) do
+
+    addresses =
+      case oui.addresses do
+        [] ->
+          []
+
+        addrs ->
+          Enum.map(addrs, fn(a) -> Util.bin_to_string(a) end)
+      end
+
     oui
     |> Map.take(@fields)
     |> Map.merge(%{
       hash: Util.bin_to_string(oui.hash),
       payer: Util.bin_to_string(oui.payer),
       owner: Util.bin_to_string(oui.owner),
-      addresses: Enum.map(oui.addresses, fn(a) -> Util.bin_to_string(a) end),
+      addresses: addresses,
       type: "oui"
     })
   end

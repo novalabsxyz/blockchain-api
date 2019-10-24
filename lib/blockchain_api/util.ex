@@ -15,7 +15,8 @@ defmodule BlockchainAPI.Util do
     POCReceiptsTransaction,
     POCRequestTransaction,
     RewardsTransaction,
-    SecurityTransaction
+    SecurityTransaction,
+    OUITransaction
   }
 
   @bones 100_000_000
@@ -242,6 +243,14 @@ defmodule BlockchainAPI.Util do
   def clean_txn_struct(%{rewards: rewards, height: height, time: time}) when is_map(rewards) do
     Map.merge(RewardsTransaction.encode_model(rewards), %{
       type: "rewards",
+      height: height,
+      time: time
+    })
+  end
+
+  def clean_txn_struct(%{oui: oui, height: height, time: time}) when is_map(oui) do
+    Map.merge(OUITransaction.encode_model(oui), %{
+      type: "oui",
       height: height,
       time: time
     })
