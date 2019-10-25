@@ -3,15 +3,7 @@ defmodule BlockchainAPI.Test.Data.OUITxn do
   use BlockchainAPI.DataCase
   alias BlockchainAPI.Query
 
-  test "single oui insert" do
-    txn = insert(:transaction, %{type: "oui"})
-    _oui_txn = insert(:oui_transaction, %{txn: txn})
-    queried = Query.OUITransaction.list(%{})
-    assert length(queried) == 1
-  end
-
-  test "multiple oui insert" do
-
+  test "oui txn insert" do
     1..200
     |> Enum.map(
       fn(_) ->
