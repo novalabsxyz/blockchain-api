@@ -9,14 +9,15 @@ defmodule BlockchainAPI.Application do
   alias BlockchainAPI.Watcher
   alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
   alias BlockchainAPI.{Notifier, RewardsNotifier}
-  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase, SubmitOUI}
-  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase, PendingOUI}
+  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase, SubmitOUI, SubmitSecExchange}
+  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase, PendingOUI, PendingSecExchange}
 
   import PendingPayment, only: [submit_payment_queue: 0]
   import PendingGateway, only: [submit_gateway_queue: 0]
   import PendingLocation, only: [submit_location_queue: 0]
   import PendingCoinbase, only: [submit_coinbase_queue: 0]
   import PendingOUI, only: [submit_oui_queue: 0]
+  import PendingSecExchange, only: [submit_sec_exchange_queue: 0]
 
   import Cachex.Spec
 
@@ -142,6 +143,14 @@ defmodule BlockchainAPI.Application do
       )
 
     :ok = Honeydew.start_workers(submit_oui_queue(), SubmitOUI)
+
+    :ok =
+      Honeydew.start_queue(submit_sec_exchange_queue(),
+        queue: {EctoPollQueue, queue_args(env, PendingSecExchange)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
+    :ok = Honeydew.start_workers(submit_sec_exchange_queue(), SubmitSecExchange)
 
     {:ok, sup}
   end
