@@ -171,11 +171,11 @@ defmodule BlockchainAPIWeb.TransactionController do
             Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
 
           :blockchain_txn_oui_v1 ->
-            IO.inspect(txn, label: :blockchain_txn_oui)
             Schema.PendingOUI.map(txn, chain_height)
-            |> IO.inspect()
             |> Query.PendingOUI.create()
-            |> IO.inspect()
+
+          :blockchain_txn_security_exchange_v1 ->
+            Schema.PendingSecExchange.map(txn, chain_height) |> Query.PendingSecExchange.create()
 
           _ ->
             :ok

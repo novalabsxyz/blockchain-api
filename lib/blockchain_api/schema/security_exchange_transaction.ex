@@ -66,7 +66,8 @@ defmodule BlockchainAPI.Schema.SecurityExchangeTransaction do
       amount: :blockchain_txn_security_exchange_v1.amount(security_exchange),
       signature: :blockchain_txn_security_exchange_v1.signature(security_exchange),
       nonce: :blockchain_txn_security_exchange_v1.nonce(security_exchange),
-      hash: :blockchain_txn_security_exchange_v1.hash(security_exchange)
+      hash: :blockchain_txn_security_exchange_v1.hash(security_exchange),
+      fee: :blockchain_txn_security_exchange_v1.fee(security_exchange)
     }
   end
 end
