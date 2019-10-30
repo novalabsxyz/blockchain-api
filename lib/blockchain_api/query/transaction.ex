@@ -19,6 +19,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.RewardsTransaction,
     Schema.SecurityTransaction,
     Schema.Transaction,
+    Schema.OUITransaction,
     Util,
     Cache
   }
@@ -263,6 +264,8 @@ defmodule BlockchainAPI.Query.Transaction do
         on: transaction.hash == poc_receipts_transaction.hash,
         left_join: rewards_txn in RewardsTransaction,
         on: transaction.hash == rewards_txn.hash,
+        left_join: oui_txn in OUITransaction,
+        on: transaction.hash == oui_txn.hash,
         order_by: [
           desc: block.height,
           desc: transaction.id,
@@ -281,7 +284,8 @@ defmodule BlockchainAPI.Query.Transaction do
           location: location_transaction,
           poc_request: poc_request_transaction,
           poc_receipts: poc_receipts_transaction,
-          rewards: rewards_txn
+          rewards: rewards_txn,
+          oui: oui_txn
         }
       )
 

@@ -13,7 +13,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     SecurityView,
     DataCreditView,
     ElectionView,
-    RewardsView
+    RewardsView,
+    OUIView
   }
 
   require Logger
@@ -104,6 +105,13 @@ defmodule BlockchainAPIWeb.TransactionController do
         |> put_view(RewardsView)
         |> render("show.json", rewards: rewards)
 
+      "oui" ->
+        oui = Query.OUITransaction.get!(bin_hash)
+
+        conn
+        |> put_view(OUIView)
+        |> render("show.json", oui: oui)
+
       _ ->
         :error
     end
@@ -153,6 +161,13 @@ defmodule BlockchainAPIWeb.TransactionController do
 
           :blockchain_txn_coinbase_v1 ->
             Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
+
+          :blockchain_txn_oui_v1 ->
+            IO.inspect(txn, label: :blockchain_txn_oui)
+            Schema.PendingOUI.map(txn, chain_height)
+            |> IO.inspect()
+            |> Query.PendingOUI.create()
+            |> IO.inspect()
 
           _ ->
             :ok
