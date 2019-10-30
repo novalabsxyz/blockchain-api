@@ -116,7 +116,7 @@ $ _build/prod/rel/blockchain_api/bin/blockchain-api peer book -s
 We can also check our block height:
 
 ```
-$ _build/prod/rel/blockchain_api/bin/blockchain-api info height
+$ _build/prod/rel/blockchain_api/bin/blockchain-api status height
 ````
 
 Or run:
