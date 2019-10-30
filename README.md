@@ -103,6 +103,8 @@ You can check that the API is running by visiting `http://localhost:4001/` from 
 
 NOTE: by default, the `config/prod.exs` configuration file assumes that the base directory is `/var/data/blockchain-api/prod` and that the API server should be running on either the `PORT` environment variable or port `4001`. Please edit the `port` and `base_dir` variables in `prod.exs` as desired for your configuration.
 
+The API also expects an environment variable called `GOOGLE_MAPS_API_KEY` to be set, which used to reverse lookup the hotspot location.
+
 ### Using the CLI
 
 Now that everything is working as intended, we can run a couple of quick CLI commands. 
