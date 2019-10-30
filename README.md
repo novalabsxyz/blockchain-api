@@ -1,18 +1,18 @@
-# BlockchainAPI
+# Helium Blockchain API
 
-An API for the helium blockchain
+The Helium Blockchain API is a full blockchain node that exposes a JSON API which can be consumed by client applications like mobile applications or block explorers.
 
 [![Build status](https://badge.buildkite.com/1c819cef9216a66d6b7132c8b085d36bb915f141d1fd3337e3.svg)](https://buildkite.com/helium/blockchain-api)
 
-## Local Installation
+## Installation
 
-In order to run locally, a number of dependencies must be met.
+In order to run a local instance of the API a number of dependencies must be met.
 
 (Note: These are required to build and run this node. Releases will be built in the future which require no external dependencies)
 
 ### Homebrew
 
-For OSX, make sure you have [Homebrew](https://brew.sh/) installed. We'll use it to install the following dependencies
+If using macOS make sure you have [Homebrew](https://brew.sh/) installed. We'll use it to install the following dependencies
 
 ```
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -25,11 +25,13 @@ $ brew install autoconf automake wget yasm gmp libtool cmake clang-format lcov d
 ```
 
 ### Elixir
-For OSX,
+
+For macOS:
 ```
 $ brew install elixir
 ```
-For Ubuntu, default package manager is woefully out of date so follow [elixir-lang.org instructions](https://elixir-lang.org/install.html#unix-and-unix-like)
+
+For Ubuntu/Debian, the default package manager is woefully out of date so follow [elixir-lang.org instructions](https://elixir-lang.org/install.html#unix-and-unix-like)
 ```
 $ wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && sudo dpkg -i erlang-solutions_1.0_all.deb
 $ sudo apt-get update
@@ -37,100 +39,92 @@ $ sudo apt-get install esl-erlang
 $ sudo apt-get install elixir
 ```
 
-### Postgres
+### PostgreSQL
 
-You'd need to install postgres server if you haven't already and configure it with a default postgres/postgres user/passwrod for now. (We'll change that on the production server as needed)
+Install PostgreSQL if you haven't already and configure it with a default postgres/postgres user/pasword for now.
 
+For macOS:
+
+```
+$ brew install postgresql
+$ initdb /usr/local/var/postgres
+$ brew services start postgresql
+
+```
+
+For Ubuntu/Debian,
 ```
 $ sudo apt install postgresql
 $ sudo -u postgres psql postgres
 $ sudo -u postgres createuser --superuser $USER
 ```
 
+NOTE: please edit `config/prod.exs` with your database credentials, otherwise it is assumed environment variables of `DATABASE_USER`, `DATABASE_PASS`, `DATABASE_NAME`, and `DATABASE_HOST` are present.
 
-### Clone blockchain_api
+### Clone blockchain-api
 
-Clone the `blockchain_api` project somewhere.
+Clone this `blockchain-api` repo:
 
 ```
-$ git clone git@github.com:helium/blockchain_api.git
+$ git clone https://github.com/helium/blockchain-api.git
 ```
 
-### Fetch deps
+### Fetch Elixir Dependencies
 
-`cd` into `blockchain_api` and use mix to fetch the erlang/elixir dependencies.
+`cd` into `blockchain-api` and use mix to fetch the erlang/elixir dependencies.
 
 ```
 $ mix deps.get
 ```
 
-### Build a release
+## Using the API
 
-Unless you're doing some development on the node, you'll want to build a `prod` release.
+### Building a release
 
-#### Building a prod release
-`cd` into the `blockchain_api` project and then run:
+Unless you're doing some development and need debugging you'll want to build a `prod` release.
+
+`cd` into the `blockchain-api` folder and then run:
 
 ```
 $ make release
 ```
 
-#### Building a dev release
-`cd` into the `blockchain_api` project and then run:
+### Starting the API
+
+Once the API has been built, you can start it by running:
 
 ```
-$ make devrelease
+$ make prod-start
 ```
 
-Note: A devrelease is not connected to the seed nodes, you need to have a local blockchain running
+This will connect the node to the main network and use the genesis block contained in the `priv/prod` folder.
 
-#### Running Interactively (Prod)
-Doing so will connect you to the seed nodes and boot the chain with the priv/genesis block
+You can check that the API is running by visiting `http://localhost:4001/` from a web browser. You should get an `ok` response.
 
-`cd` into the `blockchain_api` project and then run:
+NOTE: by default, the `config/prod.exs` configuration file assumes that the base directory is `/var/data/blockchain-api/prod` and that the API server should be running on either the `PORT` environment variable or port `4001`. Please edit the `port` and `base_dir` variables in `prod.exs` as desired for your configuration.
 
-Remove existing data folder (if any). NOTE: This will wipe an existing chain if you had one before.
+The API also expects an environment variable called `GOOGLE_MAPS_API_KEY` to be set, which is used to reverse lookup the hotspot location.
 
-```rm -rf data```
+### Using the CLI
 
-Build clean
+Now that everything is working as intended, we can run a couple of quick CLI commands. 
 
-```make clean && make```
-
-Reset Database to start fresh
-
-```make reset-prod-db```
-
-Start interactively
-
-```make prod-start```
-
-
-#### Running Interactively (Dev)
-Doing so will NOT connect you to the seed nodes, you'll have to supply it manually on the interactive shell.
-
-`cd` into the `blockchain_api` project and then run:
-
-Remove existing data folder (if any)
-
-```rm -rf data```
-
-Build clean
-
-```make clean && make```
-
-Reset Database to start fresh
-
-```make reset-dev-db```
-
-Start interactively
-
-```make dev-start```
-
-#### Running Tests
-
-`cd` into the `blockchain_api` project and run:
+Firstly, check whether we are connected to the network and have a few peers:
 
 ```
-make clean && make reset-test-db && make test
+$ _build/prod/rel/blockchain_api/bin/blockchain-api peer book -s
+````
+
+We can also check our block height:
+
 ```
+$ _build/prod/rel/blockchain_api/bin/blockchain-api status height
+````
+
+Or run:
+
+```
+$ _build/prod/rel/blockchain_api/bin/blockchain-api
+````
+
+To get a list of commands.
