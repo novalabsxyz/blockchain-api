@@ -105,6 +105,8 @@ NOTE: by default, the `config/prod.exs` configuration file assumes that the base
 
 The API also expects an environment variable called `GOOGLE_MAPS_API_KEY` to be set, which is used to reverse lookup the hotspot location.
 
+The API routes are [temporarily documented](https://documenter.getpostman.com/view/8776393/SVmsTzP6?version=latest#2755b1c5-065c-46d4-b020-f8c3282d381f) on Postman.
+
 ### Using the CLI
 
 Now that everything is working as intended, we can run a couple of quick CLI commands. 
