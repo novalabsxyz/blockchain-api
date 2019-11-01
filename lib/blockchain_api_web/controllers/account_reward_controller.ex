@@ -2,7 +2,6 @@ defmodule BlockchainAPIWeb.AccountRewardController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
-  alias BlockchainAPIWeb.AccountRewardView
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -12,8 +11,10 @@ defmodule BlockchainAPIWeb.AccountRewardController do
                       |> Util.string_to_bin()
                       |> Query.RewardsTransaction.list_for()
 
-    conn
-    |> put_view(AccountRewardView)
-    |> render("index.json", account_rewards: account_rewards)
+    render(
+      conn,
+      "index.json",
+      account_rewards: account_rewards
+    )
   end
 end
