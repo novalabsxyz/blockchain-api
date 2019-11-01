@@ -6,7 +6,8 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
     Repo,
     Schema.RewardsTransaction,
     Schema.RewardTxn,
-    Schema.Transaction
+    Schema.Transaction,
+    Util
   }
 
   def create(attrs \\ %{}) do
@@ -45,6 +46,16 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
       }
     )
     |> Repo.all()
+    |> encode()
+  end
+
+  defp encode([]), do: []
+  defp encode(list) do
+    list |> Enum.map(&encode_entry/1)
+  end
+
+  defp encode_entry(%{hotspot: g, account: a, hash: h}=map) do
+    %{map | hotspot: Util.bin_to_string(g), account: Util.bin_to_string(a), hash: Util.bin_to_string(h)}
   end
 
 end
