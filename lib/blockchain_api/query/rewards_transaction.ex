@@ -40,7 +40,7 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
         account: rt.account,
         amount: rt.amount,
         type: rt.type,
-        hash: rt.hash,
+        hash: t.hash,
         height: t.block_height
       }
     )
