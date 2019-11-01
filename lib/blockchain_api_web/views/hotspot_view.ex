@@ -18,6 +18,12 @@ defmodule BlockchainAPIWeb.HotspotView do
     }
   end
 
+  def render("timeline.json", data) do
+    %{
+      data: render_many(data.hotspots, HotspotView, "hotspot.json")
+    }
+  end
+
   def render("hotspot.json", %{hotspot: hotspot}) do
     hotspot
   end

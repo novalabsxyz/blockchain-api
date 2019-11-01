@@ -35,6 +35,16 @@ defmodule BlockchainAPIWeb.HotspotController do
     )
   end
 
+  def timeline(conn, _params) do
+    hotspots = Query.Hotspot.all_by_time()
+
+    render(
+      conn,
+      "timeline.json",
+      hotspots: hotspots
+    )
+  end
+
   def receipts(conn, %{"hotspot_address" => address}) do
     receipts =
       with address <- Util.string_to_bin(address),
