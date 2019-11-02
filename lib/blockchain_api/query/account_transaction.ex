@@ -167,6 +167,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
           short_street: hotspot.short_street,
           short_state: hotspot.short_state,
           short_country: hotspot.short_country,
+          name: hotspot.name,
           score: hotspot.score,
           location_height: lsq.location_height,
           status:
