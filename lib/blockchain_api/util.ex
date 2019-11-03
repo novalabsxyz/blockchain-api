@@ -89,51 +89,53 @@ defmodule BlockchainAPI.Util do
          ) do
       {:ok, %{status_code: 200, body: body}} ->
         decoded_body = Jason.decode!(body)
+        results = Map.get(decoded_body, "results")
 
-        case hd(decoded_body["results"]) do
-          %{"address_components" => address_components} ->
-            {:ok,
-             %{
-               long_street:
-                 Enum.find(address_components, fn c -> c["types"] == ["route"] end)["long_name"] ||
-                   "Unknown",
-               short_street:
-                 Enum.find(address_components, fn c -> c["types"] == ["route"] end)["short_name"] ||
-                   "Unknown",
-               long_city:
-                 Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
-                   "long_name"
-                 ] || "Unknown",
-               long_state:
-                 Enum.find(address_components, fn c ->
-                   c["types"] == ["administrative_area_level_1", "political"]
-                 end)["long_name"] || "Unknown",
-               long_country:
-                 Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
-                   "long_name"
-                 ] || "Unknown",
-               short_city:
-                 Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
-                   "short_name"
-                 ] || "Unknown",
-               short_state:
-                 Enum.find(address_components, fn c ->
-                   c["types"] == ["administrative_area_level_1", "political"]
-                 end)["short_name"] || "Unknown",
-               short_country:
-                 Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
-                   "short_name"
-                 ] || "Unknown"
-             }}
-
-          _ ->
+        case results do
+          nil ->
             reverse_geocode(loc, retry - 1)
-            {:error, :unknown_location}
+          [] ->
+            reverse_geocode(loc, retry - 1)
+          res ->
+            case hd(res) do
+              %{"address_components" => address_components} ->
+                {:ok,
+                  %{
+                    long_street:
+                    Enum.find(address_components, fn c -> c["types"] == ["route"] end)["long_name"] ||
+                      "Unknown",
+                    short_street:
+                    Enum.find(address_components, fn c -> c["types"] == ["route"] end)["short_name"] ||
+                      "Unknown",
+                    long_city:
+                    Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
+                      "long_name"
+                    ] || "Unknown",
+                    long_state:
+                    Enum.find(address_components, fn c ->
+                      c["types"] == ["administrative_area_level_1", "political"]
+                    end)["long_name"] || "Unknown",
+                    long_country:
+                    Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
+                      "long_name"
+                    ] || "Unknown",
+                    short_city:
+                    Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
+                      "short_name"
+                    ] || "Unknown",
+                    short_state:
+                    Enum.find(address_components, fn c ->
+                      c["types"] == ["administrative_area_level_1", "political"]
+                    end)["short_name"] || "Unknown",
+                    short_country:
+                    Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
+                      "short_name"
+                    ] || "Unknown"
+                    }}
+            end
         end
-
       _ ->
         reverse_geocode(loc, retry - 1)
-        {:error, :bad_response}
     end
   end
 
