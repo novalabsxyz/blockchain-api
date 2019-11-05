@@ -1,29 +1,24 @@
 defmodule BlockchainAPIWeb.WitnessController do
   use BlockchainAPIWeb, :controller
 
-  alias BlockchainAPI.Query
+  alias BlockchainAPI.Util
   alias BlockchainAPIWeb.WitnessView
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def show(conn, %{"name"  => name} = _params) do
+  def show(conn, %{"address"  => address} = _params) do
     conn
     |> put_view(WitnessView)
-    |> render("show.json", witnesses: witnesses(name))
+    |> render("show.json", witnesses: witnesses(address))
   end
 
-  defp witnesses(name) do
-    name
-    |> String.split("-")
-    |> Enum.map(&String.capitalize/1)
-    |> Enum.join(" ")
-    |> Query.Hotspot.get_addr_from_name()
+  defp witnesses(address) do
+    address
+    |> Util.string_to_bin()
     |> get_witnesses()
   end
 
-  defp get_witnesses(nil), do: []
-  defp get_witnesses([]), do: []
-  defp get_witnesses([addr]) do
+  defp get_witnesses(addr) do
     :blockchain_worker.blockchain()
     |> :blockchain.ledger()
     |> :blockchain_ledger_v1.active_gateways()
