@@ -72,4 +72,5 @@ defmodule BlockchainAPIWeb.HotspotController do
     |> put_view(POCWitnessesView)
     |> render("index.json", poc_witnesses: witnesses)
   end
+
 end
