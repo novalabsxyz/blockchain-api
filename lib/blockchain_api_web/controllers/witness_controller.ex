@@ -27,9 +27,40 @@ defmodule BlockchainAPIWeb.WitnessController do
     |> Map.to_list()
     |> Enum.reduce(
       [],
-      fn({addr, _witness}, acc) ->
-        [BlockchainAPI.Schema.Hotspot.animal_name(addr) | acc]
+      fn({_addr, _witness}=kv, acc) ->
+        [encode_witness(kv) | acc]
       end)
   end
-  defp get_witnesses(_), do: []
+
+  defp encode_witness({addr, witness}) do
+
+    hist =
+      try do
+        :blockchain_ledger_gateway_v2.witness_hist(witness)
+      rescue
+        _ ->
+          %{}
+      end
+
+    first_time =
+      case :blockchain_ledger_gateway_v2.witness_first_time(witness) do
+        :undefined -> nil
+        t -> t
+      end
+
+    recent_time =
+      case :blockchain_ledger_gateway_v2.witness_recent_time(witness) do
+        :undefined -> nil
+        t -> t
+      end
+
+    %{
+      name: BlockchainAPI.Schema.Hotspot.animal_name(addr),
+      addr: Util.bin_to_string(addr),
+      hist: hist,
+      first_time: first_time,
+      recent_time: recent_time
+    }
+  end
+
 end
