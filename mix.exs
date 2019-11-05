@@ -75,7 +75,7 @@ defmodule BlockchainAPI.MixProject do
       {:ex_machina, "~> 2.3", only: [:dev, :test]},
 
       # blockchain requirements
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "rg/path-v2"},
       {:cuttlefish,
        git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
