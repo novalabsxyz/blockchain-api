@@ -90,6 +90,16 @@ defmodule BlockchainAPI.Query.Hotspot do
     end
   end
 
+  # Get hotspot addr from name
+  def get_addr_from_name(name) do
+    from(
+      h in Hotspot,
+      where: h.name == ^name,
+      select: h.address
+    )
+    |> Repo.all()
+  end
+
   # Search hotspots with fuzzy str match with Levenshtein distance
 
   def search(query_string) do
