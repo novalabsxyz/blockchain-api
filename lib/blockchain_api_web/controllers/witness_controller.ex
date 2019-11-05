@@ -13,46 +13,28 @@ defmodule BlockchainAPIWeb.WitnessController do
   end
 
   defp witnesses(name) do
-    addr = get_addr(name)
-    case addr do
-      [] -> []
-      [a] ->
-        get_witnesses(a)
-      _ ->
-        []
-    end
+    name
+    |> String.split("-")
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
+    |> Query.Hotspot.get_addr_from_name()
+    |> get_witnesses()
   end
 
-  defp get_addr(name) do
-    name = name
-           |> IO.inspect
-           |> String.split("-")
-           |> IO.inspect
-           |> Enum.map(&String.capitalize/1)
-           |> IO.inspect
-           |> Enum.join(" ")
-    addr = Query.Hotspot.get_addr_from_name(name)
-    IO.inspect(addr)
-    addr
+  defp get_witnesses(nil), do: []
+  defp get_witnesses([]), do: []
+  defp get_witnesses([addr]) do
+    :blockchain_worker.blockchain()
+    |> :blockchain.ledger()
+    |> :blockchain_ledger_v1.active_gateways()
+    |> Map.get(addr)
+    |> :blockchain_ledger_gateway_v2.witnesses()
+    |> Map.to_list()
+    |> Enum.reduce(
+      [],
+      fn({addr, _witness}, acc) ->
+        [BlockchainAPI.Schema.Hotspot.animal_name(addr) | acc]
+      end)
   end
-
-  defp get_witnesses(addr) do
-    witnesses = :blockchain_worker.blockchain()
-                |> IO.inspect
-                |> :blockchain.ledger()
-                |> IO.inspect
-                |> :blockchain_ledger_v1.active_gateways()
-                |> IO.inspect
-                |> Map.get(addr)
-                |> IO.inspect
-                |> :blockchain_ledger_gateway_v2.witnesses()
-                |> Map.to_list()
-                |> Enum.reduce(
-                  [],
-                  fn({addr, _witness}, acc) ->
-                    [BlockchainAPI.Schema.Hotspot.animal_name(addr) | acc]
-                  end)
-    IO.inspect(witnesses, label: :witnesses)
-    witnesses
-  end
+  defp get_witnesses(_), do: []
 end
