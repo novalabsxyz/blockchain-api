@@ -56,7 +56,7 @@ defmodule BlockchainAPIWeb.WitnessController do
 
     %{
       name: BlockchainAPI.Schema.Hotspot.animal_name(addr),
-      addr: Util.bin_to_string(addr),
+      address: Util.bin_to_string(addr),
       hist: hist,
       first_time: first_time,
       recent_time: recent_time
