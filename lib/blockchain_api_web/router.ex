@@ -51,7 +51,7 @@ defmodule BlockchainAPIWeb.Router do
 
     get "/stats", StatsController, :show
 
-    resources "/witnesses", WitnessController, only: [:show], param: "name"
+    resources "/witnesses", WitnessController, only: [:show], param: "address"
   end
 
   scope "/", BlockchainAPIWeb do
