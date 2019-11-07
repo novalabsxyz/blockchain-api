@@ -21,7 +21,6 @@ defmodule BlockchainAPI.Util do
   }
 
   @bones 100_000_000
-  @max_retries 5
   require Logger
 
   def rounder(nil, _) do
@@ -69,75 +68,6 @@ defmodule BlockchainAPI.Util do
 
   def h3_from_string(index) do
     index |> String.to_charlist() |> :h3.from_string()
-  end
-
-  def reverse_geocode(loc) do
-    reverse_geocode(loc, @max_retries)
-  end
-
-  def reverse_geocode(loc, 0) do
-    Logger.error("Exceeded google maps lookup for #{inspect(loc)}")
-    {:error, :retries_exceeded}
-  end
-
-  def reverse_geocode(loc, retry) do
-    {lat, lng} = h3_to_lat_lng(h3_to_string(loc))
-
-    case HTTPoison.get(
-           "https://maps.googleapis.com/maps/api/geocode/json?latlng=#{lat},#{lng}&key=#{
-             Application.get_env(:blockchain_api, :google_maps_secret)
-           }", [], [ssl: [{:honor_cipher_order, :undefined}]]
-         ) do
-      {:ok, %{status_code: 200, body: body}} ->
-        decoded_body = Jason.decode!(body)
-        results = Map.get(decoded_body, "results")
-
-        case results do
-          nil ->
-            reverse_geocode(loc, retry - 1)
-          [] ->
-            reverse_geocode(loc, retry - 1)
-          res ->
-            case hd(res) do
-              %{"address_components" => address_components} ->
-                {:ok,
-                  %{
-                    long_street:
-                    Enum.find(address_components, fn c -> c["types"] == ["route"] end)["long_name"] ||
-                      "Unknown",
-                    short_street:
-                    Enum.find(address_components, fn c -> c["types"] == ["route"] end)["short_name"] ||
-                      "Unknown",
-                    long_city:
-                    Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
-                      "long_name"
-                    ] || "Unknown",
-                    long_state:
-                    Enum.find(address_components, fn c ->
-                      c["types"] == ["administrative_area_level_1", "political"]
-                    end)["long_name"] || "Unknown",
-                    long_country:
-                    Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
-                      "long_name"
-                    ] || "Unknown",
-                    short_city:
-                    Enum.find(address_components, fn c -> c["types"] == ["locality", "political"] end)[
-                      "short_name"
-                    ] || "Unknown",
-                    short_state:
-                    Enum.find(address_components, fn c ->
-                      c["types"] == ["administrative_area_level_1", "political"]
-                    end)["short_name"] || "Unknown",
-                    short_country:
-                    Enum.find(address_components, fn c -> c["types"] == ["country", "political"] end)[
-                      "short_name"
-                    ] || "Unknown"
-                    }}
-            end
-        end
-      _ ->
-        reverse_geocode(loc, retry - 1)
-    end
   end
 
   def clean_txn_struct(%{pending_payment: payment}) when is_map(payment) do
