@@ -8,7 +8,11 @@ defmodule BlockchainAPI.PeriodicUpdater do
   """
 
   use GenServer
-  alias BlockchainAPI.{Query, Util}
+  alias BlockchainAPI.{
+    Geocoder,
+    Query,
+    Util
+  }
   require Logger
 
   @me __MODULE__
@@ -76,7 +80,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
 
         hotspots_with_location_in_ledger
         |> Enum.each(fn {h, l} ->
-          case Util.reverse_geocode(l) do
+          case Geocoder.reverse_geocode(l) do
             {:error, _} = e ->
               Logger.error("Unable to geo encode")
               e
