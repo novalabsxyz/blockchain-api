@@ -148,7 +148,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
             %{address: address, owner: owner, location: nil, score: score}
 
           loc ->
-            case Util.reverse_geocode(loc) do
+            case BlockchainAPI.Geocoder.reverse_geocode(loc) do
               {:ok, loc_info_map} ->
                 Map.merge(
                   %{
