@@ -1,7 +1,11 @@
 defmodule BlockchainAPI.Schema.Hotspot do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BlockchainAPI.{Util, Schema.Hotspot}
+  alias BlockchainAPI.{
+    Geocoder,
+    Schema.Hotspot,
+    Util
+  }
 
   @fields [
     :id,
@@ -102,7 +106,7 @@ defmodule BlockchainAPI.Schema.Hotspot do
         }
 
       loc ->
-        case Util.reverse_geocode(loc) do
+        case Geocoder.reverse_geocode(loc) do
           {:ok, loc_info_map} ->
             Map.merge(
               %{
