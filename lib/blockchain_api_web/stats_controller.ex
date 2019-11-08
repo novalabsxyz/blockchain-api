@@ -10,6 +10,7 @@ defmodule BlockchainAPIWeb.StatsController do
     stats = Stats.list()
 
     conn
+    |> put_resp_header("surrogate-control", "max-age=300")
     |> put_view(StatsView)
     |> render("show.json", stats: stats)
   end
