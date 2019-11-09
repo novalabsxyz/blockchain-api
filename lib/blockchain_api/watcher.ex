@@ -92,12 +92,15 @@ defmodule BlockchainAPI.Watcher do
       last_known_height ->
         case height > last_known_height do
           true ->
+            # purge the cache first so that when ws clients are
+            # notified of a new block, they'll have fresh data
+            if !sync_flag, do: Purger.purge_key("block")
+
             Range.new(last_known_height + 1, height)
             |> Enum.map(fn h ->
               {:ok, b} = :blockchain.get_block(h, chain)
               h = :blockchain_block.height(b)
               Committer.commit(b, ledger, h, sync_flag, env)
-              if !sync_flag, do: Purger.purge_key("block")
             end)
 
           false ->

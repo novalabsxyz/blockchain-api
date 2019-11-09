@@ -21,12 +21,11 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.Transaction,
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
-    Util,
-    Cache
+    Util
   }
 
   def get(block_height) do
-    Cache.Util.get(:txn_cache, block_height, &set_by_height/1, :timer.minutes(2))
+    get_by_height(block_height)
   end
 
   def type(hash) do
@@ -193,20 +192,6 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def get_ongoing_poc_requests() do
-    Cache.Util.get(:txn_cache, :ongoing, &set_ongoing/0, :timer.minutes(2))
-  end
-
-  # ==================================================================
-  # Helper functions
-  # ==================================================================
-
-  # Cache helper
-  defp set_by_height(block_height) do
-    data = get_by_height(block_height)
-    {:commit, data}
-  end
-
-  defp set_ongoing() do
     ongoing_subquery =
       from(
         txn in Transaction,
@@ -227,17 +212,18 @@ defmodule BlockchainAPI.Query.Transaction do
         select: sum(q.count)
       )
 
-    data =
-      case Repo.one(q) do
-        nil ->
-          0
+    case Repo.one(q) do
+      nil ->
+        0
 
-        res ->
-          Decimal.to_integer(res)
-      end
-
-    {:commit, data}
+      res ->
+        Decimal.to_integer(res)
+    end
   end
+
+  # ==================================================================
+  # Helper functions
+  # ==================================================================
 
   defp get_by_height(block_height) do
     query =

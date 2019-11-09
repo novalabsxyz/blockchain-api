@@ -19,8 +19,6 @@ defmodule BlockchainAPI.Application do
   import PendingOUI, only: [submit_oui_queue: 0]
   import PendingSecExchange, only: [submit_sec_exchange_queue: 0]
 
-  import Cachex.Spec
-
   def start(_type, _args) do
     # Blockchain Supervisor Options
     base_dir = Application.get_env(:blockchain, :base_dir, String.to_charlist("data"))
@@ -74,15 +72,7 @@ defmodule BlockchainAPI.Application do
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
       {Notifier, []},
-      {RewardsNotifier, []},
-      Supervisor.child_spec(Cachex,
-        start: {Cachex, :start_link, [:txn_cache, [limit: cache_limit()]]},
-        id: :txn_cache
-      ),
-      Supervisor.child_spec(Cachex,
-        start: {Cachex, :start_link, [:account_txn_cache, [limit: cache_limit()]]},
-        id: :account_txn_cache
-      )
+      {RewardsNotifier, []}
     ]
 
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
@@ -168,10 +158,5 @@ defmodule BlockchainAPI.Application do
     # No need for prod level checking here
     poll_interval = Application.get_env(:ecto_poll_queue, :interval, 30)
     [schema: schema, repo: Repo, poll_interval: poll_interval]
-  end
-
-  defp cache_limit() do
-    # maximum 5000 entries, LRW eviction, trim to 2500
-    limit(size: 5000, policy: Cachex.Policy.LRW, reclaim: 0.5)
   end
 end
