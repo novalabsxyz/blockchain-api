@@ -8,8 +8,11 @@ defmodule BlockchainAPIWeb.BlockController do
   def index(conn, params) do
     blocks = Query.Block.list(params)
 
-    render(
-      conn,
+    conn
+    |> put_resp_header("surrogate-key", "block")
+    |> put_resp_header("surrogate-control", "max-age=300")
+    |> put_resp_header("cache-control", "max-age=300")
+    |> render(
       "index.json",
       blocks: blocks
     )
@@ -17,6 +20,10 @@ defmodule BlockchainAPIWeb.BlockController do
 
   def show(conn, %{"height" => height}) do
     block = Query.Block.get(height)
-    render(conn, "show.json", block: block)
+    conn
+    |> put_resp_header("surrogate-key", "eternal")
+    |> put_resp_header("surrogate-control", "max-age=86400")
+    |> put_resp_header("cache-control", "max-age=86400")
+    |> render("show.json", block: block)
   end
 end
