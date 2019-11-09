@@ -26,6 +26,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 config :blockchain_api,
   env: Mix.env(),
   google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
+  fastly_api_key: System.get_env("FASTLY_API_KEY"),
+  fastly_service_id: System.get_env("FASTLY_SERVICE_ID"),
   notifier_client: BlockchainAPI.FakeNotifierClient
 
 # Configure your database
