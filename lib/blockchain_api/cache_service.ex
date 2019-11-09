@@ -1,4 +1,4 @@
-defmodule BlockchainAPI.Purger do
+defmodule BlockchainAPI.CacheService do
   def purge_key(key) do
     fastly_post("purge/#{key}")
   end
