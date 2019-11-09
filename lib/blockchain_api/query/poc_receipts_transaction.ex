@@ -12,30 +12,33 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     Schema.POCPathElement,
     Schema.Transaction,
     Schema.Hotspot,
-    Schema.Block,
-    Cache
+    Schema.Block
   }
 
   # ==================================================================
   # Public functions
   # ==================================================================
   def list(params) do
-    {:challenges, challenges} =
-      Cache.Util.get(:challenge_cache, {:challenges, params}, &set_list/1, :timer.minutes(2))
-
-    challenges
+    path_query()
+    |> receipt_query()
+    |> maybe_filter(params)
+    |> Repo.all()
+    |> encode()
   end
 
   def issued() do
-    Cache.Util.get(:challenge_cache, :issued, &set_issued/0, :timer.minutes(2))
+    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
+    finish = Util.current_time()
+
+    receipt_issued_count_query(start, finish) |> Repo.one()
   end
 
   def show(id) do
-    Cache.Util.get(:challenge_cache, id, &set_id/1, :timer.minutes(2))
+    get_by_id(id)
   end
 
   def get(hash) do
-    Cache.Util.get(:challenge_cache, hash, &set_hash/1, :timer.minutes(2))
+    get_by_hash(hash)
   end
 
   def aggregate_challenges(challenges) do
@@ -74,37 +77,6 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   # ==================================================================
   # Helper functions
   # ==================================================================
-  # Cache helpers
-  def set_id(id) do
-    data = get_by_id(id)
-    {:commit, data}
-  end
-
-  def set_hash(hash) do
-    data = get_by_hash(hash)
-    {:commit, data}
-  end
-
-  defp set_issued() do
-    start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
-    finish = Util.current_time()
-
-    data = receipt_issued_count_query(start, finish) |> Repo.one()
-
-    {:commit, data}
-  end
-
-  defp set_list({:challenges, params}) do
-    data =
-      path_query()
-      |> receipt_query()
-      |> maybe_filter(params)
-      |> Repo.all()
-      |> encode()
-
-    {:commit, {:challenges, data}}
-  end
-
   defp get_by_id(id) do
     path_query()
     |> receipt_query(id)

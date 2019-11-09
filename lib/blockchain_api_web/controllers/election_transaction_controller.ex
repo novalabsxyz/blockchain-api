@@ -7,7 +7,11 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
 
   def index(conn, params) do
     elections = Query.ElectionTransaction.list(params)
-    render(conn, "index.json", elections: elections)
+    conn
+    |> put_resp_header("surrogate-key", "block")
+    |> put_resp_header("surrogate-control", "max-age=300")
+    |> put_resp_header("cache-control", "max-age=300")
+    |> render("index.json", elections: elections)
   end
 
   def show(conn, %{"hash" => hash}) do
@@ -17,6 +21,10 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
         election -> election
       end
 
-    render(conn, "show.json", election: election)
+    conn
+    |> put_resp_header("surrogate-key", "block")
+    |> put_resp_header("surrogate-control", "max-age=300")
+    |> put_resp_header("cache-control", "max-age=300")
+    |> render("show.json", election: election)
   end
 end

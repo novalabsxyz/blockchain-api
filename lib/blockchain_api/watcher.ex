@@ -1,6 +1,10 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
-  alias BlockchainAPI.{Query, Committer}
+  alias BlockchainAPI.{
+    Committer,
+    Purger,
+    Query
+  }
 
   @me __MODULE__
   require Logger
@@ -93,6 +97,7 @@ defmodule BlockchainAPI.Watcher do
               {:ok, b} = :blockchain.get_block(h, chain)
               h = :blockchain_block.height(b)
               Committer.commit(b, ledger, h, sync_flag, env)
+              if !sync_flag, do: Purger.purge_key("block")
             end)
 
           false ->

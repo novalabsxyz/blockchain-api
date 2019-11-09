@@ -11,7 +11,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
   }
 
   describe "index/2" do
-    setup [:expire_cache, :insert_election_transactions]
+    setup [:insert_election_transactions]
 
     test "returns list of conensus elections", %{conn: conn} do
       %{"data" => elections} =
@@ -217,10 +217,5 @@ test "returns empty map when no election transaction matches hash", %{conn: conn
         election_transactions_id: et.id
       })
     {:ok, et}
-  end
-
-  defp expire_cache(_) do
-    Cachex.expire(:election_cache, {:elections, %{}}, 0)
-    :ok
   end
 end
