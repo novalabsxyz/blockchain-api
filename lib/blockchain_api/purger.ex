@@ -9,10 +9,7 @@ defmodule BlockchainAPI.Purger do
 
     if api_key && service_id do
       url = "https://api.fastly.com/service/#{service_id}/#{path}"
-
-      response = HTTPoison.post(url, body, [{"Fastly-Key", api_key}])
-      IO.inspect(response)
-      response
+      HTTPoison.post(url, body, [{"Fastly-Key", api_key}])
     end
   end
 end
