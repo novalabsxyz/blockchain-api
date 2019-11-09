@@ -1,8 +1,8 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
   alias BlockchainAPI.{
+    CacheService,
     Committer,
-    Purger,
     Query
   }
 
@@ -94,7 +94,7 @@ defmodule BlockchainAPI.Watcher do
           true ->
             # purge the cache first so that when ws clients are
             # notified of a new block, they'll have fresh data
-            if !sync_flag, do: Purger.purge_key("block")
+            if !sync_flag, do: CacheService.purge_key("block")
 
             Range.new(last_known_height + 1, height)
             |> Enum.map(fn h ->
