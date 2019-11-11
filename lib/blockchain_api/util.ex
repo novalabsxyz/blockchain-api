@@ -12,6 +12,8 @@ defmodule BlockchainAPI.Util do
     PendingGateway,
     PendingLocation,
     PendingPayment,
+    PendingOUI,
+    PendingSecExchange,
     POCReceiptsTransaction,
     POCRequestTransaction,
     RewardsTransaction,
@@ -92,6 +94,14 @@ defmodule BlockchainAPI.Util do
       height: nil,
       time: nil
     })
+  end
+
+  def clean_txn_struct(%{pending_oui: oui}) when is_map(oui) do
+    Map.merge(PendingOUI.encode_model(oui), %{type: "oui", height: nil, time: nil})
+  end
+
+  def clean_txn_struct(%{pending_sec_exchange: security_exchange}) when is_map(security_exchange) do
+    Map.merge(PendingSecExchange.encode_model(security_exchange), %{type: "security_exchange", height: nil, time: nil})
   end
 
   def clean_txn_struct(%{payment: payment, height: height, time: time}) when is_map(payment) do

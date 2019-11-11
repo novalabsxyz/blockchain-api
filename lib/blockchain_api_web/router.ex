@@ -17,6 +17,10 @@ defmodule BlockchainAPIWeb.Router do
         only: [:index],
         param: "account_address"
 
+      resources "/pending_txns", AccountPendingTxnController,
+        only: [:index],
+        param: "account_address"
+
       resources "/gateways", AccountGatewayController, only: [:index], param: "account_address"
       resources "/rewards", AccountRewardController, only: [:index], param: "account_address"
     end
