@@ -5,8 +5,9 @@ defmodule BlockchainAPI.Cache.CacheService do
     fastly_post("purge/#{key}")
   end
 
+  # when pagination params are used, override any options provided
+  # set a long TTL and a surrogate key of pagination
   def put_cache_headers(%Plug.Conn{params: %{"before" => _, "limit" => _}} = conn, _opts) do
-    IO.puts("override with pagination cache headers")
     conn
     |> do_put_cache_headers(ttl: :long, key: "pagination")
   end
