@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.AccountController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query, Schema}
+  import BlockchainAPI.Cache.CacheService
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -9,11 +10,9 @@ defmodule BlockchainAPIWeb.AccountController do
   def index(conn, params) do
     accounts = Query.Account.list(params)
 
-    render(
-      conn,
-      "index.json",
-      accounts: accounts
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", accounts: accounts)
   end
 
   def show(conn, %{"address" => address}) do
@@ -33,7 +32,9 @@ defmodule BlockchainAPIWeb.AccountController do
           dc_balance: account_data_credit_balance
         })
 
-      render(conn, "show.json", account: account_data)
+      conn
+      |> put_cache_headers(ttl: :short, key: "block")
+      |> render("show.json", account: account_data)
     rescue
       # NOTE: This should probably be somewhere else and feels like a hack
       # This account does not exist in the database, hence we return some default values

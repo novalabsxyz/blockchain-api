@@ -2,17 +2,16 @@ defmodule BlockchainAPIWeb.PaymentController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
+  import BlockchainAPI.Cache.CacheService
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
     txns = Query.PaymentTransaction.list(params)
 
-    render(
-      conn,
-      "index.json",
-      payment_transactions: txns
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", payment_transactions: txns)
   end
 
   def show(conn, %{"hash" => hash}) do
@@ -21,6 +20,8 @@ defmodule BlockchainAPIWeb.PaymentController do
       |> Util.string_to_bin()
       |> Query.PaymentTransaction.get!()
 
-    render(conn, "show.json", payment: payment)
+    conn
+    |> put_cache_headers(ttl: :long, key: "eternal")
+    |> render("show.json", payment: payment)
   end
 end

@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
+  import BlockchainAPI.Cache.CacheService
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -11,10 +12,8 @@ defmodule BlockchainAPIWeb.AccountTransactionController do
 
     txns = bin_address |> Query.AccountTransaction.list(params)
 
-    render(
-      conn,
-      "index.json",
-      account_transactions: txns
-    )
+    conn
+    |> put_cache_headers(ttl: :never)
+    |> render("index.json", account_transactions: txns)
   end
 end

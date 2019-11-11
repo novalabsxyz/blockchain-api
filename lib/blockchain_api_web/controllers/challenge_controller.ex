@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.ChallengeController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Query
+  import BlockchainAPI.Cache.CacheService
 
   action_fallback BlockchainAPIWeb.FallbackController
 
@@ -12,9 +13,7 @@ defmodule BlockchainAPIWeb.ChallengeController do
     {successful, failed} = Query.POCReceiptsTransaction.aggregate_challenges(challenges)
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
+    |> put_cache_headers(ttl: :short, key: "block")
     |> render(
       "index.json",
       challenges: challenges,
@@ -29,9 +28,7 @@ defmodule BlockchainAPIWeb.ChallengeController do
     challenge = Query.POCReceiptsTransaction.show(id)
 
     conn
-    |> put_resp_header("surrogate-key", "eternal")
-    |> put_resp_header("surrogate-control", "max-age=86400")
-    |> put_resp_header("cache-control", "max-age=86400")
+    |> put_cache_headers(ttl: :long, key: "eternal")
     |> render("show.json", challenge: challenge)
   end
 end

@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.HotspotRewardController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
+  import BlockchainAPI.Cache.CacheService
 
   action_fallback BlockchainAPIWeb.FallbackController
 
@@ -11,10 +12,8 @@ defmodule BlockchainAPIWeb.HotspotRewardController do
       |> Util.string_to_bin()
       |> Query.HotspotReward.list(params)
 
-    render(
-      conn,
-      "index.json",
-      hotspot_rewards: hotspot_rewards
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", hotspot_rewards: hotspot_rewards)
   end
 end
