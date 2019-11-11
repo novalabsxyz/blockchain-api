@@ -27,4 +27,27 @@ defmodule BlockchainAPI.Query.PendingOUI do
     |> PendingOUI.changeset(attrs)
     |> Repo.update!()
   end
+
+  def get_by_owner(address) do
+    from(
+      poui in PendingOUI,
+      where: poui.owner == ^address
+    )
+    |> Repo.all()
+    |> format()
+  end
+
+  # ==================================================================
+  # Helper functions
+  # ==================================================================
+  defp format(entries) do
+    entries
+    |> Enum.map(&format_one/1)
+  end
+
+  defp format_one(nil), do: %{}
+
+  defp format_one(entry) do
+    Map.merge(entry, %{type: "oui"})
+  end
 end

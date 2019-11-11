@@ -27,4 +27,30 @@ defmodule BlockchainAPI.Query.PendingSecExchange do
     |> PendingSecExchange.changeset(attrs)
     |> Repo.update!()
   end
+
+  def get_by_address(address) do
+    query =
+      from(
+        psec in PendingSecExchange,
+        where: psec.payee == ^address or psec.payer == ^address,
+        select: psec
+      )
+    query
+    |> Repo.all()
+    |> format()
+  end
+
+  # ==================================================================
+  # Helper functions
+  # ==================================================================
+  defp format(entries) do
+    entries
+    |> Enum.map(&format_one/1)
+  end
+
+  defp format_one(nil), do: %{}
+
+  defp format_one(entry) do
+    Map.merge(entry, %{type: "security_exchange"})
+  end
 end
