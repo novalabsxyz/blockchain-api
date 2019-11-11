@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.BlockController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Query
+  import BlockchainAPI.Cache.CacheService
 
   action_fallback BlockchainAPIWeb.FallbackController
 
@@ -9,21 +10,14 @@ defmodule BlockchainAPIWeb.BlockController do
     blocks = Query.Block.list(params)
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
-    |> render(
-      "index.json",
-      blocks: blocks
-    )
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", blocks: blocks)
   end
 
   def show(conn, %{"height" => height}) do
     block = Query.Block.get(height)
     conn
-    |> put_resp_header("surrogate-key", "eternal")
-    |> put_resp_header("surrogate-control", "max-age=86400")
-    |> put_resp_header("cache-control", "max-age=86400")
+    |> put_cache_headers(ttl: :long, key: "eternal")
     |> render("show.json", block: block)
   end
 end

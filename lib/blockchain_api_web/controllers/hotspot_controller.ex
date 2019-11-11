@@ -4,19 +4,16 @@ defmodule BlockchainAPIWeb.HotspotController do
   alias BlockchainAPI.{Query, Util}
   alias BlockchainAPIWeb.{POCReceiptsView, POCWitnessesView}
 
+  import BlockchainAPI.Cache.CacheService
+
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
     hotspots = Query.Hotspot.list(params)
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
-    |> render(
-      "index.json",
-      hotspots: hotspots
-    )
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", hotspots: hotspots)
   end
 
   def show(conn, %{"address" => address}) do
@@ -26,9 +23,7 @@ defmodule BlockchainAPIWeb.HotspotController do
       |> Query.Hotspot.get!()
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
+    |> put_cache_headers(ttl: :short, key: "block")
     |> render("show.json", hotspot: hotspot)
   end
 
@@ -36,26 +31,16 @@ defmodule BlockchainAPIWeb.HotspotController do
     results = Query.Hotspot.search(term)
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
-    |> render(
-      "search.json",
-      results: results
-    )
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("search.json", results: results)
   end
 
   def timeline(conn, _params) do
     hotspots = Query.Hotspot.all_by_time()
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
-    |> render(
-      "timeline.json",
-      hotspots: hotspots
-    )
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("timeline.json", hotspots: hotspots)
   end
 
   def receipts(conn, %{"hotspot_address" => address}) do
@@ -68,9 +53,7 @@ defmodule BlockchainAPIWeb.HotspotController do
       end
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
+    |> put_cache_headers(ttl: :short, key: "block")
     |> put_view(POCReceiptsView)
     |> render("index.json", poc_receipts: receipts)
   end
@@ -85,9 +68,7 @@ defmodule BlockchainAPIWeb.HotspotController do
       end
 
     conn
-    |> put_resp_header("surrogate-key", "block")
-    |> put_resp_header("surrogate-control", "max-age=300")
-    |> put_resp_header("cache-control", "max-age=300")
+    |> put_cache_headers(ttl: :short, key: "block")
     |> put_view(POCWitnessesView)
     |> render("index.json", poc_witnesses: witnesses)
   end

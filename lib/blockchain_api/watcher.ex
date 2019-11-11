@@ -1,10 +1,11 @@
 defmodule BlockchainAPI.Watcher do
   use GenServer
   alias BlockchainAPI.{
-    CacheService,
     Committer,
     Query
   }
+
+  alias BlockchainAPI.Cache.CacheService
 
   @me __MODULE__
   require Logger

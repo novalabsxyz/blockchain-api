@@ -18,6 +18,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     SecExchangeView
   }
 
+  import BlockchainAPI.Cache.CacheService
+
   require Logger
 
   action_fallback BlockchainAPIWeb.FallbackController
@@ -25,11 +27,9 @@ defmodule BlockchainAPIWeb.TransactionController do
   def index(conn, %{"block_height" => height} = _params) do
     txns = Query.Transaction.get(height)
 
-    render(
-      conn,
-      "index.json",
-      transactions: txns
-    )
+    conn
+    |> put_cache_headers(ttl: :long, key: "eternal")
+    |> render("index.json", transactions: txns)
   end
 
   def show(conn, %{"hash" => hash}) do
