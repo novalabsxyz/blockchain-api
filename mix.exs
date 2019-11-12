@@ -31,8 +31,7 @@ defmodule BlockchainAPI.MixProject do
         :xmerl,
         :timex,
         :httpoison,
-        :erl_angry_purple_tiger,
-        :cachex
+        :erl_angry_purple_tiger
       ],
       included_applications: [:blockchain],
       mod: {BlockchainAPI.Application, []}
