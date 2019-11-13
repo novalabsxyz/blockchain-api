@@ -64,7 +64,6 @@ defmodule BlockchainAPI.MixProject do
       {:honeydew, "~> 1.4.0"},
       {:poison, "~> 3.1"},
       {:timex, "~> 3.1"},
-      {:cachex, "~> 3.2"},
       {:distillery, "~> 2.0"},
       {:cors_plug, "~> 2.0"},
       {:logger_file_backend, "~> 0.0.10"},
