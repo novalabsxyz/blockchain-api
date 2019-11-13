@@ -2,12 +2,15 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.Query
+  import BlockchainAPI.Cache.CacheService
 
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
     elections = Query.ElectionTransaction.list(params)
-    render(conn, "index.json", elections: elections)
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", elections: elections)
   end
 
   def show(conn, %{"hash" => hash}) do
@@ -17,6 +20,8 @@ defmodule BlockchainAPIWeb.ElectionTransactionController do
         election -> election
       end
 
-    render(conn, "show.json", election: election)
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("show.json", election: election)
   end
 end

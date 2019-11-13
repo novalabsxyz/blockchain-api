@@ -28,6 +28,8 @@ config :blockchain_api,
   google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
   onesignal_rest_api_key: System.get_env("ONESIGNAL_API_KEY"),
   onesignal_app_id: System.get_env("ONESIGNAL_APP_ID"),
+  fastly_api_key: System.get_env("FASTLY_API_KEY"),
+  fastly_service_id: System.get_env("FASTLY_SERVICE_ID"),
   notifier_client: BlockchainAPI.NotifierClient
 
 # Configure your database

@@ -4,16 +4,16 @@ defmodule BlockchainAPIWeb.HotspotController do
   alias BlockchainAPI.{Query, Util}
   alias BlockchainAPIWeb.{POCReceiptsView, POCWitnessesView}
 
+  import BlockchainAPI.Cache.CacheService
+
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, params) do
     hotspots = Query.Hotspot.list(params)
 
-    render(
-      conn,
-      "index.json",
-      hotspots: hotspots
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", hotspots: hotspots)
   end
 
   def show(conn, %{"address" => address}) do
@@ -22,27 +22,25 @@ defmodule BlockchainAPIWeb.HotspotController do
       |> Util.string_to_bin()
       |> Query.Hotspot.get!()
 
-    render(conn, "show.json", hotspot: hotspot)
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("show.json", hotspot: hotspot)
   end
 
   def search(conn, %{"term" => term} = _params) do
     results = Query.Hotspot.search(term)
 
-    render(
-      conn,
-      "search.json",
-      results: results
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("search.json", results: results)
   end
 
   def timeline(conn, _params) do
     hotspots = Query.Hotspot.all_by_time()
 
-    render(
-      conn,
-      "timeline.json",
-      hotspots: hotspots
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("timeline.json", hotspots: hotspots)
   end
 
   def receipts(conn, %{"hotspot_address" => address}) do
@@ -55,6 +53,7 @@ defmodule BlockchainAPIWeb.HotspotController do
       end
 
     conn
+    |> put_cache_headers(ttl: :short, key: "block")
     |> put_view(POCReceiptsView)
     |> render("index.json", poc_receipts: receipts)
   end
@@ -69,6 +68,7 @@ defmodule BlockchainAPIWeb.HotspotController do
       end
 
     conn
+    |> put_cache_headers(ttl: :short, key: "block")
     |> put_view(POCWitnessesView)
     |> render("index.json", poc_witnesses: witnesses)
   end

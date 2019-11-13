@@ -17,8 +17,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.Transaction,
-    Util,
-    Cache
+    Util
   }
 
   # ==================================================================
@@ -31,27 +30,19 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   end
 
   def list(address, %{"before" => _before, "limit" => _limit} = params) do
-    {:account_txns, _, account_txns} =
-      Cache.Util.get(
-        :account_txn_cache,
-        {:account_txns, address, params},
-        &set_list/1,
-        :timer.minutes(2)
-      )
-
-    account_txns
+    address
+    |> list_query()
+    |> maybe_filter(params)
+    |> Repo.all()
+    |> format()
   end
 
   def list(address, %{"before" => _before} = params) do
-    {:account_txns, _, account_txns} =
-      Cache.Util.get(
-        :account_txn_cache,
-        {:account_txns, address, params},
-        &set_list/1,
-        :timer.minutes(2)
-      )
-
-    account_txns
+    address
+    |> list_query()
+    |> maybe_filter(params)
+    |> Repo.all()
+    |> format()
   end
 
   def list(address, %{"limit" => limit} = _params) do
@@ -189,17 +180,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   # ==================================================================
   # Helper functions
   # ==================================================================
-  defp set_list({:account_txns, address, params}) do
-    data =
-      address
-      |> list_query()
-      |> maybe_filter(params)
-      |> Repo.all()
-      |> format()
-
-    {:commit, {:account_txns, address, data}}
-  end
-
   defp clean_account_gateways(entries) do
     entries
     |> Enum.map(fn map ->

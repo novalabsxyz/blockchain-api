@@ -3,6 +3,8 @@ defmodule BlockchainAPIWeb.ActivityController do
 
   alias BlockchainAPI.{Util, Query}
 
+  import BlockchainAPI.Cache.CacheService
+
   action_fallback BlockchainAPIWeb.FallbackController
 
   def index(conn, %{"hotspot_address" => address} = params) do
@@ -11,10 +13,8 @@ defmodule BlockchainAPIWeb.ActivityController do
       |> Util.string_to_bin()
       |> Query.HotspotActivity.list(params)
 
-    render(
-      conn,
-      "index.json",
-      activity: activity
-    )
+    conn
+    |> put_cache_headers(ttl: :short, key: "block")
+    |> render("index.json", activity: activity)
   end
 end
