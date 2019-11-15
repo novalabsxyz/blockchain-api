@@ -2,7 +2,12 @@ defmodule BlockchainAPI.Query.RewardTxn do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.RewardTxn, Schema.Transaction, Schema.Block}
+  alias BlockchainAPI.{
+    Repo,
+    Schema.RewardTxn,
+    Schema.Transaction,
+    Schema.RewardsTransaction,
+    Schema.Block}
 
   def create(attrs \\ %{}) do
     %RewardTxn{}

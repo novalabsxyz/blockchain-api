@@ -5,7 +5,7 @@ defmodule BlockchainAPIWeb.RewardsController do
 
   action_fallback BlockchainAPIWeb.FallbackController
 
-  def show(conn, %{"hash" => hash} = params) do
+  def show(conn, %{"hash" => hash} = _params) do
     epoch_rewards =
       hash
       |> Util.string_to_bin()
