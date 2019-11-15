@@ -2,6 +2,7 @@ defmodule BlockchainAPIWeb.RewardsController do
   use BlockchainAPIWeb, :controller
 
   alias BlockchainAPI.{Util, Query}
+  alias BlockchainAPIWeb.RewardView
 
   action_fallback BlockchainAPIWeb.FallbackController
 
