@@ -52,4 +52,16 @@ defmodule BlockchainAPI.Query.RewardTxn do
     )
     |> Repo.all()
   end
+
+  def total_by_epoch(hash) do
+    from(
+      t in RewardsTransaction,
+      left_join: r in RewardTxn,
+      on: r.rewards_hash == t.hash,
+      where: t.hash == ^hash,
+      select: sum(r.amount)
+    )
+    |> Repo.one()
+  end
+
 end
