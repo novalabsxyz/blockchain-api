@@ -51,6 +51,8 @@ defmodule BlockchainAPIWeb.Router do
     get "/pending_payments", PendingPaymentController, :show
 
     get "/stats", StatsController, :show
+
+    resources "/witnesses", WitnessController, only: [:show], param: "address"
   end
 
   scope "/", BlockchainAPIWeb do
