@@ -20,6 +20,7 @@ defmodule BlockchainAPIWeb.RewardsController do
       end
 
     conn
+    |> put_view(RewardView)
     |> render("show.json", epoch_rewards: res)
   end
 end
