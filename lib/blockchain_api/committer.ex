@@ -188,65 +188,74 @@ defmodule BlockchainAPI.Committer do
         :ok
 
       txns ->
-        Enum.map(txns, fn txn ->
-          case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 ->
-              insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
+        Enum.map(txns,
+          fn txn ->
+            add_transaction(block, ledger, txn, height)
+          end)
+    end
+  end
 
-            :blockchain_txn_payment_v1 ->
-              insert_transaction(:blockchain_txn_payment_v1, txn, height)
+  defp add_transaction(block, ledger, txn, height) do
+    case :blockchain_txn.type(txn) do
+      :blockchain_txn_coinbase_v1 ->
+        insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
 
-            :blockchain_txn_add_gateway_v1 ->
-              insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-              upsert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
+      :blockchain_txn_payment_v1 ->
+        insert_transaction(:blockchain_txn_payment_v1, txn, height)
 
-            :blockchain_txn_gen_gateway_v1 ->
-              insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
-              upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
+      :blockchain_txn_add_gateway_v1 ->
+        insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
+        upsert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
 
-            :blockchain_txn_poc_request_v1 ->
-              insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height)
+      :blockchain_txn_gen_gateway_v1 ->
+        insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
+        upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
 
-            :blockchain_txn_poc_receipts_v1 ->
-              insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height)
+      :blockchain_txn_poc_request_v1 ->
+        insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height)
 
-            :blockchain_txn_assert_location_v1 ->
-              insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
-              # also upsert hotspot
-              upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
+      :blockchain_txn_poc_receipts_v1 ->
+        insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height)
 
-            :blockchain_txn_security_coinbase_v1 ->
-              insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
+      :blockchain_txn_assert_location_v1 ->
+        insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
+        # also upsert hotspot
+        upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
 
-            :blockchain_txn_security_exchange_v1 ->
-              insert_transaction(:blockchain_txn_security_exchange_v1, txn, height)
+      :blockchain_txn_security_coinbase_v1 ->
+        insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
 
-            :blockchain_txn_dc_coinbase_v1 ->
-              insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height)
+      :blockchain_txn_security_exchange_v1 ->
+        insert_transaction(:blockchain_txn_security_exchange_v1, txn, height)
 
-            :blockchain_txn_consensus_group_v1 ->
-              insert_transaction(
-                :blockchain_txn_consensus_group_v1,
-                txn,
-                height,
-                :blockchain_block.time(block)
-              )
+      :blockchain_txn_dc_coinbase_v1 ->
+        insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height)
 
-            :blockchain_txn_rewards_v1 ->
-              insert_transaction(
-                :blockchain_txn_rewards_v1,
-                txn,
-                height,
-                :blockchain_block.time(block)
-              )
+      :blockchain_txn_consensus_group_v1 ->
+        insert_transaction(
+          :blockchain_txn_consensus_group_v1,
+          txn,
+          height,
+          :blockchain_block.time(block)
+        )
 
-            :blockchain_txn_oui_v1 ->
-              insert_transaction(:blockchain_txn_oui_v1, txn, height)
+      :blockchain_txn_rewards_v1 ->
+        insert_transaction(
+          :blockchain_txn_rewards_v1,
+          txn,
+          height,
+          :blockchain_block.time(block)
+        )
 
-            _ ->
-              :ok
-          end
-        end)
+      :blockchain_txn_oui_v1 ->
+        insert_transaction(:blockchain_txn_oui_v1, txn, height)
+
+      :blockchain_txn_bundle_v1 ->
+        :blockchain_txn_bundle_v1.txns(txn)
+        |> Enum.map(fn t -> add_transaction(block, ledger, t, height) end)
+
+      _ ->
+        :ok
     end
   end
 
@@ -259,36 +268,42 @@ defmodule BlockchainAPI.Committer do
         :ok
 
       txns ->
-        Enum.map(txns, fn txn ->
-          case :blockchain_txn.type(txn) do
-            :blockchain_txn_coinbase_v1 ->
-              insert_account_transaction(:blockchain_txn_coinbase_v1, txn)
+        Enum.map(txns, fn txn -> add_account_transaction(txn) end)
+    end
+  end
 
-            :blockchain_txn_payment_v1 ->
-              insert_account_transaction(:blockchain_txn_payment_v1, txn)
+  defp add_account_transaction(txn) do
+    case :blockchain_txn.type(txn) do
+      :blockchain_txn_coinbase_v1 ->
+        insert_account_transaction(:blockchain_txn_coinbase_v1, txn)
 
-            :blockchain_txn_add_gateway_v1 ->
-              insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
+      :blockchain_txn_payment_v1 ->
+        insert_account_transaction(:blockchain_txn_payment_v1, txn)
 
-            :blockchain_txn_assert_location_v1 ->
-              insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
+      :blockchain_txn_add_gateway_v1 ->
+        insert_account_transaction(:blockchain_txn_add_gateway_v1, txn)
 
-            :blockchain_txn_gen_gateway_v1 ->
-              insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
+      :blockchain_txn_assert_location_v1 ->
+        insert_account_transaction(:blockchain_txn_assert_location_v1, txn)
 
-            :blockchain_txn_security_coinbase_v1 ->
-              insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
+      :blockchain_txn_gen_gateway_v1 ->
+        insert_account_transaction(:blockchain_txn_gen_gateway_v1, txn)
 
-            :blockchain_txn_dc_coinbase_v1 ->
-              insert_account_transaction(:blockchain_txn_dc_coinbase_v1, txn)
+      :blockchain_txn_security_coinbase_v1 ->
+        insert_account_transaction(:blockchain_txn_security_coinbase_v1, txn)
 
-            :blockchain_txn_rewards_v1 ->
-              insert_account_transaction(:blockchain_txn_rewards_v1, txn)
+      :blockchain_txn_dc_coinbase_v1 ->
+        insert_account_transaction(:blockchain_txn_dc_coinbase_v1, txn)
 
-            _ ->
-              :ok
-          end
-        end)
+      :blockchain_txn_rewards_v1 ->
+        insert_account_transaction(:blockchain_txn_rewards_v1, txn)
+
+      :blockchain_txn_bundle_v1 ->
+        :blockchain_txn_bundle_v1.txns(txn)
+        |> Enum.map(fn t -> add_account_transaction(t) end)
+
+      _ ->
+        :ok
     end
   end
 
