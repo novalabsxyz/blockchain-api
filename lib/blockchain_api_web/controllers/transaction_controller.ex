@@ -132,56 +132,90 @@ defmodule BlockchainAPIWeb.TransactionController do
       |> :blockchain_txn.deserialize()
 
     chain = :blockchain_worker.blockchain()
+    ledger = :blockchain.ledger(chain)
 
     case :blockchain.height(chain) do
       {:error, _} ->
         send_resp(conn, 404, "no_chain")
 
-      {:ok, chain_height} ->
-        case :blockchain_txn.type(txn) do
-          :blockchain_txn_payment_v1 ->
-            Schema.PendingPayment.map(txn, chain_height) |> Query.PendingPayment.create()
-
-          :blockchain_txn_add_gateway_v1 ->
-            # Check that the account exists in the DB
-            owner = :blockchain_txn_add_gateway_v1.owner(txn)
-
-            case Query.Account.get(owner) do
-              nil ->
-                # Create account
-                ledger = :blockchain.ledger(chain)
-                {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
-
-                case Query.Account.create(%{balance: 0, address: owner, nonce: 0, fee: fee}) do
-                  {:ok, _} ->
-                    Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
-
-                  {:error, _} ->
-                    send_resp(conn, 404, "error_adding_gateway_owner")
-                end
-
-              _account ->
-                Schema.PendingGateway.map(txn, chain_height) |> Query.PendingGateway.create()
-            end
-
-          :blockchain_txn_assert_location_v1 ->
-            Schema.PendingLocation.map(txn, chain_height) |> Query.PendingLocation.create()
-
-          :blockchain_txn_coinbase_v1 ->
-            Schema.PendingCoinbase.map(txn, chain_height) |> Query.PendingCoinbase.create()
-
-          :blockchain_txn_oui_v1 ->
-            Schema.PendingOUI.map(txn, chain_height)
-            |> Query.PendingOUI.create()
-
-          :blockchain_txn_security_exchange_v1 ->
-            Schema.PendingSecExchange.map(txn, chain_height) |> Query.PendingSecExchange.create()
-
-          _ ->
-            :ok
-        end
-
+      {:ok, height} ->
+        create_pending_txn(conn, ledger, txn, height)
         send_resp(conn, 200, "ok")
     end
   end
+
+  defp create_pending_txn(conn, ledger, txn, height) do
+    case :blockchain_txn.type(txn) do
+      :blockchain_txn_payment_v1 ->
+        create_pending_payment(txn, height)
+
+      :blockchain_txn_add_gateway_v1 ->
+        create_pending_gateway(conn, ledger, txn, height)
+
+      :blockchain_txn_assert_location_v1 ->
+        create_pending_location(txn, height)
+
+      :blockchain_txn_oui_v1 ->
+        create_pending_oui(txn, height)
+
+      :blockchain_txn_security_exchange_v1 ->
+        create_pending_sec_exchange(txn, height)
+
+      :blockchain_txn_bundle_v1 ->
+        create_pending_bundle(conn, ledger, txn, height)
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp create_pending_gateway(conn, ledger, txn, height) do
+    # Check that the account exists in the DB
+    owner = :blockchain_txn_add_gateway_v1.owner(txn)
+
+    case Query.Account.get(owner) do
+      nil ->
+        # Create account
+        {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
+
+        case Query.Account.create(%{balance: 0, address: owner, nonce: 0, fee: fee}) do
+          {:ok, _} ->
+            Schema.PendingGateway.map(txn, height) |> Query.PendingGateway.create()
+
+          {:error, _} ->
+            send_resp(conn, 404, "error_adding_gateway_owner")
+        end
+
+      _account ->
+        Schema.PendingGateway.map(txn, height) |> Query.PendingGateway.create()
+    end
+  end
+
+  defp create_pending_payment(txn, height) do
+    Schema.PendingPayment.map(txn, height) |> Query.PendingPayment.create()
+  end
+
+  defp create_pending_location(txn, height) do
+    Schema.PendingLocation.map(txn, height) |> Query.PendingLocation.create()
+  end
+
+  defp create_pending_oui(txn, height) do
+    Schema.PendingOUI.map(txn, height) |> Query.PendingOUI.create()
+  end
+
+  defp create_pending_sec_exchange(txn, height) do
+    Schema.PendingSecExchange.map(txn, height) |> Query.PendingSecExchange.create()
+  end
+
+  defp create_pending_bundle(conn, ledger, txn, height) do
+    # create pending bundle txn
+    Schema.PendingBundle.map(txn, height) |> Query.PendingBundle.create()
+    # create pending bundled txns
+    :blockchain_txn_bundle_v1.txns(txn)
+    |> Enum.each(
+      fn t ->
+        create_pending_txn(conn, ledger, t, height)
+      end)
+  end
+
 end
