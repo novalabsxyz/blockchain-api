@@ -22,6 +22,12 @@ defmodule BlockchainAPI.Query.PendingPayment do
     |> Repo.one!()
   end
 
+  def get_all_by_hash(hash) do
+    PendingPayment
+    |> where([pp], pp.hash == ^hash)
+    |> Repo.all()
+  end
+
   def get_by_id!(id) do
     PendingPayment
     |> where([pp], pp.id == ^id)

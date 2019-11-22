@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingOUI do
     |> Repo.one!()
   end
 
+  def get_all_by_hash(hash) do
+    PendingOUI
+    |> where([poui], poui.hash == ^hash)
+    |> Repo.all()
+  end
+
   def get_by_id!(id) do
     PendingOUI
     |> where([poui], poui.id == ^id)

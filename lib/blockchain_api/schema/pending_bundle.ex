@@ -8,6 +8,7 @@ defmodule BlockchainAPI.Schema.PendingBundle do
   @fields [
     :hash,
     :txn_hashes,
+    :txn_types,
     :txn,
     :submit_height,
     :status
@@ -18,7 +19,8 @@ defmodule BlockchainAPI.Schema.PendingBundle do
   @derive {Jason.Encoder, only: @fields}
   schema "pending_bundles" do
     field :hash, :binary, null: false
-    field :txn_hashes, {:array, :string}, null: false
+    field :txn_hashes, {:array, :binary}, null: false
+    field :txn_types, {:array, :string}, null: false
     field :txn, :binary, null: false
     field :submit_height, :integer, null: false, default: 0
     field :status, :string, null: false, default: "pending"
@@ -41,7 +43,8 @@ defmodule BlockchainAPI.Schema.PendingBundle do
     |> Map.drop([:txn, :submit_height])
     |> Map.merge(%{
       hash: Util.bin_to_string(pending_bundle.hash),
-      txn_hashes: Enum.map(pending_bundle.txn_hashes, fn(h) -> Util.bin_to_string(h) end),
+      txn_hashes: encode_txn_hashes(pending_bundle),
+      txn_types: encode_txn_types(pending_bundle),
       type: "bundle"
     })
   end
@@ -58,10 +61,33 @@ defmodule BlockchainAPI.Schema.PendingBundle do
     %{
       hash: :blockchain_txn_bundle_v1.hash(txn),
       txn: :blockchain_txn.serialize(txn),
-      txn_hashes: Enum.map(:blockchain_txn_bundle_v1.txns(txn), fn(t) -> :blockchain_txn.hash(t) end),
+      txn_hashes: txn_hashes(txn),
+      txn_types: txn_types(txn),
       submit_height: submit_height,
       status: "pending"
     }
+  end
+
+  defp txn_hashes(txn) do
+    txn
+    |> :blockchain_txn_bundle_v1.txns()
+    |> Enum.map(fn(t) -> :blockchain_txn.hash(t) end)
+  end
+
+  defp txn_types(txn) do
+    txn
+    |> :blockchain_txn_bundle_v1.txns()
+    |> Enum.map(fn(t) -> :blockchain_txn.type(t) end)
+  end
+
+  defp encode_txn_hashes(pending_bundle) do
+    pending_bundle.txn_hashes
+    |> Enum.map(fn(hash) -> Util.bin_to_string(hash) end)
+  end
+
+  defp encode_txn_types(pending_bundle) do
+    pending_bundle.txn_types
+    |> Enum.map(fn(type) -> Atom.to_string(type) end)
   end
 
   def submit_bundle_queue, do: @submit_bundle_queue

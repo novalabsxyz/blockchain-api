@@ -9,8 +9,22 @@ defmodule BlockchainAPI.Application do
   alias BlockchainAPI.Watcher
   alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
   alias BlockchainAPI.{Notifier, RewardsNotifier}
-  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase, SubmitOUI, SubmitSecExchange}
-  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase, PendingOUI, PendingSecExchange}
+  alias BlockchainAPI.Job.{
+    SubmitPayment,
+    SubmitGateway,
+    SubmitLocation,
+    SubmitCoinbase,
+    SubmitOUI,
+    SubmitSecExchange,
+    SubmitBundle}
+  alias BlockchainAPI.Schema.{
+    PendingPayment,
+    PendingGateway,
+    PendingLocation,
+    PendingCoinbase,
+    PendingOUI,
+    PendingSecExchange,
+    PendingBundle}
 
   import PendingPayment, only: [submit_payment_queue: 0]
   import PendingGateway, only: [submit_gateway_queue: 0]
@@ -18,6 +32,7 @@ defmodule BlockchainAPI.Application do
   import PendingCoinbase, only: [submit_coinbase_queue: 0]
   import PendingOUI, only: [submit_oui_queue: 0]
   import PendingSecExchange, only: [submit_sec_exchange_queue: 0]
+  import PendingBundle, only: [submit_bundle_queue: 0]
 
   def start(_type, _args) do
     # Blockchain Supervisor Options
@@ -126,6 +141,14 @@ defmodule BlockchainAPI.Application do
 
     :ok = Honeydew.start_workers(submit_sec_exchange_queue(), SubmitSecExchange)
 
+    :ok =
+      Honeydew.start_queue(submit_bundle_queue(),
+        queue: {EctoPollQueue, queue_args(env, PendingBundle)},
+        failure_mode: Honeydew.FailureMode.Abandon
+      )
+
+    :ok = Honeydew.start_workers(submit_bundle_queue(), SubmitBundle)
+
     {:ok, sup}
   end
 
@@ -154,7 +177,7 @@ defmodule BlockchainAPI.Application do
   end
 
   defp queue_args(_, schema) do
-    # Check for test and dev env pending txns every 30 minutes
+    # Check for test and dev env pending txns every 30 seconds
     # No need for prod level checking here
     poll_interval = Application.get_env(:ecto_poll_queue, :interval, 30)
     [schema: schema, repo: Repo, poll_interval: poll_interval]

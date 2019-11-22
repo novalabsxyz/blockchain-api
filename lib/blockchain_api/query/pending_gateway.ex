@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingGateway do
     |> Repo.one!()
   end
 
+  def get_all_by_hash(hash) do
+    PendingGateway
+    |> where([pg], pg.hash == ^hash)
+    |> Repo.all()
+  end
+
   def get_by_id!(id) do
     PendingGateway
     |> where([pg], pg.id == ^id)

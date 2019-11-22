@@ -9,6 +9,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingBundleTable do
       add :status, :string, null: false, default: "pending"
       add :txn, :binary, null: false
       add :txn_hashes, {:array, :binary}, null: false
+      add :txn_types, {:array, :string}, null: false
       add :submit_height, :bigint, null: false, default: 0
 
       honeydew_fields(submit_bundle_queue())
