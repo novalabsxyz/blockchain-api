@@ -250,10 +250,6 @@ defmodule BlockchainAPI.Committer do
       :blockchain_txn_oui_v1 ->
         insert_transaction(:blockchain_txn_oui_v1, txn, height)
 
-      :blockchain_txn_bundle_v1 ->
-        :blockchain_txn_bundle_v1.txns(txn)
-        |> Enum.map(fn t -> add_transaction(block, ledger, t, height) end)
-
       _ ->
         :ok
     end
@@ -297,10 +293,6 @@ defmodule BlockchainAPI.Committer do
 
       :blockchain_txn_rewards_v1 ->
         insert_account_transaction(:blockchain_txn_rewards_v1, txn)
-
-      :blockchain_txn_bundle_v1 ->
-        :blockchain_txn_bundle_v1.txns(txn)
-        |> Enum.map(fn t -> add_account_transaction(t) end)
 
       _ ->
         :ok

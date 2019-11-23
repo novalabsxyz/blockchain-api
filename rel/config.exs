@@ -110,6 +110,33 @@ environment :pescadero do
   )
 end
 
+environment :test do
+  set(include_erts: false)
+  set(include_src: false)
+  set(cookie: :"x0l{pOQ4prFE!%lPs^H/Qb^h2zGmxyh9Re:5r2^<GcTz5q?i0=MN_*:e~FI)2xeY")
+  set(vm_args: "rel/vm.args")
+
+  set(
+    commands: [
+      peer: "rel/commands/peer",
+      genesis: "rel/commands/genesis",
+      ledger: "rel/commands/ledger",
+      status: "rel/commands/status"
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Distillery.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/test.exs"]}
+    ]
+  )
+
+  set(
+    overlays: [
+      {:copy, "rel/config/test.exs", "etc/test.exs"}
+    ]
+  )
+end
 # You may define one or more releases in this file.
 # If you have not set a default release, or selected one
 # when running `mix distillery.release`, the first release in the file

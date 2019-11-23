@@ -84,6 +84,9 @@ reset-test-db:
 ci:
 	export MIX_ENV=test PORT=4002 && $(MIX) local.hex --force && $(MIX) local.rebar --force && $(MIX) deps.get && $(MIX) test --trace
 
+testrelease:
+	export NO_ESCRIPT=1 MIX_ENV=test && $(MIX) distillery.release --env=test
+
 # Build prod docker image
 docker-prod:
 	docker build \

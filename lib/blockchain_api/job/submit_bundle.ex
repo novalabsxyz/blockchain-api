@@ -30,11 +30,11 @@ defmodule BlockchainAPI.Job.SubmitBundle do
           # Do this update
           update_attrs = %{status: "cleared"}
 
-          # Mark all the bundled txns
-          :ok = update_bundled_txns(pending_bundle, update_attrs)
-
           # Mark the bundle itself
           pending_bundle |> PendingBundle.update!(update_attrs)
+
+          # Mark all the bundled txns
+          :ok = update_bundled_txns(pending_bundle, update_attrs)
 
         {:error, reason} ->
           Logger.error(
@@ -46,20 +46,23 @@ defmodule BlockchainAPI.Job.SubmitBundle do
           # Do this update
           update_attrs = %{status: "error"}
 
-          # Mark all the bundled txns
-          :ok = update_bundled_txns(pending_bundle, update_attrs)
-
           # Mark the bundle itself
           pending_bundle |> PendingBundle.update!(update_attrs)
+
+          # Mark all the bundled txns
+          :ok = update_bundled_txns(pending_bundle, update_attrs)
       end
     end)
   end
 
   defp update_bundled_txns(pending_bundle, update_attrs) do
     hashes = pending_bundle.txn_hashes
+    IO.inspect(hashes, label: :hashes)
     types = pending_bundle.txn_types
+    IO.inspect(types, label: :types)
 
     Enum.zip(types, hashes)
+    |> IO.inspect()
     |> Enum.map(fn {type, hash} ->
       case type do
         "blockchain_txn_payment_v1" ->

@@ -44,7 +44,6 @@ defmodule BlockchainAPI.Schema.PendingBundle do
     |> Map.merge(%{
       hash: Util.bin_to_string(pending_bundle.hash),
       txn_hashes: encode_txn_hashes(pending_bundle),
-      txn_types: encode_txn_types(pending_bundle),
       type: "bundle"
     })
   end
@@ -77,17 +76,12 @@ defmodule BlockchainAPI.Schema.PendingBundle do
   defp txn_types(txn) do
     txn
     |> :blockchain_txn_bundle_v1.txns()
-    |> Enum.map(fn(t) -> :blockchain_txn.type(t) end)
+    |> Enum.map(fn(t) -> to_string(:blockchain_txn.type(t)) end)
   end
 
   defp encode_txn_hashes(pending_bundle) do
     pending_bundle.txn_hashes
     |> Enum.map(fn(hash) -> Util.bin_to_string(hash) end)
-  end
-
-  defp encode_txn_types(pending_bundle) do
-    pending_bundle.txn_types
-    |> Enum.map(fn(type) -> Atom.to_string(type) end)
   end
 
   def submit_bundle_queue, do: @submit_bundle_queue
