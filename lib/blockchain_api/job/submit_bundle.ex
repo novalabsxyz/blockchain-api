@@ -34,7 +34,7 @@ defmodule BlockchainAPI.Job.SubmitBundle do
           pending_bundle |> PendingBundle.update!(update_attrs)
 
           # Mark all the bundled txns
-          :ok = update_bundled_txns(pending_bundle, update_attrs)
+          update_bundled_txns(pending_bundle, update_attrs)
 
         {:error, reason} ->
           Logger.error(
@@ -50,7 +50,7 @@ defmodule BlockchainAPI.Job.SubmitBundle do
           pending_bundle |> PendingBundle.update!(update_attrs)
 
           # Mark all the bundled txns
-          :ok = update_bundled_txns(pending_bundle, update_attrs)
+          update_bundled_txns(pending_bundle, update_attrs)
       end
     end)
   end

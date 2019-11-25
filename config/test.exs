@@ -23,7 +23,8 @@ config :blockchain_api, BlockchainAPI.Repo,
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10,
-  timeout: 60000,
+  timeout: 120000,
+  ownership_timeout: 120000,
   log: false
 
 config :blockchain_api,
@@ -34,4 +35,4 @@ config :blockchain_api,
 config :blockchain,
   seed_nodes: [],
   seed_node_dns: '',
-  base_dir: String.to_charlist("/tmp/blockchain-api/test/")
+  base_dir: String.to_charlist("/var/data/blockchain-api/test/")
