@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingSecExchange do
     |> Repo.one!()
   end
 
+  def get_all_by_hash(hash) do
+    PendingSecExchange
+    |> where([psec], psec.hash == ^hash)
+    |> Repo.all()
+  end
+
   def get_by_id!(id) do
     PendingSecExchange
     |> where([psec], psec.id == ^id)

@@ -9,10 +9,15 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
   check_origin: false,
-  secret_key_base: "783ef8381ceb304d0bd6a62f2bb256751dae3969e8eadd0358fbd47797dd0bee"
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Only debug statements for tests
 config :logger, level: :debug
+
+config :blockchain_api,
+  env: Mix.env(),
+  google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
+  notifier_client: BlockchainAPI.FakeNotifierClient
 
 # Preset database configuration for tests
 # Configure your database

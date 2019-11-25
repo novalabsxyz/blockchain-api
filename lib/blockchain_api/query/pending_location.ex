@@ -16,6 +16,12 @@ defmodule BlockchainAPI.Query.PendingLocation do
     |> Repo.one!()
   end
 
+  def get_all_by_hash(hash) do
+    PendingLocation
+    |> where([pl], pl.hash == ^hash)
+    |> Repo.all()
+  end
+
   def get_by_id!(id) do
     PendingLocation
     |> where([pl], pl.id == ^id)
