@@ -35,7 +35,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
   pool_size: 20,
-  timeout: 120_000,
+  timeout: 600_000,
   log: false
 
 config :blockchain,
