@@ -5,8 +5,6 @@ defmodule BlockchainAPI.Watcher do
     Query
   }
 
-  alias BlockchainAPI.Cache.CacheService
-
   @me __MODULE__
   require Logger
 
@@ -72,12 +70,14 @@ defmodule BlockchainAPI.Watcher do
 
     case Application.get_env(:blockchain_api, :ro_mode, 1) do
       1 ->
-        {:noreply, state}
+        :ok
       _ ->
         {:ok, block} = :blockchain.get_block(hash, chain)
         add_block(block, chain, ledger, sync_flag, env)
-        {:noreply, state}
     end
+
+    {:noreply, state}
+
   end
 
   @impl true
@@ -99,21 +99,21 @@ defmodule BlockchainAPI.Watcher do
       last_known_height ->
         case height > last_known_height do
           true ->
-            # purge the cache first so that when ws clients are
-            # notified of a new block, they'll have fresh data
-            if !sync_flag, do: CacheService.purge_key("block")
-
+            Logger.info("DB height: #{inspect(last_known_height)}, BlockHeight: #{inspect(height)}, Missing: #{inspect(height - last_known_height)}")
             Range.new(last_known_height + 1, height)
             |> Enum.map(fn h ->
               {:ok, b} = :blockchain.get_block(h, chain)
-              h = :blockchain_block.height(b)
-              Committer.commit(b, ledger, h, sync_flag, env)
+              block_height = :blockchain_block.height(b)
+              Logger.info("Committing block at height: #{inspect(block_height)}")
+              Committer.commit(b, ledger, block_height, sync_flag, env)
+              Logger.info("Committed block at height: #{inspect(block_height)}")
             end)
 
           false ->
             :ok
         end
     end
+
   end
 
   defp load_chain(genesis_file) do

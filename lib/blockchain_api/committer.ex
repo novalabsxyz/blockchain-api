@@ -32,12 +32,15 @@ defmodule BlockchainAPI.Committer do
   }
 
   alias BlockchainAPIWeb.BlockChannel
+  alias BlockchainAPI.Cache.CacheService
 
   require Logger
 
   def commit(block, ledger, height, sync_flag, env) do
     case commit_block(block, ledger, height) do
       {:ok, term} ->
+        # block has been committed, refresh the cache.
+        if !sync_flag, do: CacheService.purge_key("block")
         notify(env, block, ledger, sync_flag)
         Logger.info("Success! Commit block: #{height}")
         {:ok, term}
