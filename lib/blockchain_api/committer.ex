@@ -55,15 +55,36 @@ defmodule BlockchainAPI.Committer do
           e
 
         {:ok, inserted_block} ->
-          add_transactions(block, ledger, height)
-          add_account_transactions(block)
-          commit_account_balances(block, ledger)
-          insert_or_update_all_account(ledger)
-          update_hotspot_score(ledger, height)
           # NOTE: move this elsewhere...
           BlockChannel.broadcast_change(inserted_block)
       end
     end)
+
+    Repo.transaction(
+      fn ->
+        add_transactions(block, ledger, height)
+      end)
+
+    Repo.transaction(
+      fn ->
+        add_account_transactions(block)
+      end)
+
+    Repo.transaction(
+      fn ->
+        commit_account_balances(block, ledger)
+      end)
+
+    Repo.transaction(
+      fn ->
+        insert_or_update_all_account(ledger)
+      end)
+
+    Repo.transaction(
+      fn ->
+        update_hotspot_score(ledger, height)
+      end)
+
   end
 
   defp notify(:prod, block, ledger, false), do: Notifier.notify(block, ledger)
