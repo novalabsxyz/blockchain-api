@@ -5,8 +5,6 @@ defmodule BlockchainAPI.Watcher do
     Query
   }
 
-  alias BlockchainAPI.Cache.CacheService
-
   @me __MODULE__
   require Logger
 
@@ -78,10 +76,6 @@ defmodule BlockchainAPI.Watcher do
         add_block(block, chain, ledger, sync_flag, env)
     end
 
-    # block has been committed at this point if we were
-    # not in read-only mode above.
-    # refresh the cache.
-    if !sync_flag, do: CacheService.purge_key("block")
     {:noreply, state}
 
   end
