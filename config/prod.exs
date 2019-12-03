@@ -10,6 +10,7 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 port = String.to_integer(System.get_env("PORT") || "4001")
+ro_mode = String.to_integer(System.get_env("RO_MODE") || "1")
 
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: port],
@@ -30,7 +31,8 @@ config :blockchain_api,
   onesignal_app_id: System.get_env("ONESIGNAL_APP_ID"),
   fastly_api_key: System.get_env("FASTLY_API_KEY"),
   fastly_service_id: System.get_env("FASTLY_SERVICE_ID"),
-  notifier_client: BlockchainAPI.NotifierClient
+  notifier_client: BlockchainAPI.NotifierClient,
+  ro_mode: ro_mode
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
