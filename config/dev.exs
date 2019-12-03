@@ -38,6 +38,8 @@ config :blockchain_api, BlockchainAPI.Repo,
   hostname: System.get_env("DATABASE_HOST"),
   pool_size: 20,
   timeout: 600_000,
+  :queue_target: 120_000,
+  :queue_interval: 5_000,
   log: false
 
 config :blockchain,
