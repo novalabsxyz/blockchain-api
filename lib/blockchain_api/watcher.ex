@@ -68,10 +68,16 @@ defmodule BlockchainAPI.Watcher do
         {:blockchain_event, {:add_block, hash, sync_flag, ledger}},
         state = %{chain: chain, env: env}
       )
-      when chain != nil do
-    {:ok, block} = :blockchain.get_block(hash, chain)
-    add_block(block, chain, ledger, sync_flag, env)
-    {:noreply, state}
+  when chain != nil do
+
+    case Application.get_env(:blockchain_api, :ro_mode, 1) do
+      1 ->
+        {:noreply, state}
+      _ ->
+        {:ok, block} = :blockchain.get_block(hash, chain)
+        add_block(block, chain, ledger, sync_flag, env)
+        {:noreply, state}
+    end
   end
 
   @impl true
