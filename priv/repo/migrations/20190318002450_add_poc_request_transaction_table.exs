@@ -9,8 +9,8 @@ defmodule BlockchainAPI.Repo.Migrations.AddPocRequestTransactionTable do
       add :location, :string, null: false
       add :owner, :binary, null: false
 
-      add :hash, references(:transactions, on_delete: :delete_all, column: :hash, type: :binary), null: false
-      add :challenger, references(:gateway_transactions, on_delete: :delete_all, column: :gateway, type: :binary), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
+      add :challenger, references(:gateway_transactions, on_delete: :nothing, column: :gateway, type: :binary), null: false
       timestamps()
     end
 

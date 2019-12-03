@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddTransactionsTable do
       add :type, :string, null: false
       add :status, :string, null: false, default: "cleared"
 
-      add :block_height, references(:blocks, on_delete: :delete_all, column: :height), null: false
+      add :block_height, references(:blocks, on_delete: :nothing, column: :height), null: false
 
       timestamps()
     end

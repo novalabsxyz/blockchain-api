@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddSecurityExchangeTransactionsTable do
       add :signature, :binary, null: false
       add :status, :string, null: false, default: "cleared"
 
-      add :hash, references(:transactions, on_delete: :delete_all, column: :hash, type: :binary), null: false
+      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
       timestamps()
     end
 
