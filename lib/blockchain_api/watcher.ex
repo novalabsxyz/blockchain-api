@@ -70,17 +70,20 @@ defmodule BlockchainAPI.Watcher do
       )
   when chain != nil do
 
-    # notified of a new block, they'll have fresh data
-    if !sync_flag, do: CacheService.purge_key("block")
-
     case Application.get_env(:blockchain_api, :ro_mode, 1) do
       1 ->
-        {:noreply, state}
+        :ok
       _ ->
         {:ok, block} = :blockchain.get_block(hash, chain)
         add_block(block, chain, ledger, sync_flag, env)
-        {:noreply, state}
     end
+
+    # block has been committed at this point if we were
+    # not in read-only mode above.
+    # refresh the cache.
+    if !sync_flag, do: CacheService.purge_key("block")
+    {:noreply, state}
+
   end
 
   @impl true
@@ -105,11 +108,11 @@ defmodule BlockchainAPI.Watcher do
             Logger.info("DB height: #{inspect(last_known_height)}, BlockHeight: #{inspect(height)}, Missing: #{inspect(height - last_known_height)}")
             Range.new(last_known_height + 1, height)
             |> Enum.map(fn h ->
-              Logger.info("Committing block at height: #{inspect(h)}")
               {:ok, b} = :blockchain.get_block(h, chain)
               block_height = :blockchain_block.height(b)
+              Logger.info("Committing block at height: #{inspect(block_height)}")
               Committer.commit(b, ledger, block_height, sync_flag, env)
-              Logger.info("Committed block at height: #{inspect(h)}")
+              Logger.info("Committed block at height: #{inspect(block_height)}")
             end)
 
           false ->
