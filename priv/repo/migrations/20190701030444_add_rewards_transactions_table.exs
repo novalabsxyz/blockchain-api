@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddRewardsTransactionsTable do
     create table(:rewards_transactions) do
       add :fee, :integer, null: false
 
-      add :hash, references(:transactions, on_delete: :nothing, column: :hash, type: :binary), null: false
+      add :hash, references(:transactions, on_delete: :delete_all, column: :hash, type: :binary), null: false
       timestamps()
     end
 

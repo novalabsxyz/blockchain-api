@@ -14,7 +14,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingPaymentTable do
       add :txn, :binary, null: false
       add :submit_height, :bigint, null: false, default: 0
 
-      add :payer, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
+      add :payer, references(:accounts, on_delete: :delete_all, column: :address, type: :binary), null: false
 
       honeydew_fields(submit_payment_queue())
 

@@ -13,7 +13,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddPendingGatewayTable do
       add :txn, :binary, null: false
       add :submit_height, :bigint, null: false, default: 0
 
-      add :owner, references(:accounts, on_delete: :nothing, column: :address, type: :binary), null: false
+      add :owner, references(:accounts, on_delete: :delete_all, column: :address, type: :binary), null: false
 
       honeydew_fields(submit_gateway_queue())
 
