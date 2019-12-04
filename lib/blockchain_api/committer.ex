@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Committer do
   @moduledoc false
 
   alias BlockchainAPI.{
+    Batcher,
     Query,
     Repo,
     Schema.Account,
@@ -26,7 +27,6 @@ defmodule BlockchainAPI.Committer do
     Schema.SecurityTransaction,
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
-    Schema.Transaction,
     Util,
     Notifier
   }
@@ -58,6 +58,7 @@ defmodule BlockchainAPI.Committer do
           e
 
         {:ok, inserted_block} ->
+          Batcher.Txns.insert_all(block, ledger, height)
           add_transactions(block, ledger, height)
           add_account_transactions(block)
           commit_account_balances(block, ledger)
@@ -340,62 +341,38 @@ defmodule BlockchainAPI.Committer do
   # ==================================================================
   # Insert individual transactions
   # ==================================================================
-  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, _height) do
     {:ok, _coinbase_entry} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, _height) do
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_security_exchange_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_exchange_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_security_exchange_v1, txn, _height) do
     {:ok, _} = Query.SecurityExchangeTransaction.create(SecurityExchangeTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_dc_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, _height) do
     {:ok, _} = Query.DataCreditTransaction.create(DataCreditTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_payment_v1, txn, _height) do
     {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, _height) do
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, _height) do
     {:ok, _} =
       Query.LocationTransaction.create(
         LocationTransaction.map(:blockchain_txn_assert_location_v1, txn)
       )
   end
 
-  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, _height) do
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(:genesis, txn))
 
     case :blockchain_txn_gen_gateway_v1.location(txn) do
@@ -410,17 +387,11 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_oui_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_oui_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_oui_v1, txn, _height) do
     {:ok, _} = Query.OUITransaction.create(OUITransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
-
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
 
     members = :blockchain_txn_consensus_group_v1.members(txn)
@@ -452,9 +423,6 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_transaction(:blockchain_txn_rewards_v1, txn, height, time) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_rewards_v1, txn))
-
     {:ok, rewards_txn} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
 
     rewards = :blockchain_txn_rewards_v1.rewards(txn)
@@ -488,10 +456,6 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height) do
     time = :blockchain_block.time(block)
-
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
-
     challenger = txn |> :blockchain_txn_poc_request_v1.challenger()
 
     {:ok, challenger_info} = challenger |> :blockchain_ledger_v1.find_gateway_info(ledger)
@@ -518,10 +482,6 @@ defmodule BlockchainAPI.Committer do
     {:ok, challenger_info} = :blockchain_ledger_v1.find_gateway_info(challenger, ledger)
     challenger_loc = :blockchain_ledger_gateway_v2.location(challenger_info)
     challenger_owner = :blockchain_ledger_gateway_v2.owner_address(challenger_info)
-
-    # Create transaction entry
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
 
     # Create POC Receipts transaction entry
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)

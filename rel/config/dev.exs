@@ -37,8 +37,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   pool_size: 20,
   timeout: :infinity,
   queue_target: 120_000,
-  queue_interval: 5_000,
-  log: false
+  queue_interval: 5_000
 
 config :blockchain,
   base_dir: String.to_charlist("/var/data/blockchain-api/dev/")

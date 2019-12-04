@@ -24,6 +24,8 @@ defmodule BlockchainAPI.Query.Transaction do
     Util
   }
 
+  alias Ecto.Multi
+
   def get(block_height) do
     get_by_height(block_height)
   end
@@ -46,6 +48,23 @@ defmodule BlockchainAPI.Query.Transaction do
     %Transaction{block_height: block_height}
     |> Transaction.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def insert_all(block_height, transactions) do
+    txn_changesets = transactions
+                     |> Enum.map(
+                       fn(t) ->
+                         meta = %{
+                           inserted_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
+                           updated_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
+                           block_height: block_height
+                         }
+                         Map.merge(t, meta)
+                       end)
+
+    Multi.new()
+    |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets)
+    |> Repo.transaction()
   end
 
   def get_payment!(txn_hash) do
