@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Committer do
   @moduledoc false
 
   alias BlockchainAPI.{
+    Batcher,
     Query,
     Repo,
     Schema.Account,
@@ -16,18 +17,13 @@ defmodule BlockchainAPI.Committer do
     Schema.Hotspot,
     Schema.LocationTransaction,
     Schema.PaymentTransaction,
-    Schema.POCPathElement,
-    Schema.POCReceipt,
     Schema.POCReceiptsTransaction,
     Schema.POCRequestTransaction,
-    Schema.POCWitness,
     Schema.RewardsTransaction,
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
-    Schema.Transaction,
-    Util,
     Notifier
   }
 
@@ -58,6 +54,7 @@ defmodule BlockchainAPI.Committer do
           e
 
         {:ok, inserted_block} ->
+          Batcher.Txns.insert_all(block, ledger, height)
           add_transactions(block, ledger, height)
           add_account_transactions(block)
           commit_account_balances(block, ledger)
@@ -340,62 +337,38 @@ defmodule BlockchainAPI.Committer do
   # ==================================================================
   # Insert individual transactions
   # ==================================================================
-  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_coinbase_v1, txn, _height) do
     {:ok, _coinbase_entry} = Query.CoinbaseTransaction.create(CoinbaseTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_security_coinbase_v1, txn, _height) do
     {:ok, _} = Query.SecurityTransaction.create(SecurityTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_security_exchange_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_security_exchange_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_security_exchange_v1, txn, _height) do
     {:ok, _} = Query.SecurityExchangeTransaction.create(SecurityExchangeTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_dc_coinbase_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_dc_coinbase_v1, txn, _height) do
     {:ok, _} = Query.DataCreditTransaction.create(DataCreditTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_payment_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_payment_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_payment_v1, txn, _height) do
     {:ok, _} = Query.PaymentTransaction.create(PaymentTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_add_gateway_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_add_gateway_v1, txn, _height) do
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(txn))
   end
 
-  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_assert_location_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_assert_location_v1, txn, _height) do
     {:ok, _} =
       Query.LocationTransaction.create(
         LocationTransaction.map(:blockchain_txn_assert_location_v1, txn)
       )
   end
 
-  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_gen_gateway_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_gen_gateway_v1, txn, _height) do
     {:ok, _} = Query.GatewayTransaction.create(GatewayTransaction.map(:genesis, txn))
 
     case :blockchain_txn_gen_gateway_v1.location(txn) do
@@ -410,17 +383,11 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_transaction(:blockchain_txn_oui_v1, txn, height) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_oui_v1, txn))
-
+  defp insert_transaction(:blockchain_txn_oui_v1, txn, _height) do
     {:ok, _} = Query.OUITransaction.create(OUITransaction.map(txn))
   end
 
   defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_consensus_group_v1, txn))
-
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
 
     members = :blockchain_txn_consensus_group_v1.members(txn)
@@ -452,9 +419,6 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp insert_transaction(:blockchain_txn_rewards_v1, txn, height, time) do
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_rewards_v1, txn))
-
     {:ok, rewards_txn} = Query.RewardsTransaction.create(RewardsTransaction.map(txn))
 
     rewards = :blockchain_txn_rewards_v1.rewards(txn)
@@ -488,10 +452,6 @@ defmodule BlockchainAPI.Committer do
 
   defp insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height) do
     time = :blockchain_block.time(block)
-
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_request_v1, txn))
-
     challenger = txn |> :blockchain_txn_poc_request_v1.challenger()
 
     {:ok, challenger_info} = challenger |> :blockchain_ledger_v1.find_gateway_info(ledger)
@@ -519,10 +479,6 @@ defmodule BlockchainAPI.Committer do
     challenger_loc = :blockchain_ledger_gateway_v2.location(challenger_info)
     challenger_owner = :blockchain_ledger_gateway_v2.owner_address(challenger_info)
 
-    # Create transaction entry
-    {:ok, _transaction_entry} =
-      Query.Transaction.create(height, Transaction.map(:blockchain_txn_poc_receipts_v1, txn))
-
     # Create POC Receipts transaction entry
     poc_request = Query.POCRequestTransaction.get_by_onion(onion)
 
@@ -530,8 +486,7 @@ defmodule BlockchainAPI.Committer do
       POCReceiptsTransaction.map(poc_request.id, challenger_loc, challenger_owner, txn)
       |> Query.POCReceiptsTransaction.create()
 
-    # Populate receipt and witness tables from the poc path _without_ any vaidation. It's done in core.
-    insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry)
+    Batcher.Pocs.insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry)
   end
 
   # ==================================================================
@@ -720,196 +675,4 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  # POC Related private db helper functions. Maybe move to a separate module?
-  defp insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry) do
-    deltas = :blockchain_txn_poc_receipts_v1.deltas(txn)
-    time = :blockchain_block.time(block)
-
-    txn
-    |> :blockchain_txn_poc_receipts_v1.path()
-    |> Enum.with_index()
-    |> Enum.map(fn {element, index} when element != :undefined ->
-      challengee = element |> :blockchain_poc_path_element_v1.challengee()
-      res = challengee |> :blockchain_ledger_v1.find_gateway_info(ledger)
-
-      case res do
-        {:error, _} ->
-          :ok
-
-        {:ok, challengee_info} ->
-          challengee_loc = :blockchain_ledger_gateway_v2.location(challengee_info)
-          challengee_owner = :blockchain_ledger_gateway_v2.owner_address(challengee_info)
-
-          delta = Enum.at(deltas, index)
-
-          {:ok, path_element_entry} =
-            POCPathElement.map(
-              poc_receipt_txn_entry.hash,
-              challengee,
-              challengee_loc,
-              challengee_owner,
-              poc_result(delta)
-            )
-            |> Query.POCPathElement.create()
-
-          _ =
-            add_receipt(
-              txn,
-              height,
-              time,
-              ledger,
-              element,
-              path_element_entry,
-              poc_receipt_txn_entry
-            )
-
-          _ =
-            add_witnesses(
-              txn,
-              height,
-              time,
-              ledger,
-              element,
-              path_element_entry,
-              poc_receipt_txn_entry
-            )
-      end
-    end)
-  end
-
-  defp add_witnesses(
-         txn,
-         height,
-         time,
-         ledger,
-         element,
-         path_element_entry,
-         poc_receipt_txn_entry
-       ) do
-    element
-    |> :blockchain_poc_path_element_v1.witnesses()
-    |> Enum.map(fn witness when witness != :undefined ->
-      witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
-
-      case :blockchain_ledger_v1.find_gateway_info(witness_gateway, ledger) do
-        {:error, _} ->
-          :ok
-
-        {:ok, wx_info} ->
-          wx_loc = :blockchain_ledger_gateway_v2.location(wx_info)
-          wx_owner = :blockchain_ledger_gateway_v2.owner_address(wx_info)
-          {:ok, wx_score} = :blockchain_ledger_v1.gateway_score(witness_gateway, ledger)
-
-          distance =
-            Util.h3_distance_in_meters(
-              wx_loc,
-              path_element_entry.challengee_loc |> String.to_charlist() |> :h3.from_string()
-            )
-
-          {:ok, poc_witness} =
-            POCWitness.map(path_element_entry.id, wx_loc, distance, wx_owner, witness)
-            |> Query.POCWitness.create()
-
-          wx_score_delta =
-            case Query.HotspotActivity.last_poc_score(witness_gateway) do
-              nil ->
-                0.0
-
-              s ->
-                wx_score - s
-            end
-
-          {:ok, _activity_entry} =
-            Query.HotspotActivity.create(%{
-              gateway: witness_gateway,
-              poc_rx_txn_hash: :blockchain_txn.hash(txn),
-              poc_rx_txn_block_height: height,
-              poc_rx_txn_block_time: time,
-              poc_witness_id: poc_witness.id,
-              poc_witness_challenge_id: poc_receipt_txn_entry.id,
-              poc_score: wx_score,
-              poc_score_delta: wx_score_delta
-            })
-      end
-    end)
-  end
-
-  defp add_receipt(txn, height, time, ledger, element, path_element_entry, poc_receipt_txn_entry) do
-    case :blockchain_poc_path_element_v1.receipt(element) do
-      :undefined ->
-        :ok
-
-      receipt ->
-        rx_gateway = receipt |> :blockchain_poc_receipt_v1.gateway()
-        {:ok, rx_info} = rx_gateway |> :blockchain_ledger_v1.find_gateway_info(ledger)
-        rx_loc = :blockchain_ledger_gateway_v2.location(rx_info)
-        rx_owner = :blockchain_ledger_gateway_v2.owner_address(rx_info)
-        {:ok, rx_score} = :blockchain_ledger_v1.gateway_score(rx_gateway, ledger)
-
-        {:ok, poc_receipt} =
-          POCReceipt.map(path_element_entry.id, rx_loc, rx_owner, receipt)
-          |> Query.POCReceipt.create()
-
-        rx_score_delta =
-          case Query.HotspotActivity.last_poc_score(rx_gateway) do
-            nil ->
-              0.0
-
-            s ->
-              rx_score - s
-          end
-
-        {:ok, _activity_entry} =
-          Query.HotspotActivity.create(%{
-            gateway: rx_gateway,
-            poc_rx_txn_hash: :blockchain_txn.hash(txn),
-            poc_rx_txn_block_height: height,
-            poc_rx_txn_block_time: time,
-            poc_rx_id: poc_receipt.id,
-            poc_rx_challenge_id: poc_receipt_txn_entry.id,
-            poc_score: rx_score,
-            poc_score_delta: rx_score_delta
-          })
-
-        rapid_decline(rx_gateway, time)
-    end
-  end
-
-  defp rapid_decline(challengee, time) do
-    challenge_results = Query.POCPathElement.get_last_ten(challengee)
-
-    case length(challenge_results) == 10 do
-      false ->
-        :ok
-
-      true ->
-        case Enum.any?(challenge_results, fn res -> res == "success" end) do
-          true ->
-            :ok
-
-          false ->
-            case Enum.count(challenge_results, fn res -> res == "failure" end) do
-              c when c >= 4 ->
-                Query.HotspotActivity.create(%{
-                  gateway: challengee,
-                  rapid_decline: true,
-                  poc_rx_txn_block_time: time
-                })
-
-              _ ->
-                :ok
-            end
-        end
-    end
-  end
-
-  defp poc_result(nil), do: "untested"
-  defp poc_result({_, {0, 0}}), do: "untested"
-
-  defp poc_result({_, {a, b}}) do
-    case a > b do
-      true -> "success"
-      false -> "failure"
-    end
-  end
 end
