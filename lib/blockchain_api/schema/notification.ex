@@ -2,8 +2,22 @@ defmodule BlockchainAPI.Schema.Notification do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @fields [:id, :style, :icon, :color, :title, :body, :share_text, :account_address, :hotspot_address, :hotspot_name, :viewed_at]
+  @fields [
+    :id,
+    :style,
+    :icon,
+    :color,
+    :title,
+    :body,
+    :share_text,
+    :account_address,
+    :hotspot_address,
+    :hotspot_name,
+    :viewed_at
+  ]
+
   @derive {Jason.Encoder, only: @fields}
+
   schema "notifications" do
     field :style, :string, null: false, default: "default"
     field :icon, :string, null: true
@@ -22,8 +36,17 @@ defmodule BlockchainAPI.Schema.Notification do
   @doc false
   def changeset(notification, attrs) do
     notification
-    |> cast(attrs, [:style, :icon, :color, :title, :body, :share_text, :account_address, :hotspot_address, :hotspot_name])
+    |> cast(attrs, [
+      :style,
+      :icon,
+      :color,
+      :title,
+      :body,
+      :share_text,
+      :account_address,
+      :hotspot_address,
+      :hotspot_name
+    ])
     |> validate_required([:style, :title, :body, :account_address])
   end
-
 end

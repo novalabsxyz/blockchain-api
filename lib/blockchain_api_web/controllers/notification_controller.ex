@@ -15,7 +15,7 @@ defmodule BlockchainAPIWeb.NotificationController do
   end
 
   def create(conn, %{"notification" => notification_params}) do
-    notification = Query.Notification.create(notification_params)
+    {:ok, notification} = Query.Notification.create(notification_params)
 
     conn
     |> render("show.json", notification: notification)

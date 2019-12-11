@@ -16,7 +16,7 @@ defmodule BlockchainAPI.Query.Notification do
   # ==================================================================
   def list(address, params) do
     base_query(address)
-    # |> maybe_filter(params)
+    |> maybe_filter(params)
     |> Repo.all()
   end
 
@@ -38,29 +38,29 @@ defmodule BlockchainAPI.Query.Notification do
     )
   end
 
-  # defp maybe_filter(query, %{"before" => before, "limit" => limit0} = _params) do
-  #   limit = min(@max_limit, String.to_integer(limit0))
+  defp maybe_filter(query, %{"before" => before, "limit" => limit0} = _params) do
+    limit = min(@max_limit, String.to_integer(limit0))
 
-  #   query
-  #   |> where([block], block.height < ^before)
-  #   |> limit(^limit)
-  # end
+    query
+    |> where([notification], notification.id < ^before)
+    |> limit(^limit)
+  end
 
-  # defp maybe_filter(query, %{"before" => before} = _params) do
-  #   query
-  #   |> where([block], block.height < ^before)
-  #   |> limit(@default_limit)
-  # end
+  defp maybe_filter(query, %{"before" => before} = _params) do
+    query
+    |> where([notification], notification.id < ^before)
+    |> limit(@default_limit)
+  end
 
-  # defp maybe_filter(query, %{"limit" => limit0} = _params) do
-  #   limit = min(@max_limit, String.to_integer(limit0))
+  defp maybe_filter(query, %{"limit" => limit0} = _params) do
+    limit = min(@max_limit, String.to_integer(limit0))
 
-  #   query
-  #   |> limit(^limit)
-  # end
+    query
+    |> limit(^limit)
+  end
 
-  # defp maybe_filter(query, %{}) do
-  #   query
-  #   |> limit(@default_limit)
-  # end
+  defp maybe_filter(query, %{}) do
+    query
+    |> limit(@default_limit)
+  end
 end
