@@ -19,6 +19,7 @@ defmodule BlockchainAPIWeb.Router do
 
       resources "/gateways", AccountGatewayController, only: [:index], param: "account_address"
       resources "/rewards", AccountRewardController, only: [:index], param: "account_address"
+      resources "/notifications", NotificationController, only: [:index, :create], param: "account_address"
     end
 
     # This has to be before the resources
