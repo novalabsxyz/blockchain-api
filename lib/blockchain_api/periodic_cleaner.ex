@@ -51,8 +51,8 @@ defmodule BlockchainAPI.PeriodicCleaner do
   end
 
   defp schedule_cleanup() do
-    # Schedule cleanup every minute
-    Process.send_after(self(), :clean, :timer.minutes(1))
+    # Schedule cleanup every 10 minutes
+    Process.send_after(self(), :clean, :timer.minutes(10))
   end
 
   defp handle_pending_txn(mod, chain) do
