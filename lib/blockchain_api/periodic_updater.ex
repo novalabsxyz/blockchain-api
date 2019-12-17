@@ -104,7 +104,7 @@ defmodule BlockchainAPI.PeriodicUpdater do
   end
 
   defp schedule_update() do
-    # Schedule update every 10 minutes
-    Process.send_after(self(), :update, :timer.minutes(10))
+    # Schedule update every 30 minutes
+    Process.send_after(self(), :update, :timer.minutes(30))
   end
 end
