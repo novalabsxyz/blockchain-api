@@ -75,6 +75,9 @@ defmodule BlockchainAPI.Batcher.Pocs do
          path_element_entry,
          poc_receipt_txn_entry
        ) do
+
+    good_quality_witnesses = :blockchain_txn_poc_receipts_v1.good_quality_witnesses(element, ledger)
+
     element
     |> :blockchain_poc_path_element_v1.witnesses()
     |> Enum.sort_by(
@@ -99,8 +102,10 @@ defmodule BlockchainAPI.Batcher.Pocs do
               path_element_entry.challengee_loc |> String.to_charlist() |> :h3.from_string()
             )
 
+          witness_is_good = Enum.member?(good_quality_witnesses, witness)
+
           {:ok, poc_witness} =
-            POCWitness.map(path_element_entry.id, wx_loc, distance, wx_owner, witness)
+            POCWitness.map(path_element_entry.id, wx_loc, distance, wx_owner, witness_is_good, witness)
             |> Query.POCWitness.create()
 
           wx_score_delta =

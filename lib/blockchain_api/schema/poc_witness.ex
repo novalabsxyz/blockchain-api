@@ -17,7 +17,8 @@ defmodule BlockchainAPI.Schema.POCWitness do
     :signal,
     :packet_hash,
     :signature,
-    :owner
+    :owner,
+    :is_good
   ]
 
   @derive {Jason.Encoder, only: @fields}
@@ -31,6 +32,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     field :packet_hash, :binary, null: false
     field :signature, :binary, null: false
     field :distance, :float, null: true
+    field :is_good, :boolean, null: true, default: true
 
     belongs_to :poc_path_elements, POCPathElement, define_field: false, foreign_key: :id
 
@@ -59,7 +61,7 @@ defmodule BlockchainAPI.Schema.POCWitness do
     })
   end
 
-  def map(id, wx_loc, distance, owner, poc_witness) do
+  def map(id, wx_loc, distance, owner, is_good, poc_witness) do
     %{
       poc_path_elements_id: id,
       owner: owner,
@@ -69,7 +71,8 @@ defmodule BlockchainAPI.Schema.POCWitness do
       timestamp: :blockchain_poc_witness_v1.timestamp(poc_witness),
       signal: :blockchain_poc_witness_v1.signal(poc_witness),
       packet_hash: :blockchain_poc_witness_v1.packet_hash(poc_witness),
-      signature: :blockchain_poc_witness_v1.signature(poc_witness)
+      signature: :blockchain_poc_witness_v1.signature(poc_witness),
+      is_good: is_good
     }
   end
 
