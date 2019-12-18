@@ -160,7 +160,8 @@ defmodule BlockchainAPI.Batcher.Pocs do
             poc_score_delta: rx_score_delta
           })
 
-        rapid_decline(rx_gateway, time)
+        # TODO: Disabling this for a better fix for db query
+        # rapid_decline(rx_gateway, time)
     end
   end
 
