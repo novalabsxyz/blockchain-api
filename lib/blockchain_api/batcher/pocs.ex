@@ -160,35 +160,26 @@ defmodule BlockchainAPI.Batcher.Pocs do
             poc_score_delta: rx_score_delta
           })
 
-        # TODO: Disabling this for a better fix for db query
-        # rapid_decline(rx_gateway, time)
+        rapid_decline(rx_gateway, time)
     end
   end
 
   defp rapid_decline(challengee, time) do
     challenge_results = Query.POCPathElement.get_last_ten(challengee)
 
-    case length(challenge_results) == 10 do
-      false ->
+    case challenge_results do
+      [] ->
         :ok
-
-      true ->
-        case Enum.any?(challenge_results, fn res -> res == "success" end) do
-          true ->
+      results ->
+        case Enum.count(results, fn res -> res == "failure" end) do
+          c when c >= 4 ->
+            Query.HotspotActivity.create(%{
+              gateway: challengee,
+              rapid_decline: true,
+              poc_rx_txn_block_time: time
+            })
+          _ ->
             :ok
-
-          false ->
-            case Enum.count(challenge_results, fn res -> res == "failure" end) do
-              c when c >= 4 ->
-                Query.HotspotActivity.create(%{
-                  gateway: challengee,
-                  rapid_decline: true,
-                  poc_rx_txn_block_time: time
-                })
-
-              _ ->
-                :ok
-            end
         end
     end
   end
