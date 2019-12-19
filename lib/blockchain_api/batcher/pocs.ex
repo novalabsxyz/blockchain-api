@@ -77,6 +77,10 @@ defmodule BlockchainAPI.Batcher.Pocs do
        ) do
     element
     |> :blockchain_poc_path_element_v1.witnesses()
+    |> Enum.sort_by(
+      fn(witness) ->
+        :blockchain_poc_witness_v1.gateway(witness)
+      end)
     |> Enum.map(fn witness when witness != :undefined ->
       witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
 

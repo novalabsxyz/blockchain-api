@@ -71,6 +71,7 @@ defmodule BlockchainAPI.Batcher.Txns do
                 acc
             end
           end)
+          |> Enum.sort_by(fn(txn) -> txn.type end)
 
         Query.Transaction.insert_all(height, txns_to_insert)
     end
