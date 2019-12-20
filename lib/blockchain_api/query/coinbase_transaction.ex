@@ -2,18 +2,18 @@ defmodule BlockchainAPI.Query.CoinbaseTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.CoinbaseTransaction}
+  alias BlockchainAPI.{Repo, RORepo, Schema.CoinbaseTransaction}
 
   def list(_params) do
     CoinbaseTransaction
     |> order_by([ct], desc: ct.id)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get!(hash) do
     CoinbaseTransaction
     |> where([ct], ct.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(attrs \\ %{}) do

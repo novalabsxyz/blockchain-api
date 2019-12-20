@@ -2,11 +2,11 @@ defmodule BlockchainAPI.Query.POCReceipt do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.POCReceipt}
+  alias BlockchainAPI.{Repo, RORepo, Schema.POCReceipt}
 
   def list(_) do
     POCReceipt
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def create(attrs \\ %{}) do
@@ -19,6 +19,6 @@ defmodule BlockchainAPI.Query.POCReceipt do
     POCReceipt
     |> where([p], p.gateway == ^hotspot_address)
     |> select([p], map(p, [:timestamp, :signal, :origin]))
-    |> Repo.all()
+    |> RORepo.all()
   end
 end

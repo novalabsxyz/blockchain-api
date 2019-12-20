@@ -40,9 +40,21 @@ config :blockchain_api, BlockchainAPI.Repo,
   password: System.get_env("DATABASE_PASS"),
   database: System.get_env("DATABASE_NAME"),
   hostname: System.get_env("DATABASE_HOST"),
-  pool_size: 20,
-  timeout: 600_000,
-  queue_target: 120_000,
+  pool_size: 10,
+  timeout: 120_000,
+  queue_target: 5_000,
+  queue_interval: 5_000,
+  log: false
+
+config :blockchain_api, BlockchainAPI.RORepo,
+  username: System.get_env("DATABASE_USER"),
+  password: System.get_env("DATABASE_PASS"),
+  database: System.get_env("DATABASE_NAME"),
+  # only the database host changes for read-only replica
+  hostname: System.get_env("RO_DATABASE_HOST"),
+  pool_size: 10,
+  timeout: 120_000,
+  queue_target: 5_000,
   queue_interval: 5_000,
   log: false
 

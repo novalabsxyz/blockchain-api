@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Query.Transaction do
 
   alias BlockchainAPI.{
     Repo,
+    RORepo,
     Schema.Block,
     Schema.CoinbaseTransaction,
     Schema.DataCreditTransaction,
@@ -31,7 +32,7 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def type(hash) do
-    Repo.one(
+    RORepo.one(
       from t in Transaction,
         where: t.hash == ^hash,
         select: t.type
@@ -41,7 +42,7 @@ defmodule BlockchainAPI.Query.Transaction do
   def get!(txn_hash) do
     Transaction
     |> where([t], t.hash == ^txn_hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(block_height, attrs \\ %{}) do
@@ -86,7 +87,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: payment_transaction.hash
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_coinbase!(txn_hash) do
@@ -105,7 +106,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: coinbase_transaction.hash
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_security!(txn_hash) do
@@ -124,7 +125,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: security_transaction.hash
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_data_credit!(txn_hash) do
@@ -143,7 +144,7 @@ defmodule BlockchainAPI.Query.Transaction do
         hash: data_credit_transaction.hash
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_election!(txn_hash) do
@@ -163,7 +164,7 @@ defmodule BlockchainAPI.Query.Transaction do
         election_height: election_transaction.height
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_gateway!(txn_hash) do
@@ -185,7 +186,7 @@ defmodule BlockchainAPI.Query.Transaction do
         staking_fee: gateway_transaction.staking_fee
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_location!(txn_hash) do
@@ -207,7 +208,7 @@ defmodule BlockchainAPI.Query.Transaction do
         location: location_transaction.location
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_ongoing_poc_requests() do
@@ -299,7 +300,7 @@ defmodule BlockchainAPI.Query.Transaction do
       )
 
     query
-    |> Repo.all()
+    |> RORepo.all()
     |> encode()
   end
 

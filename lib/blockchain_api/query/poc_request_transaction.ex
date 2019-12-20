@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   alias BlockchainAPI.{
     Repo,
+    RORepo,
     Schema.POCRequestTransaction,
     Schema.POCReceiptsTransaction,
     Util
@@ -11,20 +12,20 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   def list(_params) do
     POCRequestTransaction
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get!(hash) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   # NOTE: onions are supposed to always have a unique hash
   def get_by_onion(onion) do
     POCRequestTransaction
     |> where([poc_req_txn], poc_req_txn.onion == ^onion)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -56,7 +57,7 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
         receipt_id: receipt.id
       }
     )
-    |> Repo.all()
+    |> RORepo.all()
     |> encode()
   end
 

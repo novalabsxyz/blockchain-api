@@ -2,12 +2,12 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.SecurityTransaction}
+  alias BlockchainAPI.{Repo, RORepo, Schema.SecurityTransaction}
 
   def list(_params) do
     SecurityTransaction
     |> order_by([ct], desc: ct.id)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get_balance(address) do
@@ -16,7 +16,7 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
       |> where([ct], ct.payee == ^address)
       |> order_by([ct], desc: ct.id)
       |> limit(1)
-      |> Repo.one()
+      |> RORepo.one()
 
     case res do
       nil -> 0
@@ -27,7 +27,7 @@ defmodule BlockchainAPI.Query.SecurityTransaction do
   def get!(hash) do
     SecurityTransaction
     |> where([ct], ct.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(attrs \\ %{}) do

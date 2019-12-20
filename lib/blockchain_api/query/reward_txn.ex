@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Query.RewardTxn do
 
   alias BlockchainAPI.{
     Repo,
+    RORepo,
     Schema.RewardTxn,
     Schema.Transaction,
     Schema.RewardsTransaction,
@@ -36,7 +37,7 @@ defmodule BlockchainAPI.Query.RewardTxn do
         rewards_hash: t.hash
       }
     )
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_from_last_week do
@@ -55,7 +56,7 @@ defmodule BlockchainAPI.Query.RewardTxn do
         amount: sum(rt.amount)
       }
     )
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def total_by_epoch(hash) do
@@ -66,7 +67,7 @@ defmodule BlockchainAPI.Query.RewardTxn do
       where: t.hash == ^hash,
       select: sum(r.amount)
     )
-    |> Repo.one()
+    |> RORepo.one()
   end
 
 end

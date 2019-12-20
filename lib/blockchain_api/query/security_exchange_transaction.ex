@@ -2,18 +2,18 @@ defmodule BlockchainAPI.Query.SecurityExchangeTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.SecurityExchangeTransaction}
+  alias BlockchainAPI.{Repo, RORepo, Schema.SecurityExchangeTransaction}
 
   def list(_params) do
     SecurityExchangeTransaction
     |> order_by([se], desc: se.id)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get!(hash) do
     SecurityExchangeTransaction
     |> where([se], se.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(attrs \\ %{}) do

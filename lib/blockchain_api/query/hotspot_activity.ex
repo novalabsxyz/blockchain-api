@@ -5,7 +5,7 @@ defmodule BlockchainAPI.Query.HotspotActivity do
   @default_limit 100
   @max_limit 500
 
-  alias BlockchainAPI.{Repo, Util, Schema.HotspotActivity}
+  alias BlockchainAPI.{Repo, RORepo, Util, Schema.HotspotActivity}
 
   def create(attrs \\ %{}) do
     %HotspotActivity{}
@@ -22,14 +22,14 @@ defmodule BlockchainAPI.Query.HotspotActivity do
       select: ha.poc_score,
       limit: 1
     )
-    |> Repo.one()
+    |> RORepo.one()
   end
 
   def list(address, params) do
     address
     |> activity_query()
     |> maybe_filter(params)
-    |> Repo.all()
+    |> RORepo.all()
     |> encode()
   end
 

@@ -2,11 +2,11 @@ defmodule BlockchainAPI.Query.POCWitness do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.POCWitness}
+  alias BlockchainAPI.{Repo, RORepo, Schema.POCWitness}
 
   def list(_) do
     POCWitness
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def create(attrs \\ %{}) do
@@ -19,6 +19,6 @@ defmodule BlockchainAPI.Query.POCWitness do
     POCWitness
     |> where([w], w.gateway == ^hotspot_address)
     |> select([w], map(w, [:timestamp, :signal, :distance]))
-    |> Repo.all()
+    |> RORepo.all()
   end
 end

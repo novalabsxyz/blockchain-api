@@ -5,6 +5,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   alias BlockchainAPI.{
     Query,
     Repo,
+    RORepo,
     Schema.Block,
     Schema.ElectionTransaction,
     Schema.Transaction,
@@ -16,7 +17,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
   def list(params) do
     list_query()
     |> maybe_filter(params)
-    |> Repo.all()
+    |> RORepo.all()
     |> encode()
   end
 
@@ -26,7 +27,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       preload: [:consensus_members],
       where: e.hash == ^hash
     )
-    |> Repo.one!()
+    |> RORepo.one!()
     |> encode_entry()
   end
 
@@ -43,7 +44,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
       preload: [:consensus_members],
       select: %{etxn: et, start_time: b.time, start_height: b.height}
     )
-    |> Repo.one()
+    |> RORepo.one()
     |> with_end_block()
     |> encode_group_entry()
   end
@@ -67,7 +68,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
   def with_end_block(%{start_height: start_height} = group) do
     {end_time, blocks_count} =
-      case start_height |> end_block_query() |> Repo.one() do
+      case start_height |> end_block_query() |> RORepo.one() do
         nil ->
           {nil, Query.Block.get_latest_height() - start_height}
 

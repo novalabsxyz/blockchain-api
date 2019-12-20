@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Query.Stats do
   import Ecto.Query, warn: false
   use Timex
 
-  alias BlockchainAPI.{Repo, Util}
+  alias BlockchainAPI.{RORepo, Util}
 
   alias BlockchainAPI.Schema.{
     Account,
@@ -49,7 +49,7 @@ defmodule BlockchainAPI.Query.Stats do
       a in Account,
       select: sum(a.balance)
     )
-    |> Repo.one()
+    |> RORepo.one()
     |> Decimal.to_integer()
   end
 
@@ -87,7 +87,7 @@ defmodule BlockchainAPI.Query.Stats do
         }
       )
 
-    %{avg_interval: avg_interval} = query |> Repo.one()
+    %{avg_interval: avg_interval} = query |> RORepo.one()
 
     avg_interval |> normalize_interval()
   end
@@ -133,7 +133,7 @@ defmodule BlockchainAPI.Query.Stats do
       )
 
     %{avg_time_interval: avg_time_interval, avg_block_interval: avg_block_interval} =
-      query |> Repo.one()
+      query |> RORepo.one()
 
     %{
       avg_block_interval: avg_block_interval |> normalize_interval(),

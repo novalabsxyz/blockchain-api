@@ -2,17 +2,17 @@ defmodule BlockchainAPI.Query.POCPathElement do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.POCPathElement}
+  alias BlockchainAPI.{Repo, RORepo, Schema.POCPathElement}
 
   def list(_) do
     POCPathElement
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get!(challengee) do
     POCPathElement
     |> where([poc_path_element], poc_path_element.challengee == ^challengee)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -27,6 +27,6 @@ defmodule BlockchainAPI.Query.POCPathElement do
     |> order_by([poc_path_element], desc: poc_path_element.id)
     |> select([poc_path_element], poc_path_element.result)
     |> limit(10)
-    |> Repo.all()
+    |> RORepo.all()
   end
 end

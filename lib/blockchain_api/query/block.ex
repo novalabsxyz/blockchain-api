@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Query.Block do
 
   alias BlockchainAPI.{
     Repo,
+    RORepo,
     Util,
     Schema.Block,
     Schema.Transaction
@@ -18,7 +19,7 @@ defmodule BlockchainAPI.Query.Block do
   def list(params) do
     base_query()
     |> maybe_filter(params)
-    |> Repo.all()
+    |> RORepo.all()
     |> encode()
   end
 
@@ -34,7 +35,7 @@ defmodule BlockchainAPI.Query.Block do
 
   def get_latest_height() do
     query = from b in Block, select: max(b.height)
-    Repo.one(query)
+    RORepo.one(query)
   end
 
   # ==================================================================
@@ -43,7 +44,7 @@ defmodule BlockchainAPI.Query.Block do
   defp get_by_height(height) do
     base_query()
     |> where([b], b.height == ^height)
-    |> Repo.one()
+    |> RORepo.one()
     |> encode()
   end
 

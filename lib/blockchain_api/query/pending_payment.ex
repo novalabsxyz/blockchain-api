@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.PendingPayment do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.PendingPayment}
+  alias BlockchainAPI.{Repo, RORepo, Schema.PendingPayment}
 
   def create(attrs \\ %{}) do
     %PendingPayment{}
@@ -13,19 +13,19 @@ defmodule BlockchainAPI.Query.PendingPayment do
   def list_pending() do
     PendingPayment
     |> where([pp], pp.status == "pending")
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get!(hash) do
     PendingPayment
     |> where([pp], pp.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_by_id!(id) do
     PendingPayment
     |> where([pp], pp.id == ^id)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def update!(pp, attrs \\ %{}) do
@@ -43,7 +43,7 @@ defmodule BlockchainAPI.Query.PendingPayment do
       )
 
     query
-    |> Repo.all()
+    |> RORepo.all()
     |> format()
   end
 
@@ -57,7 +57,7 @@ defmodule BlockchainAPI.Query.PendingPayment do
       where: pp.status != "cleared",
       select: pp
     )
-    |> Repo.all()
+    |> RORepo.all()
     |> format()
   end
 
@@ -68,7 +68,7 @@ defmodule BlockchainAPI.Query.PendingPayment do
       where: pp.nonce == ^nonce,
       select: pp
     )
-    |> Repo.one()
+    |> RORepo.one()
     |> format_one()
   end
 
