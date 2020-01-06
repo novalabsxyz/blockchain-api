@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
   ]
 
   @repo BlockchainAPI.Repo
+  @rorepo BlockchainAPI.RORepo
 
   @otp_app :blockchain_api
 
@@ -30,6 +31,7 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
 
   defp start_connection() do
     {:ok, _ } = @repo.start_link(pool_size: 10)
+    {:ok, _ } = @rorepo.start_link(pool_size: 10)
   end
 
   defp run_migrations() do

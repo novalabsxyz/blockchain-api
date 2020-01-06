@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.PendingLocation}
+  alias BlockchainAPI.{Repo, RORepo, Schema.PendingLocation}
 
   def create(attrs \\ %{}) do
     %PendingLocation{}
@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.PendingLocation do
   def get!(hash) do
     PendingLocation
     |> where([pl], pl.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_by_id!(id) do
     PendingLocation
     |> where([pl], pl.id == ^id)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def update!(pl, attrs \\ %{}) do
@@ -31,7 +31,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
   def list_pending() do
     PendingLocation
     |> where([pl], pl.status == "pending")
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get_by_owner(address) do
@@ -43,7 +43,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
       where: pl.status != "cleared",
       select: pl
     )
-    |> Repo.all()
+    |> RORepo.all()
     |> format()
   end
 
@@ -55,7 +55,7 @@ defmodule BlockchainAPI.Query.PendingLocation do
       where: pl.nonce == ^nonce,
       select: pl
     )
-    |> Repo.all()
+    |> RORepo.all()
     |> format()
   end
 

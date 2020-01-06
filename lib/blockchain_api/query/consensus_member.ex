@@ -2,12 +2,12 @@ defmodule BlockchainAPI.Query.ConsensusMember do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.ConsensusMember}
+  alias BlockchainAPI.{Repo, RORepo, Schema.ConsensusMember}
 
   def list(_params) do
     ConsensusMember
     |> order_by([ct], desc: ct.id)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def create(attrs \\ %{}) do

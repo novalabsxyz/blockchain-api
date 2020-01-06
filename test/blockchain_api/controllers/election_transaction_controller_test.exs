@@ -43,7 +43,7 @@ defmodule BlockchainAPIWeb.ElectionTransactionControllerTest do
     test "returns prior consensus elections when before param is set", %{conn: conn} do
       first_id =
         ElectionTransaction
-        |> Repo.all()
+        |> RORepo.all()
         |> hd()
         |> Map.get(:id)
 

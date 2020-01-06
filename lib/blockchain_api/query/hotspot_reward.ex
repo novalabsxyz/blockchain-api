@@ -5,13 +5,13 @@ defmodule BlockchainAPI.Query.HotspotReward do
   @default_limit 100
   @max_limit 500
 
-  alias BlockchainAPI.{Repo, Schema.RewardTxn}
+  alias BlockchainAPI.{RORepo, Schema.RewardTxn}
 
   def list(address, params) do
     address
     |> list_query()
     |> maybe_filter(params)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   defp list_query(address) do

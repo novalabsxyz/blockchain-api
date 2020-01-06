@@ -6,6 +6,7 @@ defmodule BlockchainAPI.Application do
   use Application
   alias Honeydew.EctoPollQueue
   alias BlockchainAPI.Repo
+  alias BlockchainAPI.RORepo
   alias BlockchainAPI.Watcher
   alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
   alias BlockchainAPI.{Notifier, RewardsNotifier}
@@ -65,6 +66,8 @@ defmodule BlockchainAPI.Application do
       },
       # Start the Ecto repository
       Repo,
+      # Start the read-only repository
+      RORepo,
       # Start the endpoint when the application starts
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)

@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.PendingGateway}
+  alias BlockchainAPI.{Repo, RORepo, Schema.PendingGateway}
 
   def create(attrs \\ %{}) do
     %PendingGateway{}
@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.PendingGateway do
   def get!(hash) do
     PendingGateway
     |> where([pg], pg.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_by_id!(id) do
     PendingGateway
     |> where([pg], pg.id == ^id)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get(owner, gateway) do
@@ -29,7 +29,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
       where: pg.gateway == ^gateway,
       select: pg
     )
-    |> Repo.one()
+    |> RORepo.one()
     |> format_one()
   end
 
@@ -42,7 +42,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
   def list_pending() do
     PendingGateway
     |> where([pg], pg.status == "pending")
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def get_by_owner(address) do
@@ -54,7 +54,7 @@ defmodule BlockchainAPI.Query.PendingGateway do
       where: pg.status != "cleared",
       select: pg
     )
-    |> Repo.all()
+    |> RORepo.all()
     |> format()
   end
 

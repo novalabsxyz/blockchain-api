@@ -4,6 +4,7 @@ defmodule BlockchainAPI.Query.Account do
 
   alias BlockchainAPI.{
     Repo,
+    RORepo,
     Util,
     Schema.Account,
     Schema.PendingPayment,
@@ -20,13 +21,13 @@ defmodule BlockchainAPI.Query.Account do
   def get!(address) do
     Account
     |> where([a], a.address == ^address)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get(address) do
     Account
     |> where([a], a.address == ^address)
-    |> Repo.one()
+    |> RORepo.one()
   end
 
   def update!(account, attrs \\ %{}) do
@@ -38,11 +39,11 @@ defmodule BlockchainAPI.Query.Account do
   def list(_params) do
     Account
     |> order_by([a], desc: a.id)
-    |> Repo.all()
+    |> RORepo.all()
   end
 
   def list_all() do
-    Account |> Repo.all()
+    Account |> RORepo.all()
   end
 
   def get_pending_transactions(address) do
@@ -72,8 +73,8 @@ defmodule BlockchainAPI.Query.Account do
         limit: 1
       )
 
-    pending_nonce = Repo.one(query_pending_nonce)
-    account_nonce = Repo.one(query_account_nonce)
+    pending_nonce = RORepo.one(query_pending_nonce)
+    account_nonce = RORepo.one(query_account_nonce)
     ledger_nonce = Util.ledger_nonce(address)
 
     case {pending_nonce, account_nonce} do
@@ -110,7 +111,7 @@ defmodule BlockchainAPI.Query.Account do
       )
 
     query
-    |> Repo.all()
+    |> RORepo.all()
     |> Enum.reject(&is_nil/1)
     |> Enum.map(&clean_pending_gateway/1)
   end
@@ -127,7 +128,7 @@ defmodule BlockchainAPI.Query.Account do
       )
 
     query
-    |> Repo.all()
+    |> RORepo.all()
     |> Enum.reject(&is_nil/1)
     |> Enum.map(&clean_pending_location/1)
   end
@@ -151,7 +152,7 @@ defmodule BlockchainAPI.Query.Account do
         select: pp
       )
 
-    total = Repo.all(query_sent) ++ Repo.all(query_recv)
+    total = RORepo.all(query_sent) ++ RORepo.all(query_recv)
 
     total
     |> Enum.reject(&is_nil/1)

@@ -77,6 +77,10 @@ defmodule BlockchainAPI.Batcher.Pocs do
        ) do
     element
     |> :blockchain_poc_path_element_v1.witnesses()
+    |> Enum.sort_by(
+      fn(witness) ->
+        :blockchain_poc_witness_v1.gateway(witness)
+      end)
     |> Enum.map(fn witness when witness != :undefined ->
       witness_gateway = witness |> :blockchain_poc_witness_v1.gateway()
 
@@ -167,27 +171,19 @@ defmodule BlockchainAPI.Batcher.Pocs do
   defp rapid_decline(challengee, time) do
     challenge_results = Query.POCPathElement.get_last_ten(challengee)
 
-    case length(challenge_results) == 10 do
-      false ->
+    case challenge_results do
+      [] ->
         :ok
-
-      true ->
-        case Enum.any?(challenge_results, fn res -> res == "success" end) do
-          true ->
+      results ->
+        case Enum.count(results, fn res -> res == "failure" end) do
+          c when c >= 4 ->
+            Query.HotspotActivity.create(%{
+              gateway: challengee,
+              rapid_decline: true,
+              poc_rx_txn_block_time: time
+            })
+          _ ->
             :ok
-
-          false ->
-            case Enum.count(challenge_results, fn res -> res == "failure" end) do
-              c when c >= 4 ->
-                Query.HotspotActivity.create(%{
-                  gateway: challengee,
-                  rapid_decline: true,
-                  poc_rx_txn_block_time: time
-                })
-
-              _ ->
-                :ok
-            end
         end
     end
   end

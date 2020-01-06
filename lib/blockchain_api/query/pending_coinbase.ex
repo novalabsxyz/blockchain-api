@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, Schema.PendingCoinbase}
+  alias BlockchainAPI.{Repo, RORepo, Schema.PendingCoinbase}
 
   def create(attrs \\ %{}) do
     %PendingCoinbase{}
@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.PendingCoinbase do
   def get!(hash) do
     PendingCoinbase
     |> where([pc], pc.hash == ^hash)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def get_by_id!(id) do
     PendingCoinbase
     |> where([pc], pc.id == ^id)
-    |> Repo.one!()
+    |> RORepo.one!()
   end
 
   def update!(pc, attrs \\ %{}) do
