@@ -76,7 +76,6 @@ defmodule BlockchainAPI.Query.Transaction do
         Logger.error("batch inserted txns error: #{inspect(reason)}")
         e
       {:ok, batch_txns} ->
-        Logger.info("batch inserted txns: #{inspect(batch_txns)}")
         {:ok, batch_txns}
     end
   end

@@ -68,7 +68,7 @@ defmodule BlockchainAPI.Committer do
               Logger.info("successfully did the whole thing without any txns")
               {:ok, :inserted_block_no_txns}
             {:ok, inserted_txns} ->
-              Logger.info("inserted_txns: #{inspect(inserted_txns)}")
+              Logger.debug("inserted_txns: #{inspect(inserted_txns)}")
               Repo.transaction(fn ->
                 Committer.add_transactions(block, ledger, height)
                 Committer.add_account_transactions(block)
@@ -486,7 +486,7 @@ defmodule BlockchainAPI.Committer do
         Logger.error("poc_req_txn insert failed, #{inspect(reason)}")
         e
       {:ok, poc_request_entry} ->
-        Logger.info("poc_req_txn insert success, #{inspect(poc_request_entry)}")
+        Logger.debug("poc_req_txn insert success, #{inspect(poc_request_entry)}")
         Query.HotspotActivity.create(%{
           gateway: challenger,
           poc_req_txn_hash: :blockchain_txn.hash(txn),
