@@ -54,14 +54,28 @@ defmodule BlockchainAPI.Committer do
           e
 
         {:ok, inserted_block} ->
-          Batcher.Txns.insert_all(block, ledger, height)
-          add_transactions(block, ledger, height)
-          add_account_transactions(block)
-          commit_account_balances(block, ledger)
-          insert_or_update_all_account(ledger)
-          update_hotspot_score(ledger, height)
-          # NOTE: move this elsewhere...
-          BlockChannel.broadcast_change(inserted_block)
+          case Batcher.Txns.insert_all(block, ledger, height) do
+            {:error, reason} = e ->
+              Logger.error("insert_all error, #{inspect(reason)}")
+              e
+            {:ok, :no_txns} ->
+              # We do these regardless of transactions on chain
+              commit_account_balances(block, ledger)
+              insert_or_update_all_account(ledger)
+              update_hotspot_score(ledger, height)
+            {:ok, _} ->
+              ## We only do these when all top level transactions
+              # have been committed to db
+              add_transactions(block, ledger, height)
+              add_account_transactions(block)
+              commit_account_balances(block, ledger)
+              insert_or_update_all_account(ledger)
+              update_hotspot_score(ledger, height)
+              # NOTE: move this elsewhere...
+              BlockChannel.broadcast_change(inserted_block)
+            _ ->
+              {:error, :unhandled}
+          end
       end
     end)
   end
