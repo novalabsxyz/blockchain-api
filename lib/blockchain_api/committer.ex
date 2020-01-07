@@ -64,9 +64,10 @@ defmodule BlockchainAPI.Committer do
               insert_or_update_all_account(ledger)
               update_hotspot_score(ledger, height)
               BlockChannel.broadcast_change(inserted_block)
+              Logger.info("successfully did the whole thing without any txns")
               {:ok, :inserted_block_no_txns}
             {:ok, inserted_txns} ->
-              IO.inspect(inserted_txns, label: :inserted_txns, limit: :infinity)
+              Logger.info("inserted_txns: #{inspect(inserted_txns)}")
               Repo.transaction(fn ->
                 add_transactions(block, ledger, height)
                 add_account_transactions(block)
@@ -76,9 +77,8 @@ defmodule BlockchainAPI.Committer do
               end)
               # NOTE: move this elsewhere...
               BlockChannel.broadcast_change(inserted_block)
+              Logger.info("successfully did the whole thing")
               {:ok, :inserted_block_and_txns}
-            _ ->
-              {:error, :unhandled}
           end
       end
     end)
@@ -479,7 +479,6 @@ defmodule BlockchainAPI.Committer do
 
     {:ok, _poc_request_entry} =
       POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
-      |> IO.inspect(label: :poc_req_txn_map)
       |> Query.POCRequestTransaction.create()
 
     {:ok, _activity_entry} =

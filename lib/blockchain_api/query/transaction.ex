@@ -5,6 +5,8 @@ defmodule BlockchainAPI.Query.Transaction do
   # number of previous blocks to look for poc request txns
   @past_poc_req_blocks 5
 
+  require Logger
+
   alias BlockchainAPI.{
     Repo,
     RORepo,
@@ -65,14 +67,18 @@ defmodule BlockchainAPI.Query.Transaction do
                          Map.merge(t, meta)
                        end)
 
-    IO.inspect(txn_changesets, label: :txn_changesets)
+    res = Multi.new()
+          |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: true)
+          |> Repo.transaction()
 
-    Multi.new()
-    |> IO.inspect()
-    |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: true)
-    |> IO.inspect(label: :multi, limit: :infinity)
-    |> Repo.transaction()
-    |> IO.inspect(label: :batch_txn_insert, limit: :infinity)
+    case res do
+      {:error, reason}=e ->
+        Logger.error("batch inserted txns error: #{inspect(reason)}")
+        e
+      {:ok, batch_txns} ->
+        Logger.info("batch inserted txns: #{inspect(batch_txns)}")
+        {:ok, batch_txns}
+    end
   end
 
   def get_payment!(txn_hash) do
