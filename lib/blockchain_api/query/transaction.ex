@@ -52,20 +52,27 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def insert_all(block_height, transactions) do
+    inserted_at = NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
+    updated_at = NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
     txn_changesets = transactions
                      |> Enum.map(
                        fn(t) ->
                          meta = %{
-                           inserted_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
-                           updated_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
+                           inserted_at: inserted_at,
+                           updated_at: updated_at,
                            block_height: block_height
                          }
                          Map.merge(t, meta)
                        end)
 
+    IO.inspect(txn_changesets, label: :txn_changesets)
+
     Multi.new()
+    |> IO.inspect()
     |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets)
+    |> IO.inspect(label: :multi)
     |> Repo.transaction()
+    |> IO.inspect(label: :batch_txn_insert)
   end
 
   def get_payment!(txn_hash) do
