@@ -478,17 +478,20 @@ defmodule BlockchainAPI.Committer do
     challenger_loc = challenger_info |> :blockchain_ledger_gateway_v2.location()
     challenger_owner = challenger_info |> :blockchain_ledger_gateway_v2.owner_address()
 
-    {:ok, _poc_request_entry} =
-      POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
-      |> Query.POCRequestTransaction.create()
+    case Query.POCRequestTransaction.create(POCRequestTransaction.map(challenger_loc, challenger_owner, txn)) do
+      {:error, reason}=e ->
+        Logger.error("poc_req_txn insert failed, #{inspect(reason)}")
+        e
+      {:ok, poc_request_entry} ->
+        Logger.info("poc_req_txn insert success, #{inspect(poc_request_entry)}")
+        Query.HotspotActivity.create(%{
+          gateway: challenger,
+          poc_req_txn_hash: :blockchain_txn.hash(txn),
+          poc_req_txn_block_height: height,
+          poc_req_txn_block_time: time
+        })
+    end
 
-    {:ok, _activity_entry} =
-      Query.HotspotActivity.create(%{
-        gateway: challenger,
-        poc_req_txn_hash: :blockchain_txn.hash(txn),
-        poc_req_txn_block_height: height,
-        poc_req_txn_block_time: time
-      })
   end
 
   defp insert_transaction(:blockchain_txn_poc_receipts_v1, txn, block, ledger, height) do
