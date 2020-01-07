@@ -217,11 +217,11 @@ defmodule BlockchainAPI.Committer do
 
             :blockchain_txn_add_gateway_v1 ->
               insert_transaction(:blockchain_txn_add_gateway_v1, txn, height)
-              upsert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
+              insert_hotspot(:blockchain_txn_add_gateway_v1, txn, ledger)
 
             :blockchain_txn_gen_gateway_v1 ->
               insert_transaction(:blockchain_txn_gen_gateway_v1, txn, height)
-              upsert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
+              insert_hotspot(:blockchain_txn_gen_gateway_v1, txn, ledger)
 
             :blockchain_txn_poc_request_v1 ->
               insert_transaction(:blockchain_txn_poc_request_v1, txn, block, ledger, height)
@@ -232,7 +232,7 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_assert_location_v1 ->
               insert_transaction(:blockchain_txn_assert_location_v1, txn, height)
               # also upsert hotspot
-              upsert_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
+              update_hotspot(:blockchain_txn_assert_location_v1, txn, ledger)
 
             :blockchain_txn_security_coinbase_v1 ->
               insert_transaction(:blockchain_txn_security_coinbase_v1, txn, height)
@@ -671,7 +671,24 @@ defmodule BlockchainAPI.Committer do
     Repo.transaction(fn -> Enum.each(changesets, &Repo.insert!(&1, [])) end)
   end
 
-  defp upsert_hotspot(txn_mod, txn, ledger) do
+  defp insert_hotspot(txn_mod, txn, ledger) do
+    try do
+      txn |> txn_mod.gateway() |> Query.Hotspot.get!()
+    rescue
+      _error in Ecto.NoResultsError ->
+        # No hotspot entry exists in the hotspot table
+        case Hotspot.map(txn_mod, txn, ledger) do
+          {:error, _} = error ->
+            # XXX: Don't add it if googleapi failed?
+            error
+
+          map ->
+            Query.Hotspot.create(map)
+        end
+    end
+  end
+
+  defp update_hotspot(txn_mod, txn, ledger) do
     try do
       hotspot = txn |> txn_mod.gateway() |> Query.Hotspot.get!()
 
@@ -685,15 +702,7 @@ defmodule BlockchainAPI.Committer do
       end
     rescue
       _error in Ecto.NoResultsError ->
-        # No hotspot entry exists in the hotspot table
-        case Hotspot.map(txn_mod, txn, ledger) do
-          {:error, _} = error ->
-            # XXX: Don't add it if googleapi failed?
-            error
-
-          map ->
-            Query.Hotspot.create(map)
-        end
+        Logger.error("Cannot insert assert_loc before the hotspot exists in db")
     end
   end
 
