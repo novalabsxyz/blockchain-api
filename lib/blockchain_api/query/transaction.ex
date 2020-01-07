@@ -69,10 +69,10 @@ defmodule BlockchainAPI.Query.Transaction do
 
     Multi.new()
     |> IO.inspect()
-    |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets)
-    |> IO.inspect(label: :multi)
+    |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: true)
+    |> IO.inspect(label: :multi, limit: :infinity)
     |> Repo.transaction()
-    |> IO.inspect(label: :batch_txn_insert)
+    |> IO.inspect(label: :batch_txn_insert, limit: :infinity)
   end
 
   def get_payment!(txn_hash) do
