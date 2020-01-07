@@ -207,7 +207,10 @@ defmodule BlockchainAPI.Committer do
         :ok
 
       txns ->
-        Enum.map(txns, fn txn ->
+        # We should sort the txns
+        sorted_txns = :lists.sort(&:blockchain_txn.sort/2, txns)
+
+        Enum.map(sorted_txns, fn txn ->
           case :blockchain_txn.type(txn) do
             :blockchain_txn_coinbase_v1 ->
               insert_transaction(:blockchain_txn_coinbase_v1, txn, height)
