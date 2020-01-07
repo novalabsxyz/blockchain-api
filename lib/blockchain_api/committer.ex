@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Committer do
   @moduledoc false
 
   alias BlockchainAPI.{
+    Committer,
     Batcher,
     Query,
     Repo,
@@ -60,20 +61,20 @@ defmodule BlockchainAPI.Committer do
               e
             {:ok, :no_txns} ->
               # We do these regardless of transactions on chain
-              commit_account_balances(block, ledger)
-              insert_or_update_all_account(ledger)
-              update_hotspot_score(ledger, height)
+              Committer.commit_account_balances(block, ledger)
+              Committer.insert_or_update_all_account(ledger)
+              Committer.update_hotspot_score(ledger, height)
               BlockChannel.broadcast_change(inserted_block)
               Logger.info("successfully did the whole thing without any txns")
               {:ok, :inserted_block_no_txns}
             {:ok, inserted_txns} ->
               Logger.info("inserted_txns: #{inspect(inserted_txns)}")
               Repo.transaction(fn ->
-                add_transactions(block, ledger, height)
-                add_account_transactions(block)
-                commit_account_balances(block, ledger)
-                insert_or_update_all_account(ledger)
-                update_hotspot_score(ledger, height)
+                Committer.add_transactions(block, ledger, height)
+                Committer.add_account_transactions(block)
+                Committer.commit_account_balances(block, ledger)
+                Committer.insert_or_update_all_account(ledger)
+                Committer.update_hotspot_score(ledger, height)
               end)
               # NOTE: move this elsewhere...
               BlockChannel.broadcast_change(inserted_block)
@@ -87,7 +88,7 @@ defmodule BlockchainAPI.Committer do
   defp notify(:prod, block, ledger, false), do: Notifier.notify(block, ledger)
   defp notify(_env, _block, _ledger, _sync_flag), do: :ok
 
-  defp commit_account_balances(block, ledger) do
+  def commit_account_balances(block, ledger) do
     account_bal_txn =
       Repo.transaction(fn ->
         add_account_balances(block, ledger)
@@ -106,7 +107,7 @@ defmodule BlockchainAPI.Committer do
     end
   end
 
-  defp insert_or_update_all_account(ledger) do
+  def insert_or_update_all_account(ledger) do
     {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
 
     hlm_maps =
@@ -183,7 +184,7 @@ defmodule BlockchainAPI.Committer do
     end)
   end
 
-  defp update_hotspot_score(ledger, height) do
+  def update_hotspot_score(ledger, height) do
     :ok =
       Query.Hotspot.all()
       |> Enum.each(fn hotspot ->
@@ -200,7 +201,7 @@ defmodule BlockchainAPI.Committer do
   # ==================================================================
   # Add all transactions
   # ==================================================================
-  defp add_transactions(block, ledger, height) do
+  def add_transactions(block, ledger, height) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
@@ -271,7 +272,7 @@ defmodule BlockchainAPI.Committer do
   # ==================================================================
   # Add all account transactions
   # ==================================================================
-  defp add_account_transactions(block) do
+  def add_account_transactions(block) do
     case :blockchain_block.transactions(block) do
       [] ->
         :ok
