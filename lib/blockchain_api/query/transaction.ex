@@ -68,7 +68,7 @@ defmodule BlockchainAPI.Query.Transaction do
                        end)
 
     res = Multi.new()
-          |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: true)
+          |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: [:id, :block_height, :hash, :type])
           |> Repo.transaction()
 
     case res do
