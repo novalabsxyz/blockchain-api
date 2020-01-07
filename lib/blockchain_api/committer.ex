@@ -48,7 +48,7 @@ defmodule BlockchainAPI.Committer do
   end
 
   defp commit_block(block, ledger, height) do
-    Repo.transaction(fn ->
+    result = Repo.transaction(fn ->
       case Query.Block.create(Block.map(block)) do
         {:error, _reason} = e ->
           e
@@ -63,21 +63,31 @@ defmodule BlockchainAPI.Committer do
               commit_account_balances(block, ledger)
               insert_or_update_all_account(ledger)
               update_hotspot_score(ledger, height)
-            {:ok, _} ->
-              ## We only do these when all top level transactions
-              # have been committed to db
-              add_transactions(block, ledger, height)
-              add_account_transactions(block)
-              commit_account_balances(block, ledger)
-              insert_or_update_all_account(ledger)
-              update_hotspot_score(ledger, height)
+              {:ok, {:inserted_block, inserted_block}}
+            {:ok, inserted_txns} ->
+              {:ok, [{:inserted_block, inserted_block}, {:inserted_txns, inserted_txns}]}
               # NOTE: move this elsewhere...
-              BlockChannel.broadcast_change(inserted_block)
             _ ->
               {:error, :unhandled}
           end
       end
     end)
+
+    case result do
+      {:error, _}=e ->
+        e
+      {:ok, {:inserted_block, inserted_block}} ->
+        BlockChannel.broadcast_change(inserted_block)
+      {:ok, [{:inserted_block, inserted_block}, {:inserted_txns, _inserted_txns}]} ->
+        Repo.transaction(fn ->
+          add_transactions(block, ledger, height)
+          add_account_transactions(block)
+          commit_account_balances(block, ledger)
+          insert_or_update_all_account(ledger)
+          update_hotspot_score(ledger, height)
+        end)
+        BlockChannel.broadcast_change(inserted_block)
+    end
   end
 
   defp notify(:prod, block, ledger, false), do: Notifier.notify(block, ledger)
@@ -475,6 +485,7 @@ defmodule BlockchainAPI.Committer do
 
     {:ok, _poc_request_entry} =
       POCRequestTransaction.map(challenger_loc, challenger_owner, txn)
+      |> IO.inspect(label: :poc_req_txn_map)
       |> Query.POCRequestTransaction.create()
 
     {:ok, _activity_entry} =
