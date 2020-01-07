@@ -30,7 +30,9 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   def create(attrs \\ %{}) do
     %POCRequestTransaction{}
+    |> IO.inspect()
     |> POCRequestTransaction.changeset(attrs)
+    |> IO.inspect(label: :poc_request_changeset)
     |> Repo.insert()
   end
 
