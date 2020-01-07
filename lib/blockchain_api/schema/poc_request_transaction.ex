@@ -33,11 +33,8 @@ defmodule BlockchainAPI.Schema.POCRequestTransaction do
   def changeset(poc_request, attrs) do
     poc_request
     |> cast(attrs, @fields)
-    |> IO.inspect()
     |> validate_required(@fields)
-    |> IO.inspect()
     |> foreign_key_constraint(:hash)
-    |> IO.inspect()
     |> foreign_key_constraint(:challenger)
   end
 
