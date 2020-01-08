@@ -32,7 +32,10 @@ config :blockchain_api,
   fastly_api_key: System.get_env("FASTLY_API_KEY"),
   fastly_service_id: System.get_env("FASTLY_SERVICE_ID"),
   notifier_client: BlockchainAPI.NotifierClient,
-  ro_mode: ro_mode
+  ro_mode: ro_mode,
+  # Overridden in prod mode
+  pending_txn_blocks_to_wait: 20,
+  pending_txn_cleanup_interval: :timer.minutes(5)
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
