@@ -26,6 +26,17 @@ config :blockchain_api, BlockchainAPI.Repo,
   timeout: 60000,
   log: false
 
+# Configure RORepo to be the same as the default repo for testing
+config :blockchain_api, BlockchainAPI.RORepo,
+  username: "postgres",
+  password: "postgres",
+  database: "blockchain-api-test",
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10,
+  timeout: 60000,
+  log: false
+
 config :blockchain_api,
   env: Mix.env(),
   notifier_client: BlockchainAPI.FakeNotifierClient
