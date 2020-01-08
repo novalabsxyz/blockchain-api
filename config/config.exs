@@ -36,18 +36,21 @@ config :logger, :console, level: :info
 config :logger, :error_log,
   path: "log/blockchain_api/error.log",
   level: :error,
+  truncate: :infinity,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
 config :logger, :info_log,
   path: "log/blockchain_api/info.log",
   level: :info,
+  truncate: :infinity,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
 config :logger, :debug_log,
   path: "log/blockchain_api/debug.log",
   level: :debug,
+  truncate: :infinity,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 

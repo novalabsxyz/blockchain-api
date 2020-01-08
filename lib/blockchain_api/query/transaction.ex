@@ -5,6 +5,8 @@ defmodule BlockchainAPI.Query.Transaction do
   # number of previous blocks to look for poc request txns
   @past_poc_req_blocks 5
 
+  require Logger
+
   alias BlockchainAPI.{
     Repo,
     RORepo,
@@ -52,20 +54,30 @@ defmodule BlockchainAPI.Query.Transaction do
   end
 
   def insert_all(block_height, transactions) do
+    inserted_at = NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
+    updated_at = NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
     txn_changesets = transactions
                      |> Enum.map(
                        fn(t) ->
                          meta = %{
-                           inserted_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
-                           updated_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second),
+                           inserted_at: inserted_at,
+                           updated_at: updated_at,
                            block_height: block_height
                          }
                          Map.merge(t, meta)
                        end)
 
-    Multi.new()
-    |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets)
-    |> Repo.transaction()
+    res = Multi.new()
+          |> Multi.insert_all(:insert_all_txns, Transaction, txn_changesets, returning: [:id, :block_height, :hash, :type])
+          |> Repo.transaction()
+
+    case res do
+      {:error, reason}=e ->
+        Logger.error("batch inserted txns error: #{inspect(reason)}")
+        e
+      {:ok, batch_txns} ->
+        {:ok, batch_txns}
+    end
   end
 
   def get_payment!(txn_hash) do

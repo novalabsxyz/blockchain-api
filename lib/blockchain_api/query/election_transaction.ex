@@ -57,7 +57,7 @@ defmodule BlockchainAPI.Query.ElectionTransaction do
 
   def get_consensus_members(election) do
     election
-    |> Repo.preload(:consensus_members)
+    |> RORepo.preload(:consensus_members)
     |> Map.get(:consensus_members)
     |> Enum.map(&encode_member/1)
   end

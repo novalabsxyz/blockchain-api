@@ -36,7 +36,7 @@ defmodule BlockchainAPI.Query.POCRequestTransaction do
 
   def get_challenge(poc_request) do
     poc_request
-    |> Repo.preload(:poc_receipts_transactions)
+    |> RORepo.preload(:poc_receipts_transactions)
     |> Map.get(:poc_receipts_transactions)
   end
 

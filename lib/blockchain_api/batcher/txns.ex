@@ -9,7 +9,7 @@ defmodule BlockchainAPI.Batcher.Txns do
   def insert_all(block, _ledger, height) do
     case :blockchain_block.transactions(block) do
       [] ->
-        :ok
+        {:ok, :no_txns}
 
       txns ->
         txns_to_insert =
