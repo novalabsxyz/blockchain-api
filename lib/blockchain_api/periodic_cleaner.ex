@@ -16,8 +16,9 @@ defmodule BlockchainAPI.PeriodicCleaner do
   require Logger
 
   @me __MODULE__
-  # Wait for 50 blocks for txn to clear
-  @max_height 50
+
+  # Wait for `pending_txn_blocks_to_wait` blocks for txn to clear, default to 50
+  @max_height Application.get_env(:blockchain_api, :pending_txn_blocks_to_wait, 50)
 
   # ==================================================================
   # API
@@ -51,8 +52,8 @@ defmodule BlockchainAPI.PeriodicCleaner do
   end
 
   defp schedule_cleanup() do
-    # Schedule cleanup every 30 minutes
-    Process.send_after(self(), :clean, :timer.minutes(30))
+    # Schedule cleanup every `pending_txn_cleanup_interval` default to 30 minutes
+    Process.send_after(self(), :clean, Application.get_env(:blockchain_api, :pending_txn_cleanup_interval, :timer.minutes(30)))
   end
 
   defp handle_pending_txn(mod, chain) do

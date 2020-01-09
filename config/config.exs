@@ -10,7 +10,9 @@ use Mix.Config
 config :blockchain_api,
   ecto_repos: [BlockchainAPI.Repo],
   onesignal_rest_api_key: "",
-  onesignal_app_id: ""
+  onesignal_app_id: "",
+  pending_txn_blocks_to_wait: 50,
+  pending_txn_cleanup_interval: :timer.minutes(30)
 
 # Configures the endpoint
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
