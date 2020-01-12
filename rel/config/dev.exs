@@ -10,6 +10,7 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 port = String.to_integer(System.get_env("PORT") || "4000")
+ro_mode = String.to_integer(System.get_env("RO_MODE") || "1")
 
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   http: [port: port],
@@ -26,7 +27,8 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
 config :blockchain_api,
   env: Mix.env(),
   google_maps_secret: System.get_env("GOOGLE_MAPS_API_KEY"),
-  notifier_client: BlockchainAPI.FakeNotifierClient
+  notifier_client: BlockchainAPI.FakeNotifierClient,
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.Repo]  # no replica in dev mode
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
@@ -40,4 +42,5 @@ config :blockchain_api, BlockchainAPI.Repo,
   queue_interval: 5_000
 
 config :blockchain,
+  env: Mix.env(),
   base_dir: String.to_charlist("/var/data/blockchain-api/dev/")

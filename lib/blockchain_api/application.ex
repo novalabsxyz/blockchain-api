@@ -67,8 +67,8 @@ defmodule BlockchainAPI.Application do
     [schema: schema, repo: Repo, poll_interval: poll_interval]
   end
 
-  defp children(:test, blockchain_sup_opts, watcher_worker_opts) do
-    # Children to start in test, dev and prod envs
+  defp children(:prod, blockchain_sup_opts, watcher_worker_opts) do
+    # Children to start in prod env
     [
       # Start the blockchain
       %{
@@ -77,8 +77,9 @@ defmodule BlockchainAPI.Application do
         restart: :permanent,
         type: :supervisor
       },
-      # Start the Ecto repository
+      # Start the Ecto repository, both master and replica
       Repo,
+      Repo.replica,
       # Start the endpoint when the application starts
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
@@ -90,7 +91,7 @@ defmodule BlockchainAPI.Application do
     ]
   end
   defp children(_, blockchain_sup_opts, watcher_worker_opts) do
-    # Children to start in dev and prod envs
+    # Children to start in test and dev
     [
       # Start the blockchain
       %{
@@ -101,7 +102,6 @@ defmodule BlockchainAPI.Application do
       },
       # Start the Ecto repository
       Repo,
-      Repo.replica,
       # Start the endpoint when the application starts
       BlockchainAPIWeb.Endpoint,
       # Starts a worker by calling: BlockchainAPI.Worker.start_link(arg)
