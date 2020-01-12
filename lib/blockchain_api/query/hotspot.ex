@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.Hotspot do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, RORepo, Util}
+  alias BlockchainAPI.{Repo, Util}
   alias BlockchainAPI.Schema.{
     Block,
     GatewayTransaction,
@@ -16,19 +16,19 @@ defmodule BlockchainAPI.Query.Hotspot do
   def list(_params) do
     Hotspot
     |> order_by([h], desc: h.id)
-    |> RORepo.all()
+    |> Repo.replica.all()
   end
 
   def get(address) do
     Hotspot
     |> where([h], h.address == ^address)
-    |> RORepo.one()
+    |> Repo.replica.one()
   end
 
   def get!(address) do
     Hotspot
     |> where([h], h.address == ^address)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -52,14 +52,14 @@ defmodule BlockchainAPI.Query.Hotspot do
   def all() do
     Hotspot
     |> order_by([h], desc: h.id)
-    |> RORepo.all()
+    |> Repo.replica.all()
   end
 
   def all_no_loc() do
     Hotspot
     |> where([h], is_nil(h.location))
     |> order_by([h], desc: h.id)
-    |> RORepo.all()
+    |> Repo.replica.all()
   end
 
   def all_by_time() do
@@ -79,7 +79,7 @@ defmodule BlockchainAPI.Query.Hotspot do
         time: b.time
       }
 
-    hotspots = query |> RORepo.all()
+    hotspots = query |> Repo.replica.all()
 
     for %{ location: location } = h <- hotspots do
       {lat, lng} = Util.h3_to_lat_lng(location)
@@ -148,7 +148,7 @@ defmodule BlockchainAPI.Query.Hotspot do
         }
       )
 
-    query |> RORepo.all()
+    query |> Repo.replica.all()
   end
 
   defp format(entries) do

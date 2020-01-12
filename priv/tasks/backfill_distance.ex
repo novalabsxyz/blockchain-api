@@ -13,7 +13,6 @@ defmodule Mix.Tasks.BackfillDistance do
 
   alias BlockchainAPI.{
     Repo,
-    RORepo,
     Schema.POCWitness,
     Schema.POCPathElement,
     Util
@@ -48,7 +47,7 @@ defmodule Mix.Tasks.BackfillDistance do
       }
     )
 
-    witnesses_without_distance = query |> RORepo.all()
+    witnesses_without_distance = query |> Repo.replica.all()
 
     for %{wx_id: wx_id, wx_loc: wx_loc, challengee_loc: challengee_loc} <- witnesses_without_distance do
       distance = Util.h3_distance_in_meters(

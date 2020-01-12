@@ -8,7 +8,6 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   alias BlockchainAPI.{
     Util,
     Repo,
-    RORepo,
     Schema.POCReceiptsTransaction,
     Schema.POCPathElement,
     Schema.Transaction,
@@ -23,7 +22,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     path_query()
     |> receipt_query()
     |> maybe_filter(params)
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> encode()
   end
 
@@ -31,7 +30,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
     start = Timex.now() |> Timex.shift(hours: -24) |> Timex.to_unix()
     finish = Util.current_time()
 
-    receipt_issued_count_query(start, finish) |> RORepo.one()
+    receipt_issued_count_query(start, finish) |> Repo.replica.one()
   end
 
   def show(id) do
@@ -66,7 +65,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
       p in POCReceiptsTransaction,
       select: max(p.id)
     )
-    |> RORepo.one()
+    |> Repo.replica.one()
   end
 
   def create(attrs \\ %{}) do
@@ -81,14 +80,14 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
   defp get_by_id(id) do
     path_query()
     |> receipt_query(id)
-    |> RORepo.one()
+    |> Repo.replica.one()
     |> encode_entry()
   end
 
   defp get_by_hash(hash) do
     POCReceiptsTransaction
     |> where([poc_receipts_txn], poc_receipts_txn.hash == ^hash)
-    |> RORepo.one()
+    |> Repo.replica.one()
   end
 
   # Encoding helpers

@@ -14,7 +14,7 @@ defmodule BlockchainAPIWeb.TransactionControllerTest do
       members: [member1, member2],
       block: b
     } do
-      BlockchainAPI.Repo.all(BlockchainAPI.Schema.ConsensusMember)
+      BlockchainAPI.Repo.replica.all(BlockchainAPI.Schema.ConsensusMember)
 
       %{"data" => [%{"members" => member_addresses}]} =
         conn

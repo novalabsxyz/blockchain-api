@@ -6,7 +6,6 @@ defmodule BlockchainAPI.Query.AccountTransaction do
   alias BlockchainAPI.{
     Query,
     Repo,
-    RORepo,
     Schema.AccountTransaction,
     Schema.CoinbaseTransaction,
     Schema.DataCreditTransaction,
@@ -34,7 +33,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     address
     |> list_query()
     |> maybe_filter(params)
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> format()
   end
 
@@ -42,7 +41,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     address
     |> list_query()
     |> maybe_filter(params)
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> format()
   end
 
@@ -55,7 +54,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       address
       |> list_query()
       |> limit(^limit)
-      |> RORepo.all()
+      |> Repo.replica.all()
       |> format()
 
     pp ++ pg ++ pl ++ rest
@@ -69,7 +68,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     rest =
       address
       |> list_query()
-      |> RORepo.all()
+      |> Repo.replica.all()
       |> format()
 
     pp ++ pg ++ pl ++ rest
@@ -79,7 +78,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     AccountTransaction
     |> where([at], at.txn_hash == ^txn_hash)
     |> where([at], at.txn_status == "pending")
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def update_pending!(pending, attrs \\ %{}) do
@@ -174,7 +173,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       )
 
     query
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> clean_account_gateways()
   end
 

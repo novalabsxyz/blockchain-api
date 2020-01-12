@@ -6,14 +6,13 @@ defmodule Mix.Tasks.BackfillHotspotName do
   ]
 
   @repo BlockchainAPI.Repo
-  @rorepo BlockchainAPI.RORepo
 
   use Mix.Task
 
   import Ecto.Query, warn: false
 
   alias BlockchainAPI.{
-    RORepo,
+    Repo,
     Schema.Hotspot,
     Query
   }
@@ -26,7 +25,7 @@ defmodule Mix.Tasks.BackfillHotspotName do
 
   defp start_connection() do
     {:ok, _ } = @repo.start_link(pool_size: 10)
-    {:ok, _ } = @rorepo.start_link(pool_size: 10)
+    {:ok, _ } = @repo.replica.start_link(pool_size: 10)
   end
 
   @shortdoc "Backfills hotspot.name field"
@@ -42,7 +41,7 @@ defmodule Mix.Tasks.BackfillHotspotName do
 
     query
     |> IO.inspect()
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> IO.inspect()
     |> Enum.map(
       fn(hotspot) ->

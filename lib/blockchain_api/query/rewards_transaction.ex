@@ -4,7 +4,6 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
 
   alias BlockchainAPI.{
     Repo,
-    RORepo,
     Schema.RewardsTransaction,
     Schema.RewardTxn,
     Schema.Transaction,
@@ -21,11 +20,11 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
     RewardsTransaction
     |> where([rewards_txn], rewards_txn.hash == ^hash)
     |> preload([:reward_txns])
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def list(_params) do
-    from(r in RewardsTransaction, preload: [:reward_txns]) |> RORepo.all()
+    from(r in RewardsTransaction, preload: [:reward_txns]) |> Repo.replica.all()
   end
 
   def list_for(account_addr) do
@@ -46,7 +45,7 @@ defmodule BlockchainAPI.Query.RewardsTransaction do
         height: t.block_height
       }
     )
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> encode()
   end
 

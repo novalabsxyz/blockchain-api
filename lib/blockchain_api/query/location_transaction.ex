@@ -2,18 +2,18 @@ defmodule BlockchainAPI.Query.LocationTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, RORepo, Schema.LocationTransaction}
+  alias BlockchainAPI.{Repo, Schema.LocationTransaction}
 
   def list(_params) do
     LocationTransaction
     |> order_by([lt], desc: [lt.id])
-    |> RORepo.all()
+    |> Repo.replica.all()
   end
 
   def get!(hash) do
     LocationTransaction
     |> where([lt], lt.hash == ^hash)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def create(attrs \\ %{}) do

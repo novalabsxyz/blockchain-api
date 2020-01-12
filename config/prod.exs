@@ -62,6 +62,7 @@ config :blockchain_api, BlockchainAPI.RORepo,
   log: false
 
 config :blockchain,
-  base_dir: String.to_charlist("/var/data/blockchain-api/prod/")
+  base_dir: String.to_charlist("/var/data/blockchain-api/prod/"),
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.RORepo]  # different replica in prod mode
 
 config :appsignal, :config, active: true

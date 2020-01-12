@@ -45,5 +45,6 @@ config :blockchain_api, BlockchainAPI.Repo,
 
 config :blockchain,
   base_dir: String.to_charlist("/var/data/blockchain-api/dev/")
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.Repo]  # no replica in dev mode
 
 config :appsignal, :config, active: true

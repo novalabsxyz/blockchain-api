@@ -3,14 +3,14 @@ defmodule BlockchainAPI.Query.AccountBalance do
   import Ecto.Query, warn: false
   use Timex
 
-  alias BlockchainAPI.{Repo, RORepo, Util, Schema.AccountBalance}
+  alias BlockchainAPI.{Repo, Util, Schema.AccountBalance}
 
   def get_latest!(address) do
     AccountBalance
     |> where([a], a.account_address == ^address)
     |> order_by([a], desc: a.block_height)
     |> limit(1)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def create(attrs \\ %{}) do
@@ -59,7 +59,7 @@ defmodule BlockchainAPI.Query.AccountBalance do
         }
       )
 
-    query |> RORepo.all()
+    query |> Repo.replica.all()
   end
 
   defp sample_daily_account_balance(address) do
