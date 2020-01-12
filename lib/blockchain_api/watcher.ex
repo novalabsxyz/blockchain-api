@@ -93,8 +93,21 @@ defmodule BlockchainAPI.Watcher do
 
     case Query.Block.get_latest_height() do
       nil ->
-        # nothing in the db yet
-        Committer.commit(block, ledger, height, sync_flag, env)
+        # check for genesis block
+        case Query.Block.get(1) do
+          nil ->
+            # nada in db
+            Range.new(1, height)
+            |> Enum.map(fn h ->
+              {:ok, b} = :blockchain.get_block(h, chain)
+              block_height = :blockchain_block.height(b)
+              Logger.info("Committing block at height: #{inspect(block_height)}")
+              Committer.commit(b, ledger, block_height, sync_flag, env)
+              Logger.info("Committed block at height: #{inspect(block_height)}")
+            end)
+          _ ->
+            :ok
+        end
 
       last_known_height ->
         case height > last_known_height do
