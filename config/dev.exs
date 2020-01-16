@@ -30,7 +30,8 @@ config :blockchain_api,
   fastly_api_key: System.get_env("FASTLY_API_KEY"),
   fastly_service_id: System.get_env("FASTLY_SERVICE_ID"),
   notifier_client: BlockchainAPI.FakeNotifierClient,
-  ro_mode: ro_mode
+  ro_mode: ro_mode,
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.Repo]  # no replica in dev mode
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,
@@ -44,6 +45,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   queue_interval: 5_000
 
 config :blockchain,
+  env: Mix.env(),
   base_dir: String.to_charlist("/var/data/blockchain-api/dev/")
 
 config :appsignal, :config, active: true

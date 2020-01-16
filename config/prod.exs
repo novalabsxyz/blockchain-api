@@ -35,7 +35,8 @@ config :blockchain_api,
   ro_mode: ro_mode,
   # Overridden in prod mode
   pending_txn_blocks_to_wait: 20,
-  pending_txn_cleanup_interval: :timer.minutes(5)
+  pending_txn_cleanup_interval: :timer.minutes(5),
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.RORepo]  # different replica in prod mode
 
 # Configure your database
 config :blockchain_api, BlockchainAPI.Repo,

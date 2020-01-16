@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.PendingSecExchange do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, RORepo, Schema.PendingSecExchange}
+  alias BlockchainAPI.{Repo, Schema.PendingSecExchange}
 
   def create(attrs \\ %{}) do
     %PendingSecExchange{}
@@ -13,13 +13,13 @@ defmodule BlockchainAPI.Query.PendingSecExchange do
   def get!(hash) do
     PendingSecExchange
     |> where([psec], psec.hash == ^hash)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def get_by_id!(id) do
     PendingSecExchange
     |> where([psec], psec.id == ^id)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def update!(psec, attrs \\ %{}) do

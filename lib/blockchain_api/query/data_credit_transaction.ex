@@ -2,7 +2,7 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
   @moduledoc false
   import Ecto.Query, warn: false
 
-  alias BlockchainAPI.{Repo, RORepo, Schema.DataCreditTransaction}
+  alias BlockchainAPI.{Repo, Schema.DataCreditTransaction}
 
   def get_balance(address) do
     res =
@@ -10,7 +10,7 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
       |> where([ct], ct.payee == ^address)
       |> order_by([ct], desc: ct.id)
       |> limit(1)
-      |> RORepo.one()
+      |> Repo.replica.one()
 
     case res do
       nil -> 0
@@ -21,7 +21,7 @@ defmodule BlockchainAPI.Query.DataCreditTransaction do
   def get!(hash) do
     DataCreditTransaction
     |> where([ct], ct.hash == ^hash)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def create(attrs \\ %{}) do

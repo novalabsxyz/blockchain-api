@@ -12,7 +12,8 @@ config :blockchain_api,
   onesignal_rest_api_key: "",
   onesignal_app_id: "",
   pending_txn_blocks_to_wait: 50,
-  pending_txn_cleanup_interval: :timer.minutes(30)
+  pending_txn_cleanup_interval: :timer.minutes(30),
+  repos: [master: BlockchainAPI.Repo]
 
 # Configures the endpoint
 config :blockchain_api, BlockchainAPIWeb.Endpoint,

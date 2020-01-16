@@ -28,7 +28,8 @@ config :blockchain_api, BlockchainAPI.Repo,
 
 config :blockchain_api,
   env: Mix.env(),
-  notifier_client: BlockchainAPI.FakeNotifierClient
+  notifier_client: BlockchainAPI.FakeNotifierClient,
+  repos: [master: BlockchainAPI.Repo, replica: BlockchainAPI.Repo]  # no replica in test mode
 
 # Don't connect dev to seed nodes
 config :blockchain,

@@ -4,7 +4,6 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
 
   alias BlockchainAPI.{
     Repo,
-    RORepo,
     Util,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
@@ -34,14 +33,14 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
       )
 
     query
-    |> RORepo.all()
+    |> Repo.replica.all()
     |> clean_gateways()
   end
 
   def get!(hash) do
     GatewayTransaction
     |> where([gt], gt.hash == ^hash)
-    |> RORepo.one!()
+    |> Repo.replica.one!()
   end
 
   def create(attrs \\ %{}) do

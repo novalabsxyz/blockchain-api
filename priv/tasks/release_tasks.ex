@@ -7,7 +7,6 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
   ]
 
   @repo BlockchainAPI.Repo
-  @rorepo BlockchainAPI.RORepo
 
   @otp_app :blockchain_api
 
@@ -30,8 +29,16 @@ defmodule BlockchainAPI.Tasks.ReleaseTasks do
   end
 
   defp start_connection() do
-    {:ok, _ } = @repo.start_link(pool_size: 10)
-    {:ok, _ } = @rorepo.start_link(pool_size: 10)
+    IO.puts "Starting repos..."
+    IO.puts "#{inspect(System.get_env("MIX_ENV"))}"
+    case System.get_env("MIX_ENV") do
+      "prod" ->
+        {:ok, _ } = @repo.start_link(pool_size: 10)
+        {:ok, _ } = @repo.replica.start_link(pool_size: 10)
+      _ ->
+        # only start repo in all other envs except prod
+        {:ok, _ } = @repo.start_link(pool_size: 10)
+    end
   end
 
   defp run_migrations() do

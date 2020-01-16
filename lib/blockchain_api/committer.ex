@@ -423,21 +423,26 @@ defmodule BlockchainAPI.Committer do
         end
       )
 
-    :ok =
-      Enum.each(
-        members,
-        fn member0 ->
-          {:ok, _activity_entry} =
-            Query.HotspotActivity.create(%{
-              gateway: member0,
-              in_consensus: true,
-              election_id: election_entry.id,
-              election_block_height: :blockchain_txn_consensus_group_v1.height(txn),
-              election_txn_block_height: height,
-              election_txn_block_time: time
-            })
-        end
-      )
+    case height > 1 do
+      true ->
+        :ok =
+          Enum.each(
+            members,
+            fn member0 ->
+              {:ok, _activity_entry} =
+                Query.HotspotActivity.create(%{
+                  gateway: member0,
+                  in_consensus: true,
+                  election_id: election_entry.id,
+                  election_block_height: :blockchain_txn_consensus_group_v1.height(txn),
+                  election_txn_block_height: height,
+                  election_txn_block_time: time
+                })
+            end
+          )
+      false ->
+        :ok
+    end
   end
 
   defp insert_transaction(:blockchain_txn_rewards_v1, txn, height, time) do
