@@ -225,6 +225,7 @@ defmodule BlockchainAPI.Query.POCReceiptsTransaction do
           lng: lng,
           distance: witness.distance,
           signal: witness.signal,
+          is_good: witness.is_good,
           signature: Util.bin_to_string(witness.signature),
           time: System.convert_time_unit(witness.timestamp, :nanosecond, :millisecond)
         }
