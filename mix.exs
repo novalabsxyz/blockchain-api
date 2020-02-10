@@ -76,6 +76,12 @@ defmodule BlockchainAPI.MixProject do
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
       {:cuttlefish,
        git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
+      {:helium_proto,
+        git: "https://github.com/helium/proto.git",
+        override: true,
+        manager: :rebar3,
+        ref: "6a68672f4d052e818931748628c1700ea29927bf"
+      },
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:lager, "3.6.7",
         [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]},
