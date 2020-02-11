@@ -46,6 +46,9 @@ config :blockchain_api, BlockchainAPI.Repo,
 
 config :blockchain,
   env: Mix.env(),
-  base_dir: String.to_charlist("/var/data/blockchain-api/dev/")
+  base_dir: String.to_charlist("/var/data/blockchain-api/dev/"),
+  peerbook_update_interval: 60000,
+  peerbook_allow_rfc1918: true,
+  peer_cache_timeout: 20000
 
 config :appsignal, :config, active: true

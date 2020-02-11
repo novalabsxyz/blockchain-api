@@ -63,6 +63,9 @@ config :blockchain_api, BlockchainAPI.RORepo,
   log: false
 
 config :blockchain,
-  base_dir: String.to_charlist("/var/data/blockchain-api/prod/")
+  base_dir: String.to_charlist("/var/data/blockchain-api/prod/"),
+  peerbook_update_interval: 60000,
+  peerbook_allow_rfc1918: true,
+  peer_cache_timeout: 20000
 
 config :appsignal, :config, active: true

@@ -35,4 +35,7 @@ config :blockchain_api,
 config :blockchain,
   seed_nodes: [],
   seed_node_dns: '',
-  base_dir: String.to_charlist("/tmp/blockchain-api/test/")
+  base_dir: String.to_charlist("/tmp/blockchain-api/test/"),
+  peerbook_update_interval: 60000,
+  peerbook_allow_rfc1918: true,
+  peer_cache_timeout: 20000
