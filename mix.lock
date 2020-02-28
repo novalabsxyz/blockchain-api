@@ -46,6 +46,7 @@
   "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "1b126c1a71e47cf0fa812b9710a5d3cbb74c2abb", [branch: "master"]},
   "libp2p_crypto": {:hex, :libp2p_crypto, "1.0.1", "0d7071a07cbba012c049c06067874969a6a2fe765ccd33b9dbb582580e62929f", [:rebar3], [{:ecc_compact, "1.0.4", [hex: :ecc_compact, repo: "hexpm", optional: false]}, {:enacl, "0.17.2", [hex: :enacl, repo: "hexpm", optional: false]}, {:erl_base58, "0.0.1", [hex: :erl_base58, repo: "hexpm", optional: false]}, {:multiaddr, "1.1.3", [hex: :multiaddr, repo: "hexpm", optional: false]}], "hexpm", "37789c6b1ddf0fb6f8c2f6e1e8297a728ca1f0e365f259a06a931a52e8c42140"},
   "logger_file_backend": {:hex, :logger_file_backend, "0.0.11", "3bbc5f31d3669e8d09d7a9443e86056fae7fc18e45c6f748c33b8c79a7e147a1", [:mix], [], "hexpm", "62be826f04644c62b0a2bc98a13e2e7ae52c0a4eda020f4c59d7287356d5e445"},
+  "merkerl": {:git, "https://github.com/helium/merkerl.git", "23c7384f30c1e6731fa40c74ce042562ad802385", [branch: "master"]},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm", "69b09adddc4f74a40716ae54d140f93beb0fb8978d8636eaded0c31b6f099f16"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm", "6cbe761d6a0ca5a31a0931bf4c63204bceb64538e664a8ecf784a9a6f3b875f1"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm", "f278585650aa581986264638ebf698f8bb19df297f66ad91b18910dfc6e19323"},
