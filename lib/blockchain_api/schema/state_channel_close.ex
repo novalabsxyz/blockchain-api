@@ -1,26 +1,40 @@
 defmodule BlockchainAPI.Schema.StateChannel do
   use Ecto.Schema
+  import Ecto.Changeset
 
   @primary_key false
   embedded_schema do
-    field :id, :binary
-    field :owner, :binary
-    field :credits, :integer
-    field :nonce, :integer
+    field :id, :string, null: false
+    field :owner, :string, null: false
+    field :credits, :integer, null: false
+    field :nonce, :integer, null: false
     embeds_many :balances, BlockchainAPI.Schema.StateChannel.Balance
-    field :root_hash, :binary
-    field :state, :string
+    field :root_hash, :string
+    field :state, :string, null: false
     field :expire_at_block, :integer
   end
+
+  def changeset(schema, params) do
+    schema
+    |> cast(params, [:id, :owner, :credits, :nonce, :root_hash, :state, :expire_at_block])
+    |> cast_embed(:balances)
+  end
+
 end
 
 defmodule BlockchainAPI.Schema.StateChannel.Balance do
   use Ecto.Schema
+  import Ecto.Changeset
 
   @primary_key false
   schema "balances" do
-    field :hotspot, :string, null: false
-    field :num_bytes, :integer, nul: false
+    field :hotspot, :string
+    field :num_bytes, :integer
+  end
+
+  def changeset(schema, params) do
+    schema
+    |> cast(params, [:hotspot, :num_bytes])
   end
 
 end
@@ -45,7 +59,7 @@ defmodule BlockchainAPI.Schema.StateChannelCloseTxn do
   @doc false
   def changeset(txn, attrs) do
     txn
-    |> cast(attrs, [:closer])
+    |> cast(attrs, [:closer, :hash])
     |> cast_embed(:state_channel)
     |> validate_required([:closer, :state_channel])
     |> foreign_key_constraint(:hash)
@@ -71,21 +85,22 @@ defmodule BlockchainAPI.Schema.StateChannelCloseTxn do
   def map(txn) do
 
     sc0 = :blockchain_txn_state_channel_close_v1.state_channel(txn)
-    balances0 = :blockchain_state_channel_v1.balances(sc0)
 
-    balances = Enum.map(balances0,
-      fn {h, b} ->
-        %BlockchainAPI.Schema.StateChannel.Balance{hotspot: h, num_bytes: b}
-      end)
+    balances = sc0
+               |> :blockchain_state_channel_v1.balances()
+               |> Enum.map(
+                 fn({h, b}) ->
+                   %{hotspot: Util.bin_to_string(h), num_bytes: b}
+                 end)
 
-    sc = %BlockchainAPI.Schema.StateChannel{
-      id: :blockchain_state_channel_v1.id(sc0),
-      owner: :blockchain_state_channel_v1.owner(sc0),
+    sc = %{
+      id: Util.bin_to_string(:blockchain_state_channel_v1.id(sc0)),
+      owner: Util.bin_to_string(:blockchain_state_channel_v1.owner(sc0)),
       credits: :blockchain_state_channel_v1.credits(sc0),
       nonce: :blockchain_state_channel_v1.nonce(sc0),
       balances: balances,
-      root_hash: :blockchain_state_channel_v1.root_hash(sc0),
-      state: :blockchain_state_channel_v1.state(sc0),
+      root_hash: Util.bin_to_string(:blockchain_state_channel_v1.root_hash(sc0)),
+      state: Atom.to_string(:blockchain_state_channel_v1.state(sc0)),
       expire_at_block: :blockchain_state_channel_v1.expire_at_block(sc0)
     }
 
