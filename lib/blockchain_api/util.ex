@@ -18,7 +18,9 @@ defmodule BlockchainAPI.Util do
     SecurityTransaction,
     OUITransaction,
     SecurityExchangeTransaction,
-    PaymentV2Txn
+    PaymentV2Txn,
+    StateChannelOpenTxn,
+    StateChannelCloseTxn
   }
 
   @bones 100_000_000
@@ -201,6 +203,22 @@ defmodule BlockchainAPI.Util do
   def clean_txn_struct(%{payment_v2: payment_v2, height: height, time: time}) when is_map(payment_v2) do
     Map.merge(PaymentV2Txn.encode_model(payment_v2), %{
       type: "payment_v2",
+      height: height,
+      time: time
+    })
+  end
+
+  def clean_txn_struct(%{sc_open: sc_open, height: height, time: time}) when is_map(sc_open) do
+    Map.merge(StateChannelOpenTxn.encode_model(sc_open), %{
+      type: "sc_open",
+      height: height,
+      time: time
+    })
+  end
+
+  def clean_txn_struct(%{sc_close: sc_close, height: height, time: time}) when is_map(sc_close) do
+    Map.merge(StateChannelCloseTxn.encode_model(sc_close), %{
+      type: "sc_close",
       height: height,
       time: time
     })

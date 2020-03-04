@@ -2,6 +2,7 @@ defmodule BlockchainAPI.Schema.StateChannel do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
   @primary_key false
   embedded_schema do
     field :id, :string, null: false
@@ -26,6 +27,7 @@ defmodule BlockchainAPI.Schema.StateChannel.Balance do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
   @primary_key false
   schema "balances" do
     field :hotspot, :string
@@ -70,7 +72,7 @@ defmodule BlockchainAPI.Schema.StateChannelCloseTxn do
     |> Map.take(@fields)
     |> Map.merge(%{
       closer: Util.bin_to_string(state_channel_close_transaction.closer),
-      type: "state_channel_close"
+      type: "sc_close"
     })
   end
 

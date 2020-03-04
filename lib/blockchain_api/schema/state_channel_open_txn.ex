@@ -34,7 +34,7 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
       id: Util.bin_to_string(state_channel_open_transaction.id),
       owner: Util.bin_to_string(state_channel_open_transaction.owner),
       hash: Util.bin_to_string(state_channel_open_transaction.hash),
-      type: "state_channel_open"
+      type: "sc_open"
     })
   end
 

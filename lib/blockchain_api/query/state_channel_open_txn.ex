@@ -9,4 +9,10 @@ defmodule BlockchainAPI.Query.StateChannelOpenTxn do
     |> StateChannelOpenTxn.changeset(attrs)
     |> Repo.insert()
   end
+
+  def get!(hash) do
+    StateChannelOpenTxn
+    |> where([sco], sco.hash == ^hash)
+    |> Repo.replica.one!()
+  end
 end
