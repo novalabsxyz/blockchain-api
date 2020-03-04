@@ -71,6 +71,14 @@ defmodule BlockchainAPI.Batcher.Txns do
                 to_insert = Transaction.map(:blockchain_txn_payment_v2, txn)
                 [to_insert | acc]
 
+              :blockchain_txn_state_channel_open_v1 ->
+                to_insert = Transaction.map(:blockchain_txn_state_channel_open_v1, txn)
+                [to_insert | acc]
+
+              :blockchain_txn_state_channel_close_v1 ->
+                to_insert = Transaction.map(:blockchain_txn_state_channel_close_v1, txn)
+                [to_insert | acc]
+
                 _ ->
                 acc
             end

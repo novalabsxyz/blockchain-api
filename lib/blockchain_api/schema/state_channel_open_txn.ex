@@ -14,6 +14,7 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
     field :amount, :integer, null: false
     field :owner, :binary, null: false
     field :nonce, :integer, null: false
+    field :expire_within, :integer, null: false
 
     timestamps()
   end
@@ -21,8 +22,8 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
   @doc false
   def changeset(txn, attrs) do
     txn
-    |> cast(attrs, [:id, :hash, :amount, :owner, :nonce])
-    |> validate_required([:id, :hash, :amount, :owner, :nonce])
+    |> cast(attrs, [:id, :hash, :amount, :owner, :nonce, :expire_within])
+    |> validate_required([:id, :hash, :amount, :owner, :nonce, :expire_within])
     |> foreign_key_constraint(:hash)
   end
 
