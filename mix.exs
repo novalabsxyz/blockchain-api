@@ -75,7 +75,7 @@ defmodule BlockchainAPI.MixProject do
       # blockchain requirements
       {:blockchain,
         git: "git@github.com:helium/blockchain-core.git",
-        branch: "macpie/ch5377/data-credits-state-channels"},
+        branch: "rg/sc-debug"},
       {:cuttlefish,
        git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},

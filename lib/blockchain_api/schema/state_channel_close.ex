@@ -2,7 +2,9 @@ defmodule BlockchainAPI.Schema.StateChannel do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive Jason.Encoder
+  @fields [:id, :owner, :credits, :nonce, :balances, :root_hash, :state, :expire_at_block]
+
+  @derive {Jason.Encoder, only: @fields}
   @primary_key false
   embedded_schema do
     field :id, :string, null: false
@@ -27,7 +29,9 @@ defmodule BlockchainAPI.Schema.StateChannel.Balance do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive Jason.Encoder
+  @fields [:hotspot, :num_bytes]
+
+  @derive {Jason.Encoder, only: @fields}
   @primary_key false
   schema "balances" do
     field :hotspot, :string

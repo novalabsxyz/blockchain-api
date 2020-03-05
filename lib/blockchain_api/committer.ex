@@ -266,10 +266,10 @@ defmodule BlockchainAPI.Committer do
               )
 
             :blockchain_txn_oui_v1 ->
-            insert_transaction(:blockchain_txn_oui_v1, txn, height)
+              insert_transaction(:blockchain_txn_oui_v1, txn, height)
 
             :blockchain_txn_state_channel_open_v1 ->
-            insert_transaction(:blockchain_txn_state_channel_open_v1, txn, height)
+              insert_transaction(:blockchain_txn_state_channel_open_v1, txn, height)
 
             :blockchain_txn_state_channel_close_v1 ->
               insert_transaction(:blockchain_txn_state_channel_close_v1, txn, height)
