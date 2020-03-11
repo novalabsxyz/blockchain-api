@@ -96,8 +96,8 @@ defmodule BlockchainAPI.Schema.StateChannelCloseTxn do
                |> :blockchain_state_channel_v1.balances()
                |> Enum.map(
                  fn(balance) ->
-                   payee = :blockchain_state_channel_balance_v1:payee(balance)
-                   num_bytes = :blockchain_state_channel_balance_v1:balance(balance)
+                   payee = :blockchain_state_channel_balance_v1.payee(balance)
+                   num_bytes = :blockchain_state_channel_balance_v1.balance(balance)
                    %{hotspot: Util.bin_to_string(payee), num_bytes: num_bytes}
                  end)
 
