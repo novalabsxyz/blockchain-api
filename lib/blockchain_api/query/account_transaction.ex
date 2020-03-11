@@ -17,6 +17,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.RewardTxn,
     Schema.SecurityTransaction,
     Schema.Transaction,
+    Schema.PaymentV2Txn,
     Util
   }
 
@@ -290,6 +291,14 @@ defmodule BlockchainAPI.Query.AccountTransaction do
                   entry.txn_hash
                   |> Query.Transaction.get_location!()
                   |> LocationTransaction.encode_model()
+
+                [Map.merge(res, %{id: entry.id}) | acc]
+
+              "payment_v2" ->
+                res =
+                  entry.txn_hash
+                  |> Query.Transaction.get_payment_v2!()
+                  |> PaymentV2Txn.encode_model()
 
                 [Map.merge(res, %{id: entry.id}) | acc]
 
