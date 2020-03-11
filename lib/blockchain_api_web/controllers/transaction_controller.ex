@@ -130,19 +130,19 @@ defmodule BlockchainAPIWeb.TransactionController do
         |> put_view(PaymentV2View)
         |> render("show.json", payment_v2: payment_v2)
 
-      "state_channel_open" ->
-        state_channel_open = Query.StateChannelOpenTxn.get!(bin_hash)
+      "sc_open" ->
+        sc_open = Query.StateChannelOpenTxn.get!(bin_hash)
 
         conn
         |> put_view(StateChannelOpenView)
-        |> render("show.json", state_channel_open: state_channel_open)
+        |> render("show.json", sc_open: sc_open)
 
-      "state_channel_close" ->
-        state_channel_close = Query.StateChannelCloseTxn.get!(bin_hash)
+      "sc_close" ->
+        sc_close = Query.StateChannelCloseTxn.get!(bin_hash)
 
         conn
         |> put_view(StateChannelCloseView)
-        |> render("show.json", state_channel_close: state_channel_close)
+        |> render("show.json", sc_close: sc_close)
 
       _ ->
         :error

@@ -99,10 +99,10 @@ defmodule BlockchainAPI.Schema.Transaction do
   end
 
   def map(:blockchain_txn_state_channel_open_v1, txn) do
-    %{type: "state_channel_open", hash: :blockchain_txn_state_channel_open_v1.hash(txn)}
+    %{type: "sc_open", hash: :blockchain_txn_state_channel_open_v1.hash(txn)}
   end
 
   def map(:blockchain_txn_state_channel_close_v1, txn) do
-    %{type: "state_channel_close", hash: :blockchain_txn_state_channel_close_v1.hash(txn)}
+    %{type: "sc_close", hash: :blockchain_txn_state_channel_close_v1.hash(txn)}
   end
 end
