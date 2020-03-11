@@ -23,6 +23,7 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.Transaction,
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
+    Schema.PaymentV2Txn,
     Util
   }
 
@@ -252,6 +253,27 @@ defmodule BlockchainAPI.Query.Transaction do
     end
   end
 
+  def get_payment_v2!(txn_hash) do
+    from(
+      transaction in Transaction,
+      where: transaction.hash == ^txn_hash,
+      left_join: block in Block,
+      on: transaction.block_height == block.height,
+      left_join: payment_v2_txn in PaymentV2Txn,
+      on: transaction.hash == payment_v2_txn.hash,
+      select: %{
+        height: block.height,
+        time: block.time,
+        payments: payment_v2_txn.payments,
+        payer: payment_v2_txn.payer,
+        nonce: payment_v2_txn.nonce,
+        fee: payment_v2_txn.fee,
+        hash: payment_v2_txn.hash
+      }
+    )
+    |> Repo.replica.one!()
+  end
+
   # ==================================================================
   # Helper functions
   # ==================================================================
@@ -286,6 +308,8 @@ defmodule BlockchainAPI.Query.Transaction do
         on: transaction.hash == oui_txn.hash,
         left_join: sec_exchange_txn in SecurityExchangeTransaction,
         on: transaction.hash == sec_exchange_txn.hash,
+        left_join: payment_v2 in PaymentV2Txn,
+        on: transaction.hash == payment_v2.hash,
         order_by: [
           desc: block.height,
           desc: transaction.id,
@@ -306,7 +330,8 @@ defmodule BlockchainAPI.Query.Transaction do
           poc_receipts: poc_receipts_transaction,
           rewards: rewards_txn,
           oui: oui_txn,
-          sec_exchange: sec_exchange_txn
+          sec_exchange: sec_exchange_txn,
+          payment_v2: payment_v2
         }
       )
 

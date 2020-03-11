@@ -17,7 +17,8 @@ defmodule BlockchainAPI.Util do
     RewardsTransaction,
     SecurityTransaction,
     OUITransaction,
-    SecurityExchangeTransaction
+    SecurityExchangeTransaction,
+    PaymentV2Txn
   }
 
   @bones 100_000_000
@@ -192,6 +193,14 @@ defmodule BlockchainAPI.Util do
   def clean_txn_struct(%{sec_exchange: sec_exchange, height: height, time: time}) when is_map(sec_exchange) do
     Map.merge(SecurityExchangeTransaction.encode_model(sec_exchange), %{
       type: "security_exchange",
+      height: height,
+      time: time
+    })
+  end
+
+  def clean_txn_struct(%{payment_v2: payment_v2, height: height, time: time}) when is_map(payment_v2) do
+    Map.merge(PaymentV2Txn.encode_model(payment_v2), %{
+      type: "payment_v2",
       height: height,
       time: time
     })

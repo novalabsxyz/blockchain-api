@@ -15,7 +15,8 @@ defmodule BlockchainAPIWeb.TransactionController do
     ElectionView,
     RewardsView,
     OUIView,
-    SecExchangeView
+    SecExchangeView,
+    PaymentV2View
   }
 
   import BlockchainAPI.Cache.CacheService
@@ -119,6 +120,13 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(SecExchangeView)
         |> render("show.json", sec_exchange: sec_exchange)
+
+      "payment_v2" ->
+        payment_v2 = Query.PaymentV2Txn.get!(bin_hash)
+
+        conn
+        |> put_view(PaymentV2View)
+        |> render("show.json", payment_v2: payment_v2)
 
       _ ->
         :error

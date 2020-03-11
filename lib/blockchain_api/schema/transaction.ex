@@ -93,4 +93,8 @@ defmodule BlockchainAPI.Schema.Transaction do
   def map(:blockchain_txn_oui_v1, txn) do
     %{type: "oui", hash: :blockchain_txn_oui_v1.hash(txn)}
   end
+
+  def map(:blockchain_txn_payment_v2, txn) do
+    %{type: "payment_v2", hash: :blockchain_txn_payment_v2.hash(txn)}
+  end
 end

@@ -120,6 +120,24 @@ defmodule BlockchainAPI.Schema.AccountTransaction do
     }
   end
 
+  def map_cleared({:blockchain_txn_payment_v2, :payee}, payee, txn) do
+    %{
+      account_address: payee,
+      txn_type: "payment_v2",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_payment_v2.hash(txn)
+    }
+  end
+
+  def map_cleared({:blockchain_txn_payment_v2, :payer}, payer, txn) do
+    %{
+      account_address: payer,
+      txn_type: "payment_v2",
+      txn_status: "cleared",
+      txn_hash: :blockchain_txn_payment_v2.hash(txn)
+    }
+  end
+
   def map_pending(:blockchain_txn_coinbase_v1, txn) do
     %{
       account_address: :blockchain_txn_coinbase_v1.payee(txn),

@@ -25,6 +25,7 @@ defmodule BlockchainAPI.Committer do
     Schema.SecurityTransaction,
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
+    Schema.PaymentV2Txn,
     Notifier
   }
 
@@ -265,6 +266,9 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_oui_v1 ->
               insert_transaction(:blockchain_txn_oui_v1, txn, height)
 
+            :blockchain_txn_payment_v2 ->
+              insert_transaction(:blockchain_txn_payment_v2, txn, height)
+
             _ ->
               :ok
           end
@@ -306,6 +310,9 @@ defmodule BlockchainAPI.Committer do
 
             :blockchain_txn_rewards_v1 ->
               insert_account_transaction(:blockchain_txn_rewards_v1, txn)
+
+            :blockchain_txn_payment_v2 ->
+              insert_account_transaction(:blockchain_txn_payment_v2, txn)
 
             _ ->
               :ok
@@ -408,6 +415,14 @@ defmodule BlockchainAPI.Committer do
   defp insert_transaction(:blockchain_txn_oui_v1, txn, _height) do
     {:ok, _} = Query.OUITransaction.create(OUITransaction.map(txn))
   end
+
+  defp insert_transaction(:blockchain_txn_payment_v2, txn, _height) do
+    cs = PaymentV2Txn.map(txn)
+    Logger.info("payment_v2, cs: #{inspect(cs)}")
+
+    {:ok, _} = Query.PaymentV2Txn.create(cs)
+  end
+
 
   defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
@@ -652,6 +667,31 @@ defmodule BlockchainAPI.Committer do
     {:ok, _} =
       Query.AccountTransaction.create(
         AccountTransaction.map_cleared(:blockchain_txn_assert_location_v1, txn)
+      )
+  end
+
+  defp insert_account_transaction(:blockchain_txn_payment_v2, txn) do
+
+    payees = txn
+             |> :blockchain_txn_payment_v2.payments()
+             |> Enum.map(
+               fn(payment) ->
+                 :blockchain_payment_v2.payee(payment)
+               end)
+
+    payer = :blockchain_txn_payment_v2.payer(txn)
+
+    :ok = Enum.each(payees,
+      fn(payee) ->
+        {:ok, _} =
+          Query.AccountTransaction.create(
+            AccountTransaction.map_cleared({:blockchain_txn_payment_v2, :payee}, payee, txn)
+          )
+      end)
+
+    {:ok, _} =
+      Query.AccountTransaction.create(
+        AccountTransaction.map_cleared({:blockchain_txn_payment_v2, :payer}, payer, txn)
       )
   end
 
