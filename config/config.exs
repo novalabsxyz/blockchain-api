@@ -18,6 +18,7 @@ config :blockchain_api,
 # Configures the endpoint
 config :blockchain_api, BlockchainAPIWeb.Endpoint,
   url: [host: "localhost"],
+  # Sample secret key, provide your own when running in dev/prod env
   secret_key_base: "OOLfw0Ez2rPqx6IOAsgbvj+5SxUhPuZ1zm6mHP0t2ETXk/8gT0guAres57j9LffB",
   render_errors: [view: BlockchainAPIWeb.ErrorView, format: "json", accepts: ~w(json)],
   pubsub: [name: BlockchainAPI.PubSub, adapter: Phoenix.PubSub.PG2],

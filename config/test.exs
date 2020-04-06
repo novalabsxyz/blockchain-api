@@ -9,6 +9,7 @@ config :blockchain_api, BlockchainAPIWeb.Endpoint,
   root: ".",
   version: Application.spec(:blockchain_api, :vsn),
   check_origin: false,
+  # sample secret key for testing
   secret_key_base: "783ef8381ceb304d0bd6a62f2bb256751dae3969e8eadd0358fbd47797dd0bee"
 
 # Only debug statements for tests
