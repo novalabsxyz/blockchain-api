@@ -108,8 +108,7 @@ defmodule BlockchainAPI.Application do
       {Watcher, watcher_worker_opts},
       {PeriodicCleaner, []},
       {PeriodicUpdater, []},
-      {Notifier, []},
-      {RewardsNotifier, []}
+      {Notifier, []}
     ]
   end
 
