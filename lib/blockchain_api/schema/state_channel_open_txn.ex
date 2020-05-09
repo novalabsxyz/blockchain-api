@@ -3,7 +3,7 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
   import Ecto.Changeset
   alias BlockchainAPI.{Util, Schema.StateChannelOpenTxn}
 
-  @fields [:id, :owner, :amount, :expire_within, :height, :time]
+  @fields [:id, :owner, :oui, :expire_within, :height, :time]
 
   @primary_key false
   @derive {Phoenix.Param, key: :hash}
@@ -11,7 +11,7 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
   schema "state_channel_open_transactions" do
     field :id, :binary, null: false, primary_key: true
     field :hash, :binary, null: false
-    field :amount, :integer, null: false
+    field :oui, :integer, null: false
     field :owner, :binary, null: false
     field :nonce, :integer, null: false
     field :expire_within, :integer, null: false
@@ -22,8 +22,8 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
   @doc false
   def changeset(txn, attrs) do
     txn
-    |> cast(attrs, [:id, :hash, :amount, :owner, :nonce, :expire_within])
-    |> validate_required([:id, :hash, :amount, :owner, :nonce, :expire_within])
+    |> cast(attrs, [:id, :hash, :oui, :owner, :nonce, :expire_within])
+    |> validate_required([:id, :hash, :oui, :owner, :nonce, :expire_within])
     |> foreign_key_constraint(:hash)
   end
 
@@ -50,7 +50,7 @@ defmodule BlockchainAPI.Schema.StateChannelOpenTxn do
     %{
       id: :blockchain_txn_state_channel_open_v1.id(txn),
       owner: :blockchain_txn_state_channel_open_v1.owner(txn),
-      amount: :blockchain_txn_state_channel_open_v1.amount(txn),
+      oui: :blockchain_txn_state_channel_open_v1.oui(txn),
       nonce: :blockchain_txn_state_channel_open_v1.nonce(txn),
       expire_within: :blockchain_txn_state_channel_open_v1.expire_within(txn),
       hash: :blockchain_txn_state_channel_open_v1.hash(txn)

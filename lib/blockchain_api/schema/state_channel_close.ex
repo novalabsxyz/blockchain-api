@@ -2,16 +2,15 @@ defmodule BlockchainAPI.Schema.StateChannel do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @fields [:id, :owner, :credits, :nonce, :balances, :root_hash, :state, :expire_at_block]
+  @fields [:id, :owner, :credits, :nonce, :summaries, :root_hash, :state, :expire_at_block]
 
   @derive {Jason.Encoder, only: @fields}
   @primary_key false
   embedded_schema do
     field :id, :string, null: false
     field :owner, :string, null: false
-    field :credits, :integer, null: false
     field :nonce, :integer, null: false
-    embeds_many :balances, BlockchainAPI.Schema.StateChannel.Balance
+    embeds_many :summaries, BlockchainAPI.Schema.StateChannel.Summary
     field :root_hash, :string
     field :state, :string, null: false
     field :expire_at_block, :integer
@@ -19,28 +18,29 @@ defmodule BlockchainAPI.Schema.StateChannel do
 
   def changeset(schema, params) do
     schema
-    |> cast(params, [:id, :owner, :credits, :nonce, :root_hash, :state, :expire_at_block])
-    |> cast_embed(:balances)
+    |> cast(params, [:id, :owner, :nonce, :root_hash, :state, :expire_at_block])
+    |> cast_embed(:summaries)
   end
 
 end
 
-defmodule BlockchainAPI.Schema.StateChannel.Balance do
+defmodule BlockchainAPI.Schema.StateChannel.Summary do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @fields [:hotspot, :num_bytes]
+  @fields [:client, :num_dcs, :num_packets]
 
   @derive {Jason.Encoder, only: @fields}
   @primary_key false
-  schema "balances" do
-    field :hotspot, :string
-    field :num_bytes, :integer
+  schema "summaries" do
+    field :client, :string
+    field :num_packets, :integer
+    field :num_dcs, :integer
   end
 
   def changeset(schema, params) do
     schema
-    |> cast(params, [:hotspot, :num_bytes])
+    |> cast(params, [:client, :num_packets, :num_dcs])
   end
 
 end
@@ -92,21 +92,21 @@ defmodule BlockchainAPI.Schema.StateChannelCloseTxn do
 
     sc0 = :blockchain_txn_state_channel_close_v1.state_channel(txn)
 
-    balances = sc0
-               |> :blockchain_state_channel_v1.balances()
-               |> Enum.map(
-                 fn(balance) ->
-                   payee = :blockchain_state_channel_balance_v1.payee(balance)
-                   num_bytes = :blockchain_state_channel_balance_v1.balance(balance)
-                   %{hotspot: Util.bin_to_string(payee), num_bytes: num_bytes}
-                 end)
+    summaries = sc0
+                |> :blockchain_state_channel_v1.summaries()
+                |> Enum.map(
+                  fn(summary) ->
+                    client = :blockchain_state_channel_summary_v1.client_pubkeybin(summary)
+                    num_packets = :blockchain_state_channel_summary_v1.num_packets(summary)
+                    num_dcs = :blockchain_state_channel_summary_v1.num_dcs(summary)
+                    %{client: Util.bin_to_string(client), num_dcs: num_dcs, num_packets: num_packets}
+                  end)
 
     sc = %{
       id: Util.bin_to_string(:blockchain_state_channel_v1.id(sc0)),
       owner: Util.bin_to_string(:blockchain_state_channel_v1.owner(sc0)),
-      credits: :blockchain_state_channel_v1.credits(sc0),
       nonce: :blockchain_state_channel_v1.nonce(sc0),
-      balances: balances,
+      summaries: summaries,
       root_hash: Util.bin_to_string(:blockchain_state_channel_v1.root_hash(sc0)),
       state: Atom.to_string(:blockchain_state_channel_v1.state(sc0)),
       expire_at_block: :blockchain_state_channel_v1.expire_at_block(sc0)

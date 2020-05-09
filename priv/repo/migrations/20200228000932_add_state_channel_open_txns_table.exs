@@ -7,7 +7,7 @@ defmodule BlockchainAPI.Repo.Migrations.AddStateChannelOpenTxnsTable do
 
       add :id, :binary, null: false, primary_key: true
       add :owner, :binary, null: false
-      add :amount, :bigint, null: false
+      add :oui, :bigint, null: false
       add :expire_within, :bigint, null: false
       add :nonce, :bigint, null: false
 
