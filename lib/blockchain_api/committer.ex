@@ -26,6 +26,8 @@ defmodule BlockchainAPI.Committer do
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
     Schema.PaymentV2Txn,
+    Schema.StateChannelOpenTxn,
+    Schema.StateChannelCloseTxn,
     Notifier
   }
 
@@ -266,6 +268,12 @@ defmodule BlockchainAPI.Committer do
             :blockchain_txn_oui_v1 ->
               insert_transaction(:blockchain_txn_oui_v1, txn, height)
 
+            :blockchain_txn_state_channel_open_v1 ->
+              insert_transaction(:blockchain_txn_state_channel_open_v1, txn, height)
+
+            :blockchain_txn_state_channel_close_v1 ->
+              insert_transaction(:blockchain_txn_state_channel_close_v1, txn, height)
+
             :blockchain_txn_payment_v2 ->
               insert_transaction(:blockchain_txn_payment_v2, txn, height)
 
@@ -423,6 +431,13 @@ defmodule BlockchainAPI.Committer do
     {:ok, _} = Query.PaymentV2Txn.create(cs)
   end
 
+  defp insert_transaction(:blockchain_txn_state_channel_open_v1, txn, _height) do
+    {:ok, _} = Query.StateChannelOpenTxn.create(StateChannelOpenTxn.map(txn))
+  end
+
+  defp insert_transaction(:blockchain_txn_state_channel_close_v1, txn, _height) do
+    {:ok, _} = Query.StateChannelCloseTxn.create(StateChannelCloseTxn.map(txn))
+  end
 
   defp insert_transaction(:blockchain_txn_consensus_group_v1, txn, height, time) do
     {:ok, election_entry} = Query.ElectionTransaction.create(ElectionTransaction.map(txn))
@@ -533,6 +548,7 @@ defmodule BlockchainAPI.Committer do
 
     Batcher.Pocs.insert_receipt_and_witnesses(txn, block, ledger, height, poc_receipt_txn_entry)
   end
+
 
   # ==================================================================
   # Insert account transactions

@@ -16,7 +16,9 @@ defmodule BlockchainAPIWeb.TransactionController do
     RewardsView,
     OUIView,
     SecExchangeView,
-    PaymentV2View
+    PaymentV2View,
+    StateChannelOpenView,
+    StateChannelCloseView
   }
 
   import BlockchainAPI.Cache.CacheService
@@ -127,6 +129,20 @@ defmodule BlockchainAPIWeb.TransactionController do
         conn
         |> put_view(PaymentV2View)
         |> render("show.json", payment_v2: payment_v2)
+
+      "sc_open" ->
+        sc_open = Query.StateChannelOpenTxn.get!(bin_hash)
+
+        conn
+        |> put_view(StateChannelOpenView)
+        |> render("show.json", sc_open: sc_open)
+
+      "sc_close" ->
+        sc_close = Query.StateChannelCloseTxn.get!(bin_hash)
+
+        conn
+        |> put_view(StateChannelCloseView)
+        |> render("show.json", sc_close: sc_close)
 
       _ ->
         :error

@@ -24,6 +24,8 @@ defmodule BlockchainAPI.Query.Transaction do
     Schema.OUITransaction,
     Schema.SecurityExchangeTransaction,
     Schema.PaymentV2Txn,
+    Schema.StateChannelOpenTxn,
+    Schema.StateChannelCloseTxn,
     Util
   }
 
@@ -310,6 +312,10 @@ defmodule BlockchainAPI.Query.Transaction do
         on: transaction.hash == sec_exchange_txn.hash,
         left_join: payment_v2 in PaymentV2Txn,
         on: transaction.hash == payment_v2.hash,
+        left_join: sc_open_txn in StateChannelOpenTxn,
+        on: transaction.hash == sc_open_txn.hash,
+        left_join: sc_close_txn in StateChannelCloseTxn,
+        on: transaction.hash == sc_close_txn.hash,
         order_by: [
           desc: block.height,
           desc: transaction.id,
@@ -331,7 +337,9 @@ defmodule BlockchainAPI.Query.Transaction do
           rewards: rewards_txn,
           oui: oui_txn,
           sec_exchange: sec_exchange_txn,
-          payment_v2: payment_v2
+          payment_v2: payment_v2,
+          sc_open: sc_open_txn,
+          sc_close: sc_close_txn
         }
       )
 
