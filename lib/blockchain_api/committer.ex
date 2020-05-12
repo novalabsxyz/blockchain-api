@@ -263,9 +263,6 @@ defmodule BlockchainAPI.Committer do
                 :blockchain_block.time(block)
               )
 
-            :blockchain_txn_oui_v1 ->
-              insert_transaction(:blockchain_txn_oui_v1, txn, height)
-
             :blockchain_txn_payment_v2 ->
               insert_transaction(:blockchain_txn_payment_v2, txn, height)
 
