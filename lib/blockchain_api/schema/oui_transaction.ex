@@ -65,8 +65,7 @@ defmodule BlockchainAPI.Schema.OUITransaction do
       txn: :blockchain_txn.serialize(txn),
       addresses: :blockchain_txn_oui_v1.addresses(txn),
       staking_fee: :blockchain_txn_oui_v1.staking_fee(txn),
-      fee: :blockchain_txn_oui_v1.fee(txn),
-      oui: :blockchain_txn_oui_v1.oui(txn)
+      fee: :blockchain_txn_oui_v1.fee(txn)
     }
   end
 end
