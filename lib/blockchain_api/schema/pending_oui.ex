@@ -75,7 +75,6 @@ defmodule BlockchainAPI.Schema.PendingOUI do
       addresses: :blockchain_txn_oui_v1.addresses(txn),
       staking_fee: :blockchain_txn_oui_v1.staking_fee(txn),
       fee: :blockchain_txn_oui_v1.fee(txn),
-      oui: :blockchain_txn_oui_v1.oui(txn),
       submit_height: submit_height,
       status: "pending"
     }
