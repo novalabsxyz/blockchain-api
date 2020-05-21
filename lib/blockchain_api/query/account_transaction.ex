@@ -164,7 +164,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
           location_height: lsq.location_height,
           status:
             fragment(
-              "CASE WHEN ? - ? < 65 THEN 'online' ELSE CASE WHEN ? - ? < 65 THEN 'online' ELSE 'offline' END END",
+              "CASE WHEN ? - ? < 130 THEN 'online' ELSE CASE WHEN ? - ? < 130 THEN 'online' ELSE 'offline' END END",
               ^current_height,
               s.challenge_height,
               ^current_height,
