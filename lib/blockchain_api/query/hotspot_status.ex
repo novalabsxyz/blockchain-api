@@ -30,6 +30,11 @@ defmodule BlockchainAPI.Query.HotspotStatus do
     swarm = :blockchain_swarm.swarm()
     pb = :libp2p_swarm.peerbook(swarm)
 
+    # force a pb refresh
+    :ok = :libp2p_peerbook.refresh(pb, pubkey_bin)
+    # sleep for 200ms, arp is fast ~80ms
+    :timer.sleep(200)
+
     case :libp2p_peerbook.get(pb, pubkey_bin) do
       {:error, reason} = e ->
         Logger.error("Peer not found #{inspect(reason)}")
