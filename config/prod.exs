@@ -46,7 +46,7 @@ config :blockchain_api, BlockchainAPI.Repo,
   hostname: System.get_env("DATABASE_HOST"),
   pool_size: 16,
   timeout: 480_000,
-  queue_target: 5_000,
+  queue_target: 10_000,
   queue_interval: 5_000,
   log: false
 
@@ -58,7 +58,7 @@ config :blockchain_api, BlockchainAPI.RORepo,
   hostname: System.get_env("RO_DATABASE_HOST"),
   pool_size: 10,
   timeout: 120_000,
-  queue_target: 5_000,
+  queue_target: 30_000,
   queue_interval: 5_000,
   log: false
 

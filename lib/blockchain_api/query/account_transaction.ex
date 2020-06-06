@@ -110,6 +110,7 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     location_status_query =
       from(
         lt in LocationTransaction,
+        where: lt.owner == ^address,
         group_by: lt.gateway,
         left_join: t in Transaction,
         on: t.hash == lt.hash,
@@ -120,29 +121,21 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       )
 
     query =
-      from(at in AccountTransaction,
-        where: at.account_address == ^address,
+      from(hotspot in Hotspot,
+        where: hotspot.owner == ^address,
         left_join: gt in GatewayTransaction,
-        on: at.account_address == gt.owner,
-        left_join: hotspot in Hotspot,
-        on: at.account_address == hotspot.owner,
-        where: gt.gateway == hotspot.address,
-        where: gt.owner == hotspot.owner,
-        where: at.txn_hash == gt.hash,
+        on: gt.owner == hotspot.owner,
         left_join: lt in LocationTransaction,
-        on: gt.gateway == lt.gateway,
+        on: gt.gateway == lt.gateway and lt.owner == ^address,
         left_join: s in subquery(status_query),
         on: s.gateway == gt.gateway,
         left_join: lsq in subquery(location_status_query),
         on: lsq.gateway == gt.gateway,
-        left_join: gtx in Transaction,
-        on: gtx.hash == gt.hash,
         distinct: hotspot.address,
-        order_by: [desc: lt.nonce, desc: hotspot.id],
+        order_by: [desc: lt.nonce],
         select: %{
-          account_address: at.account_address,
-          added_height: gtx.block_height,
-          gateway: gt.gateway,
+          account_address: hotspot.owner,
+          gateway: hotspot.address,
           gateway_hash: gt.hash,
           gateway_fee: gt.fee,
           owner: gt.owner,
@@ -163,15 +156,16 @@ defmodule BlockchainAPI.Query.AccountTransaction do
           score: hotspot.score,
           location_height: lsq.location_height,
           status:
-            fragment(
-              "CASE WHEN ? - ? < 130 THEN 'online' ELSE CASE WHEN ? - ? < 130 THEN 'online' ELSE 'offline' END END",
-              ^current_height,
-              s.challenge_height,
-              ^current_height,
-              lsq.location_height
-            )
-        }
-      )
+          fragment(
+            "CASE WHEN ? - ? < 130 THEN 'online' ELSE CASE WHEN ? - ? < 130 THEN 'online' ELSE 'offline' END END",
+            ^current_height,
+            s.challenge_height,
+            ^current_height,
+            lsq.location_height
+          )
+          }
+        )
+
 
     query
     |> Repo.replica.all()
@@ -187,10 +181,11 @@ defmodule BlockchainAPI.Query.AccountTransaction do
       {lat, lng} = Util.h3_to_lat_lng(map.location)
       status = Query.HotspotStatus.consolidate_status(map.status, map.gateway)
       sync_percent = Query.HotspotStatus.sync_percent(map.gateway)
+      added_height = Query.GatewayTransaction.get_added_at_height(map.gateway)
 
       map
       |> encoded_account_gateway_map()
-      |> Map.merge(%{lat: lat, lng: lng, status: status, sync_percent: sync_percent})
+      |> Map.merge(%{lat: lat, lng: lng, status: status, sync_percent: sync_percent, added_height: added_height})
     end)
   end
 
