@@ -49,6 +49,20 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     |> Repo.insert()
   end
 
+  def get_added_at_height(gateway_address) do
+    txn_hash = GatewayTransaction
+               |> where([gt], gt.gateway == ^gateway_address)
+               |> order_by([gt], gt.id)
+               |> limit(1)
+               |> select([gt], gt.hash)
+               |> Repo.replica.one!()
+
+    Transaction
+    |> where([t], t.hash == ^txn_hash)
+    |> select([t], t.block_height)
+    |> Repo.replica.one!()
+  end
+
   # ==================================================================
   # Helper functions
   # ==================================================================

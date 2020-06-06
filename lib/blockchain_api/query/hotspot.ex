@@ -31,6 +31,12 @@ defmodule BlockchainAPI.Query.Hotspot do
     |> Repo.replica.one!()
   end
 
+  def get_by_owner(owner_address) do
+    Hotspot
+    |> where([h], h.owner == ^owner_address)
+    |> Repo.replica.all()
+  end
+
   def create(attrs \\ %{}) do
     %Hotspot{}
     |> Hotspot.changeset(attrs)
