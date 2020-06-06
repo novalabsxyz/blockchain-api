@@ -7,6 +7,7 @@ defmodule BlockchainAPI.Query.GatewayTransaction do
     Util,
     Schema.GatewayTransaction,
     Schema.LocationTransaction,
+    Schema.Transaction,
     Schema.Hotspot
   }
 
