@@ -282,4 +282,11 @@ defmodule BlockchainAPI.Util do
         |> Number.Delimit.number_to_delimited(precision: 0)
     end
   end
+
+  def pmap(collection, func) do
+    collection
+    |> Enum.map(&(Task.async(fn -> func.(&1) end)))
+    |> Enum.map(&Task.await/1)
+  end
+
 end

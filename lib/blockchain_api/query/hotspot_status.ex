@@ -5,7 +5,6 @@ defmodule BlockchainAPI.Query.HotspotStatus do
   @stale_delta 3_600_000
 
   require Logger
-  alias BlockchainAPI.Query
 
   def consolidate_status(challenge_status, pubkey_bin) do
     case challenge_status do
@@ -46,7 +45,7 @@ defmodule BlockchainAPI.Query.HotspotStatus do
     end
   end
 
-  def sync_percent(pubkey_bin) do
+  def sync_percent(pubkey_bin, api_height) do
     swarm = :blockchain_swarm.swarm()
     pb = :libp2p_swarm.peerbook(swarm)
 
@@ -56,8 +55,6 @@ defmodule BlockchainAPI.Query.HotspotStatus do
         nil
 
       {:ok, peer} ->
-        api_height = Query.Block.get_latest_height()
-
         case :libp2p_peer.signed_metadata_get(peer, <<"height">>, :undefined) do
           height when is_integer(height) and height > 0 ->
             case abs(api_height - height) <= 500 do
