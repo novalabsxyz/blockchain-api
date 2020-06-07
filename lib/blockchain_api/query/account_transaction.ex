@@ -10,13 +10,10 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     Schema.CoinbaseTransaction,
     Schema.DataCreditTransaction,
     Schema.GatewayTransaction,
-    Schema.Hotspot,
-    Schema.HotspotActivity,
     Schema.LocationTransaction,
     Schema.PaymentTransaction,
     Schema.RewardTxn,
     Schema.SecurityTransaction,
-    Schema.Transaction,
     Schema.PaymentV2Txn,
     Util
   }
@@ -94,113 +91,77 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> Repo.delete!()
   end
 
-  def get_gateways(address, _params \\ %{}) do
+  def get_gateways(address, _ \\ %{}) do
     current_height = Query.Block.get_latest_height()
+    sql = get_gateways_sql()
 
-    status_query =
-      from(
-        ha in HotspotActivity,
-        group_by: ha.gateway,
-        select: %{
-          gateway: ha.gateway,
-          challenge_height: max(ha.poc_req_txn_block_height)
-        }
-      )
+    res = Ecto.Adapters.SQL.query!(Repo.replica, sql, [current_height, address])
 
-    location_status_query =
-      from(
-        lt in LocationTransaction,
-        where: lt.owner == ^address,
-        group_by: lt.gateway,
-        left_join: t in Transaction,
-        on: t.hash == lt.hash,
-        select: %{
-          gateway: lt.gateway,
-          location_height: max(t.block_height)
-        }
-      )
-
-    query =
-      from(hotspot in Hotspot,
-        where: hotspot.owner == ^address,
-        left_join: gt in GatewayTransaction,
-        on: gt.owner == hotspot.owner,
-        left_join: lt in LocationTransaction,
-        on: gt.gateway == lt.gateway and lt.owner == ^address,
-        left_join: s in subquery(status_query),
-        on: s.gateway == gt.gateway,
-        left_join: lsq in subquery(location_status_query),
-        on: lsq.gateway == gt.gateway,
-        distinct: hotspot.address,
-        order_by: [desc: lt.nonce],
-        select: %{
-          account_address: hotspot.owner,
-          gateway: hotspot.address,
-          gateway_hash: gt.hash,
-          gateway_fee: gt.fee,
-          owner: gt.owner,
-          payer: gt.payer,
-          location: lt.location,
-          location_fee: lt.fee,
-          location_nonce: lt.nonce,
-          location_hash: lt.hash,
-          long_city: hotspot.long_city,
-          long_street: hotspot.long_street,
-          long_state: hotspot.long_state,
-          long_country: hotspot.long_country,
-          short_city: hotspot.short_city,
-          short_street: hotspot.short_street,
-          short_state: hotspot.short_state,
-          short_country: hotspot.short_country,
-          name: hotspot.name,
-          score: hotspot.score,
-          location_height: lsq.location_height,
-          status:
-          fragment(
-            "CASE WHEN ? - ? < 130 THEN 'online' ELSE CASE WHEN ? - ? < 130 THEN 'online' ELSE 'offline' END END",
-            ^current_height,
-            s.challenge_height,
-            ^current_height,
-            lsq.location_height
-          )
+    res.rows
+    |> BlockchainAPI.Util.pmap(
+      fn([
+        owner,
+        account_address,
+        gateway_hash,
+        gateway,
+        payer,
+        gateway_fee,
+        name,
+        added_height,
+        location,
+        score,
+        long_city,
+        long_street,
+        long_state,
+        long_country,
+        short_city,
+        short_street,
+        short_state,
+        short_country,
+        location_nonce,
+        location_fee,
+        location_hash,
+        location_height,
+        challenge_height,
+        status
+      ]) ->
+          {lat, lng} = Util.h3_to_lat_lng(location)
+          status = Query.HotspotStatus.consolidate_status(status, gateway)
+          sync_percent = Query.HotspotStatus.sync_percent(gateway, current_height)
+          %{owner: Util.bin_to_string(owner),
+            account_address: Util.bin_to_string(account_address),
+            gateway_hash: Util.bin_to_string(gateway_hash),
+            gateway: Util.bin_to_string(gateway),
+            payer: Util.bin_to_string(payer),
+            gateway_fee: gateway_fee,
+            name: name,
+            added_height: added_height,
+            location: location,
+            lat: lat,
+            lng: lng,
+            score: Util.rounder(score, 4),
+            long_city: long_city,
+            long_street: long_street,
+            long_state: long_state,
+            long_country: long_country,
+            short_city: short_city,
+            short_street: short_street,
+            short_state: short_state,
+            short_country: short_country,
+            location_nonce: location_nonce,
+            location_fee: location_fee,
+            location_hash: Util.bin_to_string(location_hash),
+            location_height: location_height,
+            challenge_height: challenge_height,
+            status: status,
+            sync_percent: sync_percent
           }
-        )
-
-
-    query
-    |> Repo.replica.all()
-    |> clean_account_gateways()
+      end)
   end
 
   # ==================================================================
   # Helper functions
   # ==================================================================
-  defp clean_account_gateways(entries) do
-    entries
-    |> Enum.map(fn map ->
-      {lat, lng} = Util.h3_to_lat_lng(map.location)
-      status = Query.HotspotStatus.consolidate_status(map.status, map.gateway)
-      sync_percent = Query.HotspotStatus.sync_percent(map.gateway)
-      added_height = Query.GatewayTransaction.get_added_at_height(map.gateway)
-
-      map
-      |> encoded_account_gateway_map()
-      |> Map.merge(%{lat: lat, lng: lng, status: status, sync_percent: sync_percent, added_height: added_height})
-    end)
-  end
-
-  defp encoded_account_gateway_map(map) do
-    %{
-      map
-      | account_address: Util.bin_to_string(map.account_address),
-        gateway: Util.bin_to_string(map.gateway),
-        gateway_hash: Util.bin_to_string(map.gateway_hash),
-        location_hash: Util.bin_to_string(map.location_hash),
-        owner: Util.bin_to_string(map.owner),
-        payer: Util.bin_to_string(map.payer),
-        score: Util.rounder(map.score, 4)
-    }
-  end
 
   defp list_query(address) do
     pending = list_pending(address)
@@ -381,4 +342,66 @@ defmodule BlockchainAPI.Query.AccountTransaction do
     |> where([at], at.id < ^before)
     |> limit(@default_limit)
   end
+
+  defp get_gateways_sql() do
+    """
+      select
+      a.gateway_owner as owner,
+      a.gateway_owner as account_address,
+      a.gateway_hash,
+      a.gateway,
+      a.payer,
+      a.gateway_fee,
+      a.hotspot_name as name,
+      a.added_height,
+      a.hotspot_location as location,
+      a.hotspot_score as score,
+      a.long_city,
+      a.long_street,
+      a.long_state,
+      a.long_country,
+      a.short_city,
+      a.short_street,
+      a.short_state,
+      a.short_country,
+      a.location_nonce,
+      a.location_fee,
+      a.location_hash,
+      a.location_height,
+      b.challenge_height,
+      case
+          when $1 - b."challenge_height" < 130 then 'online'
+          else
+          case when a."location_height" = NULL then 'offline'
+          else
+            case
+                when $1 - a."location_height" < 130 then 'online'
+                else 'offline'
+            end
+          end
+      end as status
+      from
+      account_gateway_view as a
+      left outer join (
+      select
+          gateway,
+          max(poc_req_txn_block_height) as challenge_height
+      from
+          hotspot_activity
+      where
+          gateway in (
+          select
+              gateway
+          from
+              account_gateway_view
+          where
+              gateway_owner = $2)
+      group by
+          hotspot_activity.gateway) as b on
+      a.gateway = b.gateway
+      where
+      a.gateway_owner = $2
+      """
+  end
+
 end
