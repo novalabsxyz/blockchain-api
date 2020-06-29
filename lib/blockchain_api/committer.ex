@@ -109,8 +109,6 @@ defmodule BlockchainAPI.Committer do
   end
 
   def insert_or_update_all_account(ledger) do
-    {:ok, fee} = :blockchain_ledger_v1.transaction_fee(ledger)
-
     hlm_maps =
       ledger
       |> :blockchain_ledger_v1.entries()
@@ -118,8 +116,7 @@ defmodule BlockchainAPI.Committer do
         %{
           nonce: :blockchain_ledger_entry_v1.nonce(entry),
           balance: :blockchain_ledger_entry_v1.balance(entry),
-          address: address,
-          fee: fee
+          address: address
         }
       end)
 
@@ -166,7 +163,6 @@ defmodule BlockchainAPI.Committer do
           params = %{
             balance: Map.get(map, :balance, 0),
             nonce: Map.get(map, :nonce, 0),
-            fee: Map.get(map, :fee, 0),
             security_nonce: Map.get(map, :security_nonce, 0),
             security_balance: Map.get(map, :security_balance, 0),
             data_credit_balance: Map.get(map, :data_credit_balance, 0)
