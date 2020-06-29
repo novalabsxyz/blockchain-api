@@ -39,11 +39,6 @@ defmodule BlockchainAPIWeb.AccountController do
       # NOTE: This should probably be somewhere else and feels like a hack
       # This account does not exist in the database, hence we return some default values
       _error in Ecto.NoResultsError ->
-        {:ok, fee} =
-          :blockchain_worker.blockchain()
-          |> :blockchain.ledger()
-          |> :blockchain_ledger_v1.transaction_fee()
-
         # XXX: This is a temp fix
         # We need to update account migration, schema to have dc_balance, dc_nonce,
         # security_balance, security_nonce as well and fetch it from there
@@ -59,7 +54,7 @@ defmodule BlockchainAPIWeb.AccountController do
 
         non_existent_account = %{
           address: address,
-          fee: fee,
+          fee: 0,
           balance: 0,
           security_balance: account_security_balance,
           dc_balance: account_data_credit_balance,
