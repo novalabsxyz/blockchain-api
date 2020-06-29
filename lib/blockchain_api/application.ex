@@ -4,20 +4,20 @@ defmodule BlockchainAPI.Application do
   @moduledoc false
 
   use Application
-  alias Honeydew.EctoPollQueue
+  # alias Honeydew.EctoPollQueue
   alias BlockchainAPI.Repo
   alias BlockchainAPI.Watcher
   alias BlockchainAPI.{PeriodicCleaner, PeriodicUpdater}
   alias BlockchainAPI.{Notifier, RewardsNotifier}
-  alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase, SubmitOUI, SubmitSecExchange}
-  alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase, PendingOUI, PendingSecExchange}
+  # alias BlockchainAPI.Job.{SubmitPayment, SubmitGateway, SubmitLocation, SubmitCoinbase, SubmitOUI, SubmitSecExchange}
+  # alias BlockchainAPI.Schema.{PendingPayment, PendingGateway, PendingLocation, PendingCoinbase, PendingOUI, PendingSecExchange}
 
-  import PendingPayment, only: [submit_payment_queue: 0]
-  import PendingGateway, only: [submit_gateway_queue: 0]
-  import PendingLocation, only: [submit_location_queue: 0]
-  import PendingCoinbase, only: [submit_coinbase_queue: 0]
-  import PendingOUI, only: [submit_oui_queue: 0]
-  import PendingSecExchange, only: [submit_sec_exchange_queue: 0]
+  # import PendingPayment, only: [submit_payment_queue: 0]
+  # import PendingGateway, only: [submit_gateway_queue: 0]
+  # import PendingLocation, only: [submit_location_queue: 0]
+  # import PendingCoinbase, only: [submit_coinbase_queue: 0]
+  # import PendingOUI, only: [submit_oui_queue: 0]
+  # import PendingSecExchange, only: [submit_sec_exchange_queue: 0]
 
   def start(_type, _args) do
     env = Application.get_env(:blockchain_api, :env, :test)
@@ -31,7 +31,7 @@ defmodule BlockchainAPI.Application do
     opts = [strategy: :one_for_one, name: BlockchainAPI.Supervisor]
     {:ok, sup} = Supervisor.start_link(children, opts)
 
-    start_honeydew_queues(env)
+    # start_honeydew_queues(env)
 
     {:ok, sup}
   end
@@ -54,18 +54,18 @@ defmodule BlockchainAPI.Application do
     |> Enum.map(&String.to_charlist/1)
   end
 
-  defp queue_args(:prod, schema) do
-    # Check for new jobs every 120s, this query is frequent but quite inexpensive
-    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 120)
-    [schema: schema, repo: Repo, poll_interval: poll_interval]
-  end
+  # defp queue_args(:prod, schema) do
+  #   # Check for new jobs every 120s, this query is frequent but quite inexpensive
+  #   poll_interval = Application.get_env(:ecto_poll_queue, :interval, 120)
+  #   [schema: schema, repo: Repo, poll_interval: poll_interval]
+  # end
 
-  defp queue_args(_, schema) do
-    # Check for test and dev env pending txns every 30 minutes
-    # No need for prod level checking here
-    poll_interval = Application.get_env(:ecto_poll_queue, :interval, 30)
-    [schema: schema, repo: Repo, poll_interval: poll_interval]
-  end
+  # defp queue_args(_, schema) do
+  #   # Check for test and dev env pending txns every 30 minutes
+  #   # No need for prod level checking here
+  #   poll_interval = Application.get_env(:ecto_poll_queue, :interval, 30)
+  #   [schema: schema, repo: Repo, poll_interval: poll_interval]
+  # end
 
   defp children(:prod, blockchain_sup_opts, watcher_worker_opts) do
     # Children to start in prod env
@@ -112,55 +112,55 @@ defmodule BlockchainAPI.Application do
     ]
   end
 
-  defp start_honeydew_queues(env) do
-    :ok =
-      Honeydew.start_queue(submit_payment_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingPayment)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  # defp start_honeydew_queues(env) do
+  #   :ok =
+  #     Honeydew.start_queue(submit_payment_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingPayment)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
+  #   :ok = Honeydew.start_workers(submit_payment_queue(), SubmitPayment)
 
-    :ok =
-      Honeydew.start_queue(submit_gateway_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingGateway)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  #   :ok =
+  #     Honeydew.start_queue(submit_gateway_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingGateway)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
+  #   :ok = Honeydew.start_workers(submit_gateway_queue(), SubmitGateway)
 
-    :ok =
-      Honeydew.start_queue(submit_location_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingLocation)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  #   :ok =
+  #     Honeydew.start_queue(submit_location_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingLocation)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
+  #   :ok = Honeydew.start_workers(submit_location_queue(), SubmitLocation)
 
-    :ok =
-      Honeydew.start_queue(submit_coinbase_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingCoinbase)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  #   :ok =
+  #     Honeydew.start_queue(submit_coinbase_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingCoinbase)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
+  #   :ok = Honeydew.start_workers(submit_coinbase_queue(), SubmitCoinbase)
 
-    :ok =
-      Honeydew.start_queue(submit_oui_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingOUI)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  #   :ok =
+  #     Honeydew.start_queue(submit_oui_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingOUI)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_oui_queue(), SubmitOUI)
+  #   :ok = Honeydew.start_workers(submit_oui_queue(), SubmitOUI)
 
-    :ok =
-      Honeydew.start_queue(submit_sec_exchange_queue(),
-        queue: {EctoPollQueue, queue_args(env, PendingSecExchange)},
-        failure_mode: Honeydew.FailureMode.Abandon
-      )
+  #   :ok =
+  #     Honeydew.start_queue(submit_sec_exchange_queue(),
+  #       queue: {EctoPollQueue, queue_args(env, PendingSecExchange)},
+  #       failure_mode: Honeydew.FailureMode.Abandon
+  #     )
 
-    :ok = Honeydew.start_workers(submit_sec_exchange_queue(), SubmitSecExchange)
-  end
+  #   :ok = Honeydew.start_workers(submit_sec_exchange_queue(), SubmitSecExchange)
+  # end
 
   defp blockchain_sup_opts() do
     base_dir = Application.get_env(:blockchain, :base_dir, String.to_charlist("data"))
