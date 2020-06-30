@@ -66,6 +66,12 @@ config :blockchain,
   base_dir: String.to_charlist("/var/data/blockchain-api/prod/"),
   peerbook_update_interval: 60000,
   peerbook_allow_rfc1918: true,
-  peer_cache_timeout: 20000
+  peer_cache_timeout: 20000,
+
+  # snapshot config
+  honor_quick_sync: true,
+  quick_sync_mode: :blessed_snapshot,
+  blessed_snapshot_block_height: 386641,
+  blessed_snapshot_block_hash: <<247,185,86,66,152,117,36,166,193,45,74,49,246,29,94,61,213,102,209,89,7,38,99,54,99,32,214,74,128,13,75,74>>
 
 config :appsignal, :config, active: true
