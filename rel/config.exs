@@ -37,7 +37,8 @@ environment :dev do
       peer: "rel/commands/peer",
       genesis: "rel/commands/genesis",
       ledger: "rel/commands/ledger",
-      status: "rel/commands/status"
+      status: "rel/commands/status",
+      snapshot: "rel/commands/snapshot"
     ]
   )
 
@@ -65,7 +66,8 @@ environment :prod do
       peer: "rel/commands/peer",
       genesis: "rel/commands/genesis",
       ledger: "rel/commands/ledger",
-      status: "rel/commands/status"
+      status: "rel/commands/status",
+      snapshot: "rel/commands/snapshot"
     ]
   )
 
