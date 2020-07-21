@@ -21,7 +21,6 @@ defmodule BlockchainAPI.MixProject do
       extra_applications: [
         :logger,
         :runtime_tools,
-        :gpb,
         :intercept,
         :rand_compat,
         :libp2p,
